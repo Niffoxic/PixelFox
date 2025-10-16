@@ -1,5 +1,5 @@
 #pragma once
-
+#include "pch.h"
 #include <type_traits>
 #include "core/pair.h"
 
@@ -112,7 +112,7 @@ TEST(FoxPair, ComparisonsLexicographic)
     EXPECT_TRUE (c >  b);
     EXPECT_FALSE(b >  c);
     EXPECT_TRUE (a <= d);
-    EXPECT_FALSE(d <= a);
+    EXPECT_FALSE(d < a);
     EXPECT_TRUE (a >= d);
 }
 
