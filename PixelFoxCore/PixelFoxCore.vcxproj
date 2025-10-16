@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="include\core\algorithm.h" />
     <ClInclude Include="include\core\initializer_list.h" />
     <ClInclude Include="include\core\iterator.h" />
     <ClInclude Include="include\core\memory.h" />

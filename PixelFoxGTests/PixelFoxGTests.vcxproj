@@ -117,6 +117,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="test_algorithm.h" />
     <ClInclude Include="test_initializer_list.h" />
     <ClInclude Include="test_iterator.h" />
     <ClInclude Include="test_memory.h" />
