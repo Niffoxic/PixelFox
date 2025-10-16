@@ -18,6 +18,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -111,11 +114,20 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>PixelFoxCore.lib;PixelFoxEngine.lib;PixelFoxMath.lib;PixelFoxPhysics.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)PixelFoxBuildEvent.bat" "$(TargetDir)" "$(Configuration)" "$(Platform)" "$(ProjectDir)" "$(SolutionDir)"
+</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>My Libs</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -126,15 +138,21 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>PixelFoxCore.lib;PixelFoxEngine.lib;PixelFoxMath.lib;PixelFoxPhysics.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)PixelFoxBuildEvent.bat" "$(TargetDir)" "$(Configuration)" "$(Platform)" "$(ProjectDir)" "$(SolutionDir)"
+</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>My Libs</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <None Include="readme.md" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
