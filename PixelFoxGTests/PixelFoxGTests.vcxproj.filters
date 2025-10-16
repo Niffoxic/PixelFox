@@ -18,6 +18,9 @@
     <ClInclude Include="test_memory.h">
       <Filter>tests\core</Filter>
     </ClInclude>
+    <ClInclude Include="test_iterator.h">
+      <Filter>tests\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
