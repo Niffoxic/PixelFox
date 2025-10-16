@@ -36,6 +36,9 @@
     <ClInclude Include="include\core\utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\core\pair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
