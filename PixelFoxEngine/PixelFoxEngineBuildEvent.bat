@@ -5,7 +5,7 @@ REM %2 = Configuration (Debug/Release)
 REM %3 = Platform      (x64/Win32)
 REM %4 = SolutionDir   (optional; if omitted we infer it)
 
-REM --- Normalize TargetDir (trim trailing backslash so tools don't choke)
+REM --- Normalize TargetDir
 set "TD=%~1"
 if "%TD:~-1%"=="\" set "TD=%TD:~0,-1%"
 

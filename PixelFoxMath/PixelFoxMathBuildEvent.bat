@@ -3,9 +3,9 @@ REM Args:
 REM %1 = TargetDir     (Math's output folder)
 REM %2 = Configuration (Debug/Release)
 REM %3 = Platform      (x64/Win32)
-REM %4 = SolutionDir   (optional; inferred if omitted)
+REM %4 = SolutionDir
 
-REM --- Normalize TargetDir (strip trailing backslash)
+REM --- Normalize TargetDir
 set "TD=%~1"
 if "%TD:~-1%"=="\" set "TD=%TD:~0,-1%"
 
