@@ -44,16 +44,16 @@ namespace fox
 
         // Observerss
         _NODISCARD _CONSTEXPR20 _Ret_maybenull_
-        const T* begin() const noexcept { return m_data;           }
+        const T*  begin() const noexcept { return m_data;          }
 
         _NODISCARD _CONSTEXPR20 _Ret_maybenull_
-        const T* end  () const noexcept { return m_data + m_size;  }
+        const T*  end  () const noexcept { return m_data + m_size; }
 
         _NODISCARD _CONSTEXPR20
-        size_type size() const noexcept { return m_size;           }
+        size_type size () const noexcept { return m_size;          }
 
         _NODISCARD _CONSTEXPR20 _Ret_maybenull_
-        const T* data () const noexcept { return m_data;           }
+        const T*  data () const noexcept { return m_data;          }
 
     private:
         const T*  m_data;

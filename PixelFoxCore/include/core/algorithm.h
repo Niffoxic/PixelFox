@@ -17,7 +17,6 @@
 
 namespace fox 
 {
-
     //~ from [first,last)
     template<class InputIt, class OutputIt>
     _NODISCARD _CONSTEXPR20
@@ -78,13 +77,13 @@ namespace fox
         return true;
     }
 
-    //~ returns true if range1 is lexicographically less than range2
+    //~ returns true if range_1 is lexicographically less than range_2
     template<class InputIt1, class InputIt2>
     _CONSTEXPR20
-        bool lexicographical_compare(
-            _In_ InputIt1 left_1, _In_ InputIt1 right_1,
-            _In_ InputIt2 left_2, _In_ InputIt2 right_2
-        )
+    bool lexicographical_compare(
+        _In_ InputIt1 left_1, _In_ InputIt1 right_1,
+        _In_ InputIt2 left_2, _In_ InputIt2 right_2
+    )
     {
         for (; left_1 != right_1 && left_2 != right_2; ++left_1, (void)++left_2)
         {
