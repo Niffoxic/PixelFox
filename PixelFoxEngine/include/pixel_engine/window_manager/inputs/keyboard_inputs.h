@@ -4,13 +4,16 @@
 #include <initializer_list>
 #include <cstdint>
 #include <algorithm>
+#include <sal.h>
 
-#define MAX_KEYBOARD_INPUTS 256u
-#define _FOX_VK_VALID _In_range_(0, MAX_KEYBOARD_INPUTS - 1)
+#include "input_interface.h"
 
 namespace pixel_engine
 {
-	enum KeyboardMode : uint8_t
+	static constexpr unsigned int MAX_KEYBOARD_INPUTS = 256u;
+#define _FOX_VK_VALID _In_range_(0, MAX_KEYBOARD_INPUTS - 1)
+
+	enum PFE_API PEKeyboardMode : uint8_t
 	{
 		None	= 0,
 		Ctrl	= 1,
@@ -19,27 +22,27 @@ namespace pixel_engine
 		Super	= 1 << 3
 	};
 	
-	class KeyboardInputs
+	class PFE_API PEKeyboardInputs final: public IInputHandler
 	{
 	public:
-		 KeyboardInputs() noexcept;
-		~KeyboardInputs() = default;
+		 PEKeyboardInputs() noexcept;
+		~PEKeyboardInputs() = default;
 
 		//~ No Copy or Move
-		KeyboardInputs(_In_ const KeyboardInputs&) = delete;
-		KeyboardInputs(_Inout_ KeyboardInputs&&)	  = delete;
+		PEKeyboardInputs(_In_ const PEKeyboardInputs&) = delete;
+		PEKeyboardInputs(_Inout_ PEKeyboardInputs&&)   = delete;
 
-		KeyboardInputs& operator=(_In_ const KeyboardInputs&) = delete;
-		KeyboardInputs& operator=(_Inout_ KeyboardInputs&&)		 = delete;
+		PEKeyboardInputs& operator=(_In_ const PEKeyboardInputs&) = delete;
+		PEKeyboardInputs& operator=(_Inout_ PEKeyboardInputs&&)   = delete;
 
 		//~ For Systems
 		_Check_return_ _NODISCARD bool ProcessMessage(
 			_In_ UINT message,
 			_In_ WPARAM wParam,
-			_In_ LPARAM lParam) noexcept;
+			_In_ LPARAM lParam) noexcept override;
 
-		void OnFrameBegin() noexcept;
-		void OnFrameEnd  () noexcept;
+		void OnFrameBegin() noexcept override;
+		void OnFrameEnd  () noexcept override;
 
 		//~ Queries
 		_Check_return_ _NODISCARD bool IsKeyPressed  (_FOX_VK_VALID int virtualKey) const noexcept;
@@ -47,7 +50,7 @@ namespace pixel_engine
 		_Check_return_ _NODISCARD bool WasKeyReleased(_FOX_VK_VALID int virtualKey) const noexcept;
 		
 		_Check_return_ _NODISCARD bool WasChordPressed(_FOX_VK_VALID int key,
-			_In_ const pixel_engine::KeyboardMode& mode = pixel_engine::KeyboardMode::None)
+			_In_ const pixel_engine::PEKeyboardMode& mode = pixel_engine::PEKeyboardMode::None)
 			const noexcept;
 		
 		_Check_return_ _NODISCARD bool WasMultipleKeyPressed(

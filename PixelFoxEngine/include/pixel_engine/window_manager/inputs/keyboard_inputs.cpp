@@ -3,13 +3,13 @@
 #include <cstring>
 
 
-pixel_engine::KeyboardInputs::KeyboardInputs() noexcept
+pixel_engine::PEKeyboardInputs::PEKeyboardInputs() noexcept
 {
     ClearAll();
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam) noexcept
+bool pixel_engine::PEKeyboardInputs::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam) noexcept
 {
     switch (message)
     {
@@ -53,49 +53,49 @@ bool pixel_engine::KeyboardInputs::ProcessMessage(UINT message, WPARAM wParam, L
 	return false;
 }
 
-void pixel_engine::KeyboardInputs::OnFrameBegin() noexcept
+void pixel_engine::PEKeyboardInputs::OnFrameBegin() noexcept
 {
 }
 
-void pixel_engine::KeyboardInputs::OnFrameEnd() noexcept
+void pixel_engine::PEKeyboardInputs::OnFrameEnd() noexcept
 {
     std::memset(m_keyPressed,  0, sizeof(m_keyPressed ));
     std::memset(m_keyReleased, 0, sizeof(m_keyReleased));
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::IsKeyPressed(int virtualKey) const noexcept
+bool pixel_engine::PEKeyboardInputs::IsKeyPressed(int virtualKey) const noexcept
 {
 	return IsInside(virtualKey) ? m_keyDown[virtualKey]: false;
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::WasKeyPressed(int virtualKey) const noexcept
+bool pixel_engine::PEKeyboardInputs::WasKeyPressed(int virtualKey) const noexcept
 {
     return IsInside(virtualKey) ? m_keyPressed[virtualKey] : false;
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::WasKeyReleased(int virtualKey) const noexcept
+bool pixel_engine::PEKeyboardInputs::WasKeyReleased(int virtualKey) const noexcept
 {
     return IsInside(virtualKey) ? m_keyReleased[virtualKey] : false;
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::WasChordPressed(int key, const pixel_engine::KeyboardMode& mode) const noexcept
+bool pixel_engine::PEKeyboardInputs::WasChordPressed(int key, const pixel_engine::PEKeyboardMode& mode) const noexcept
 {
     if (!WasKeyPressed(key)) return false;
 
-    if ((mode & pixel_engine::KeyboardMode::Ctrl)   && !IsCtrlPressed())  return false;
-    if ((mode & pixel_engine::KeyboardMode::Shift)  && !IsShiftPressed()) return false;
-    if ((mode & pixel_engine::KeyboardMode::Alt)    && !IsAltPressed())   return false;
-    if ((mode & pixel_engine::KeyboardMode::Super)  && !IsSuperPressed()) return false;
+    if ((mode & pixel_engine::PEKeyboardMode::Ctrl)   && !IsCtrlPressed())  return false;
+    if ((mode & pixel_engine::PEKeyboardMode::Shift)  && !IsShiftPressed()) return false;
+    if ((mode & pixel_engine::PEKeyboardMode::Alt)    && !IsAltPressed())   return false;
+    if ((mode & pixel_engine::PEKeyboardMode::Super)  && !IsSuperPressed()) return false;
 
     return true;
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::WasMultipleKeyPressed(std::initializer_list<int> keys) const noexcept
+bool pixel_engine::PEKeyboardInputs::WasMultipleKeyPressed(std::initializer_list<int> keys) const noexcept
 {
     bool anyPressed = false;
     for (int key : keys) 
@@ -106,7 +106,7 @@ bool pixel_engine::KeyboardInputs::WasMultipleKeyPressed(std::initializer_list<i
     return anyPressed;
 }
 
-void pixel_engine::KeyboardInputs::ClearAll() noexcept
+void pixel_engine::PEKeyboardInputs::ClearAll() noexcept
 {
     std::memset(m_keyPressed,  0, sizeof(m_keyPressed));
     std::memset(m_keyDown,     0, sizeof(m_keyDown));
@@ -114,31 +114,31 @@ void pixel_engine::KeyboardInputs::ClearAll() noexcept
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::IsSetAutoRepeat(LPARAM lParam) noexcept
+bool pixel_engine::PEKeyboardInputs::IsSetAutoRepeat(LPARAM lParam) noexcept
 {
 	return (lParam & (1 << 30)) != 0;
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::IsCtrlPressed() const noexcept
+bool pixel_engine::PEKeyboardInputs::IsCtrlPressed() const noexcept
 {
     return m_keyDown[VK_CONTROL] || m_keyDown[VK_LCONTROL] || m_keyDown[VK_RCONTROL];
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::IsShiftPressed() const noexcept
+bool pixel_engine::PEKeyboardInputs::IsShiftPressed() const noexcept
 {
 	return m_keyDown[VK_SHIFT] || m_keyDown[VK_LSHIFT] || m_keyDown[VK_RSHIFT];
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::IsAltPressed() const noexcept
+bool pixel_engine::PEKeyboardInputs::IsAltPressed() const noexcept
 {
 	return m_keyDown[VK_MENU] || m_keyDown[VK_LMENU] || m_keyDown[VK_RMENU];
 }
 
 _Use_decl_annotations_
-bool pixel_engine::KeyboardInputs::IsSuperPressed() const noexcept
+bool pixel_engine::PEKeyboardInputs::IsSuperPressed() const noexcept
 {
 	return m_keyDown[VK_LWIN] || m_keyDown[VK_RWIN];
 }
