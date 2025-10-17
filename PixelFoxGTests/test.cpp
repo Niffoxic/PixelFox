@@ -1,7 +1,2 @@
 #include "pch.h"
-#include "test_initializer_list.h"
-#include "test_pair.h"
-#include "test_utility.h"
-#include "test_memory.h"
-#include "test_iterator.h"
-#include "test_algorithm.h"
+#include "test_vector.h"
