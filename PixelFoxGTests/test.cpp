@@ -1,7 +1,7 @@
 #include "pch.h"
-
-TEST(TestCaseName, TestName) 
-{
-  EXPECT_EQ(1, 1);
-  EXPECT_TRUE(true);
-}
+#include "test_initializer_list.h"
+#include "test_pair.h"
+#include "test_utility.h"
+#include "test_memory.h"
+#include "test_iterator.h"
+#include "test_algorithm.h"
