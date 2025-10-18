@@ -3,7 +3,7 @@
 #include <sal.h>
 #include "PixelFoxEngineAPI.h"
 
-#include "pixel_engine/system_manager/interface/interface_manager.h"
+#include "pixel_engine/core/interface/interface_manager.h"
 
 #include "inputs/keyboard_inputs.h"
 #include "inputs/mouse_inputs.h"
