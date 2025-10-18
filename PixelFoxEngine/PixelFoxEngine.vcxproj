@@ -172,9 +172,11 @@
     <ClInclude Include="include\pixel_engine\window_manager\PEWindowsManager.h" />
     <ClInclude Include="PixelFoxEngineAPI.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_manager.h" />
+    <ClInclude Include="include\pixel_engine\core\service\service_locator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\logger\logger.cpp" />

@@ -3,6 +3,7 @@
 #include "pixel_engine/core/event/event_queue.h"
 
 #include "pixel_engine/utilities/logger/logger.h"
+#include "pixel_engine/core/service/service_locator.h"
 
 #include "resource.h"
 
@@ -23,7 +24,8 @@ int CALLBACK WinMain(
 {
     try
     {
-        logger::Instance().test_log();
+        FOX_SERVICE_REGISTER_SINGLETON(logger);
+        FOX_SERVICE_FIND(logger)->test_log();
 
         WINDOW_CREATE_DESC desc{};
         desc.Height = 500u;

@@ -146,9 +146,9 @@ namespace pixel_engine
 		}
 
 	private:
-		inline static std::shared_mutex s_mutex{};
-		inline static fox::vector<Deleter> s_deleters{};
-		inline static std::unordered_map<std::type_index, void*> s_services{};
+		static std::shared_mutex						  s_mutex;
+		static fox::vector<Deleter>						  s_deleters;
+		static std::unordered_map<std::type_index, void*> s_services;
 	};
 
 	//~ Helpers
@@ -169,20 +169,20 @@ namespace pixel_engine
 
 // Creates and registers a service owned by ServiceLocator.
 // use it like: auto* rd = SERVICE_CREATE(RenderDevice, hwnd, desc)
-#define SERVICE_CREATE(classname, ...) \
+#define FOX_SERVICE_CREATE(classname, ...) \
     pixel_engine::MakeService<classname>(__VA_ARGS__)
 
 // Registers an existing instance
 // use it like: SERVICE_REIGSTER(FutureServices, &SomeFutureServices)
-#define SERVICE_REIGSTER(classname, instance_ptr) \
+#define FOX_SERVICE_REIGSTER(classname, instance_ptr) \
     pixel_engine::ServiceLocator::RegisterInstance<classname>((instance_ptr), {})
 
 // Returns a pointer to a registered service, or nullptr if not found
 // use it like: auto* rd = SERVICE_FIND(RenderDevice);
-#define SERVICE_FIND(classname) \
+#define FOX_SERVICE_FIND(classname) \
     (pixel_engine::ServiceLocator::Get<classname>())
 
 // Registers a singleton class
 // use it like: SERVICE_REGISTER_SINGLETON(RenderDevice, hwnd, init_desc)
-#define SERVICE_REGISTER_SINGLETON(classname, ...) \
+#define FOX_SERVICE_REGISTER_SINGLETON(classname, ...) \
     pixel_engine::ServiceLocator::RegisterSingleton<classname>(__VA_ARGS__)
