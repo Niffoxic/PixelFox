@@ -6,12 +6,12 @@
 #include <algorithm>
 #include <sal.h>
 
-#include "input_interface.h"
+#include "interface_inputs.h"
 
 namespace pixel_engine
 {
 	static constexpr unsigned int MAX_KEYBOARD_INPUTS = 256u;
-#define _FOX_VK_VALID _In_range_(0, MAX_KEYBOARD_INPUTS - 1)
+#define _FOX_VK_VALID _In_range_(0, MAX_KEYBOARD_INPUTS - 1) _Valid_
 
 	enum PFE_API PEKeyboardMode : uint8_t
 	{
@@ -26,7 +26,7 @@ namespace pixel_engine
 	{
 	public:
 		 PEKeyboardInputs() noexcept;
-		~PEKeyboardInputs() = default;
+		~PEKeyboardInputs() noexcept override = default;
 
 		//~ No Copy or Move
 		PEKeyboardInputs(_In_ const PEKeyboardInputs&) = delete;

@@ -5,7 +5,7 @@
 #include <Windows.h>
 
 #include "core/vector.h"
-#include "input_interface.h"
+#include "interface_inputs.h"
 
 namespace pixel_engine
 {
@@ -13,7 +13,7 @@ namespace pixel_engine
 	{
 	public:
 		 PEMouseInputs();
-		~PEMouseInputs() = default;
+		~PEMouseInputs() noexcept override = default;
 
 		void AttachWindowHandle(_In_ HWND hWnd);
 
@@ -43,11 +43,11 @@ namespace pixel_engine
 		{ dx = m_nRawDeltaX; dy = m_nRawDeltaY; }
 
 		_NODISCARD _Check_return_ __forceinline
-		bool IsMouseButtonPressed(_In_range_(type >= 0 && type < 3) int type) const
+		bool IsMouseButtonPressed(_In_range_(0, 2) _Valid_ int type) const
 		{ return (type >= 0 && type < 3) ? m_bButtonDown[type] : false; }
 		
 		_NODISCARD _Check_return_ __forceinline
-		bool WasButtonPressed	 (_In_range_(type >= 0 && type < 3) int type) const
+		bool WasButtonPressed	 (_In_range_(0, 2) _Valid_ int type) const
 		{ return (type >= 0 && type < 3) ? m_bButtonPressed[type] : false; }
 		
 		_NODISCARD _Check_return_ __forceinline
