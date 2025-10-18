@@ -24,7 +24,37 @@
     <ClInclude Include="PixelFoxEngineAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestEngine.h">
+    <ClInclude Include="include\pixel_engine\PixelEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\window_manager\PEWindowsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\window_manager\inputs\mouse_inputs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\window_manager\inputs\interface_inputs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\system_manager\interface\interface_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\utilities\id_allocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\utilities\hash_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\exceptions\base_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\exceptions\win_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\system_manager\event\event_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,7 +65,16 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestEngine.cpp">
+    <ClCompile Include="include\pixel_engine\PixelEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\window_manager\PEWindowsManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

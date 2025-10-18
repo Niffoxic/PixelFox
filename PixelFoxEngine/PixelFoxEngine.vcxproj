@@ -114,11 +114,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;PIXELFOXENGINE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;PIXELFOXENGINE_EXPORTS;_WINDOWS;_USRDLL;NOMINMAX;_WINDLL</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,11 +137,12 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;PIXELFOXENGINE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;PIXELFOXENGINE_EXPORTS;_WINDOWS;_USRDLL;_WINDLL;NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,19 +156,32 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="include\pixel_engine\exceptions\win_exception.h" />
+    <ClInclude Include="include\pixel_engine\system_manager\event\event_queue.h" />
+    <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
+    <ClInclude Include="include\pixel_engine\utilities\id_allocator.h" />
+    <ClInclude Include="include\pixel_engine\system_manager\interface\interface_manager.h" />
+    <ClInclude Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.h" />
+    <ClInclude Include="include\pixel_engine\window_manager\inputs\mouse_inputs.h" />
+    <ClInclude Include="include\pixel_engine\window_manager\inputs\interface_inputs.h" />
+    <ClInclude Include="include\pixel_engine\exceptions\base_exception.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="include\pixel_engine\PixelEngine.h" />
+    <ClInclude Include="include\pixel_engine\window_manager\PEWindowsManager.h" />
     <ClInclude Include="PixelFoxEngineAPI.h" />
-    <ClInclude Include="TestEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
+    <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TestEngine.cpp" />
+    <ClCompile Include="include\pixel_engine\PixelEngine.cpp" />
+    <ClCompile Include="include\pixel_engine\window_manager\PEWindowsManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
