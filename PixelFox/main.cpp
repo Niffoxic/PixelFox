@@ -1,4 +1,9 @@
 #include "pixel_engine/window_manager/PEWindowsManager.h"
+#include "pixel_engine/exceptions/base_exception.h"
+
+#include "resource.h"
+
+//~ Only Tests for now
 
 using namespace pixel_engine;
 
@@ -8,23 +13,48 @@ int CALLBACK WinMain(
     _In_ LPSTR         lpCmdLine,
     _In_ int           nCmdShow)
 {
-    PEWindowsManager windowsManager{};
-
-    if (!windowsManager.OnInit())
+    try
     {
-        MessageBox(nullptr, "Failed to initialize PEWindowsManager.", "PixelFox Error", MB_ICONERROR);
+        WINDOW_CREATE_DESC desc{};
+        desc.Height = 500u;
+        desc.Width = 800u;
+        desc.IconId = IDI_ICON1;
+        desc.WindowTitle = "PixelFox";
+
+        PEWindowsManager windowsManager{ desc };
+
+        if (!windowsManager.OnInit())
+        {
+            MessageBox(nullptr, "Failed to initialize PEWindowsManager.", "PixelFox Error", MB_ICONERROR);
+            return EXIT_FAILURE;
+        }
+
+        MSG msg = { };
+        while (msg.message != WM_QUIT)
+        {
+            if (PEWindowsManager::ProcessMessage())
+                return S_OK;
+
+            windowsManager.OnLoopStart(0.0f);
+            windowsManager.OnLoopEnd();
+        }
+
+        windowsManager.OnRelease();
+        return S_OK;
+    }
+    catch (const pixel_engine::BaseException& ex)
+    {
+        MessageBox(nullptr, ex.what(), "PixelFox Exception", MB_ICONERROR | MB_OK);
         return EXIT_FAILURE;
     }
-
-    // Main message loop
-    MSG msg = {};
-    while (msg.message != WM_QUIT)
+    catch (const std::exception& ex)
     {
-        if (PEWindowsManager::ProcessMessage()) return S_OK;
-        windowsManager.OnLoopStart(0.0f);
-        windowsManager.OnLoopEnd();
+        MessageBox(nullptr, ex.what(), "Standard Exception", MB_ICONERROR | MB_OK);
+        return EXIT_FAILURE;
     }
-
-    windowsManager.OnRelease();
-    return S_OK;
+    catch (...)
+    {
+        MessageBox(nullptr, "Unknown fatal error occurred.", "PixelFox Crash", MB_ICONERROR | MB_OK);
+        return EXIT_FAILURE;
+    }
 }

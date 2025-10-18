@@ -1,5 +1,8 @@
 #pragma once
+
+#include <sal.h>
 #include "PixelFoxEngineAPI.h"
+
 #include "pixel_engine/system_manager/interface/interface_manager.h"
 
 #include "inputs/keyboard_inputs.h"
@@ -10,25 +13,26 @@ namespace pixel_engine
 	typedef struct _WINDOW_CREATE_DESC
 	{
 		std::string WindowTitle;
-		UINT		Width;
-		UINT		Height;
+		_Field_range_(100, 1920) UINT Width;
+		_Field_range_(100, 1080) UINT Height;
+		_Field_range_(100, 200)  UINT IconId;
 	} PFE_API WINDOW_CREATE_DESC;
 
 	class PFE_API PEWindowsManager final: public IManager
 	{
 	public:
 		PEWindowsManager() = default;
-		explicit PEWindowsManager(const WINDOW_CREATE_DESC& desc);
+		explicit PEWindowsManager(_In_ const WINDOW_CREATE_DESC& desc);
 		~PEWindowsManager() override;
 
-		PEWindowsManager(const PEWindowsManager&) = delete;
-		PEWindowsManager(PEWindowsManager&&) = delete;
+		PEWindowsManager(_In_ const PEWindowsManager&) = delete;
+		PEWindowsManager(_Inout_ PEWindowsManager&&) = delete;
 
-		PEWindowsManager& operator=(const PEWindowsManager&) = delete;
-		PEWindowsManager& operator=(PEWindowsManager&&) = delete;
+		PEWindowsManager& operator=(_In_ const PEWindowsManager&) = delete;
+		PEWindowsManager& operator=(_Inout_ PEWindowsManager&&) = delete;
 
 		// if returns true means the system gotta shutdown now
-		static bool ProcessMessage();
+		_NODISCARD _Check_return_ static bool ProcessMessage();
 
 		PEKeyboardInputs Keyboard{};
 		PEMouseInputs	 Mouse{};
@@ -40,31 +44,53 @@ namespace pixel_engine
 		_NODISCARD _Check_return_ __forceinline
 		std::string GetManagerName() const override { return "WindowsManager"; }
 
-		void OnLoopStart(float deltaTime) override;
+		void OnLoopStart(_In_ float deltaTime) override;
 		void OnLoopEnd() override;
 
 		//~ Queries
-		HWND GetWindowsHandle() const;
-		HINSTANCE GetWindowsInstance() const;
-
-		bool IsFullScreen() const { return m_bFullScreen; }
-		void SetFullScreen(bool flag);
-
-		float GetAspectRatio() const;
+		_NODISCARD _Ret_maybenull_ HWND		 GetWindowsHandle  () const;
+		_NODISCARD _Ret_maybenull_ HINSTANCE GetWindowsInstance() const;
 		
-		int GetWindowsWidth() const  { return m_nWindowsWidth; }
+		_NODISCARD _Check_return_ __forceinline
+		bool IsFullScreen() const { return m_bFullScreen; }
+		
+		void SetFullScreen(_In_ bool flag);
+
+		_NODISCARD _Check_return_ float GetAspectRatio() const;
+		
+		_NODISCARD _Check_return_ __forceinline
+		int GetWindowsWidth () const { return m_nWindowsWidth; }
+		_NODISCARD _Check_return_ __forceinline
 		int GetWindowsHeight() const { return m_nWindowsHeight; }
 
-		void SetWindowTitle(const std::string& title) const;
+		void SetWindowTitle(_In_ const std::string& title) const;
 
 	private:
+		_NODISCARD _Check_return_ _Must_inspect_result_
+		_Success_(return != 0)
 		bool InitWindowScreen();
 		
-		LRESULT MessageHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+		_NODISCARD
+		LRESULT MessageHandler(
+			_In_ HWND   hwnd,
+			_In_ UINT   msg,
+			_In_ WPARAM wParam,
+			_In_ LPARAM lParam);
 
-		static LRESULT CALLBACK WindowProcSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-		static LRESULT CALLBACK WindowProcThunk(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	
+		_Function_class_(WINDOWS_CALLBACK)
+		static LRESULT CALLBACK WindowProcSetup(
+			_In_ HWND   hwnd,
+			_In_ UINT   msg,
+			_In_ WPARAM wParam,
+			_In_ LPARAM lParam);
+
+		_Function_class_(WINDOWS_CALLBACK)
+		static LRESULT CALLBACK WindowProcThunk(
+			_In_ HWND   hwnd,
+			_In_ UINT   msg,
+			_In_ WPARAM wParam,
+			_In_ LPARAM lParam);
+
 		void TransitionToFullScreen();
 		void TransitionToWindowedScreen() const;
 
@@ -77,5 +103,6 @@ namespace pixel_engine
 		HINSTANCE		m_pWindowsInstance{				nullptr			};
 		bool			m_bFullScreen	  {				false			};
 		WINDOWPLACEMENT m_WindowPlacement { sizeof(m_WindowPlacement)	};
+		UINT			m_nIconID		  {				0u				};
 	};
 } // namespace pixel_engine
