@@ -1,6 +1,6 @@
 #include "pixel_engine/window_manager/PEWindowsManager.h"
 #include "pixel_engine/exceptions/base_exception.h"
-#include "pixel_engine/system_manager/event/event_queue.h"
+#include "pixel_engine/core/event/event_queue.h"
 
 #include "pixel_engine/utilities/logger/logger.h"
 

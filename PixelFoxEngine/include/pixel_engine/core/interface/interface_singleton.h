@@ -7,8 +7,13 @@
 #include <type_traits>
 #include <cassert>
 
-namespace pixel_engine {
-
+namespace pixel_engine
+{
+    /// <summary>
+    /// Generic Singleton interface for all the services
+    /// </summary>
+    /// <typeparam name="T"> Service typename </typeparam>
+    /// <typeparam name="LeakOnExit"> true: leak it on purpose </typeparam>
     template<class T, bool LeakOnExit = false>
     class ISingleton
     {

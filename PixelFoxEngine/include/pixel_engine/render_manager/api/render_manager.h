@@ -1,6 +1,6 @@
 #pragma once
 #include "PixelFoxEngineAPI.h"
-#include "pixel_engine/system_manager/interface/interface_manager.h"
+#include "pixel_engine/core/interface/interface_manager.h"
 
 
 namespace pixel_engine

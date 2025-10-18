@@ -4,7 +4,7 @@
 #include <sal.h>
 #include <windows.h>
 
-#include "pixel_engine/system_manager/interface/interface_singleton.h"
+#include "pixel_engine/core/interface/interface_singleton.h"
 
 namespace pixel_engine
 {
