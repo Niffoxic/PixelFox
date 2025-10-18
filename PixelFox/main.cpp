@@ -1,11 +1,17 @@
 #include "pixel_engine/window_manager/PEWindowsManager.h"
 #include "pixel_engine/exceptions/base_exception.h"
+#include "pixel_engine/system_manager/event/event_queue.h"
 
 #include "resource.h"
 
 //~ Only Tests for now
 
 using namespace pixel_engine;
+
+struct WindowResizedEvent 
+{
+    std::string message;
+};
 
 int CALLBACK WinMain(
     _In_ HINSTANCE     hInstance,
@@ -29,14 +35,22 @@ int CALLBACK WinMain(
             return EXIT_FAILURE;
         }
 
-        MSG msg = { };
-        while (msg.message != WM_QUIT)
+        auto subA = EventQueue::Subscribe<WindowResizedEvent>([](const WindowResizedEvent& event)
+        {
+            MessageBox(nullptr, event.message.c_str(), "Mesage", MB_OK);
+        });
+
+        EventQueue::Post(WindowResizedEvent{ "Is It woking?" });
+
+        while (true)
         {
             if (PEWindowsManager::ProcessMessage())
                 return S_OK;
 
             windowsManager.OnLoopStart(0.0f);
             windowsManager.OnLoopEnd();
+
+            EventQueue::DispatchAll();
         }
 
         windowsManager.OnRelease();

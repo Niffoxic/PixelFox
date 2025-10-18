@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="include\pixel_engine\exceptions\win_exception.h" />
+    <ClInclude Include="include\pixel_engine\system_manager\event\event_queue.h" />
     <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
     <ClInclude Include="include\pixel_engine\utilities\id_allocator.h" />
     <ClInclude Include="include\pixel_engine\system_manager\interface\interface_manager.h" />
