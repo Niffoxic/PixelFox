@@ -57,6 +57,15 @@
     <ClInclude Include="include\pixel_engine\system_manager\event\event_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\api\render_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\utilities\logger\logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\system_manager\interface\interface_singleton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -75,6 +84,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\api\render_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\utilities\logger\logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

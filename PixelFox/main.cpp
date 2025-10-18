@@ -2,6 +2,8 @@
 #include "pixel_engine/exceptions/base_exception.h"
 #include "pixel_engine/system_manager/event/event_queue.h"
 
+#include "pixel_engine/utilities/logger/logger.h"
+
 #include "resource.h"
 
 //~ Only Tests for now
@@ -21,6 +23,8 @@ int CALLBACK WinMain(
 {
     try
     {
+        logger::Instance().test_log();
+
         WINDOW_CREATE_DESC desc{};
         desc.Height = 500u;
         desc.Width = 800u;

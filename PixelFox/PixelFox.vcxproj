@@ -124,6 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxEngine\include;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -148,6 +149,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxPhysics;$(SolutionDir)PixelFoxCore;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
