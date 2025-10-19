@@ -283,7 +283,7 @@ namespace fox
             return true;
         }
 
-        _Must_inspect_result_ bool insert_or_assign(_In_ Key&& key, _In_ T&& value)
+        bool insert_or_assign(_In_ Key&& key, _In_ T&& value)
         {
             grow_if_needed();
             const size_type idx = index_of(key);
@@ -345,6 +345,7 @@ namespace fox
             node* n = static_cast<node*>(::operator new(sizeof(node)));
             ::new (&n->key) Key(std::move(key));
             ::new (&n->value) T(std::forward<Args>(args)...);
+            
             n->next = m_buckets[idx];
             m_buckets[idx] = n;
             ++m_size;
