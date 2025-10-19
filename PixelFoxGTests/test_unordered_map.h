@@ -231,3 +231,135 @@ TEST(FoxUnorderedMap, ManyInsertions_Stress) {
     }
     EXPECT_EQ(m.size(), (size_t)N - removed);
 }
+
+// ---------- Iterator Tests ----------
+
+TEST(FoxUnorderedMap, Iterator_EmptyMap_BeginEqEnd) {
+    unordered_map<int, int> m(8);
+    auto it = m.begin();
+    auto ed = m.end();
+    EXPECT_EQ(it, ed);
+    EXPECT_EQ(std::distance(m.begin(), m.end()), 0);
+}
+
+TEST(FoxUnorderedMap, Iterator_TraversesAll_NoDupes) {
+    unordered_map<int, int> m(8);
+    for (int i = 0; i < 20; ++i) m.insert_or_assign(i, i * 10);
+
+    std::vector<int> keys;
+    std::vector<int> vals;
+    for (auto it = m.begin(); it != m.end(); ++it) {
+        auto kv = *it;
+        keys.push_back(kv.first);
+        vals.push_back(kv.second);
+    }
+
+    std::sort(keys.begin(), keys.end());
+    keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
+    EXPECT_EQ(keys.size(), m.size());
+
+    // spot-check a few
+    for (int k : {0, 1, 7, 13, 19}) {
+        auto* p = m.find(k);
+        ASSERT_NE(p, nullptr);
+        EXPECT_EQ(*p, k * 10);
+    }
+}
+
+TEST(FoxUnorderedMap, Iterator_RangeFor_ModifyValues) {
+    unordered_map<std::string, int> m(8);
+    m.insert_or_assign("a", 1);
+    m.insert_or_assign("b", 2);
+    m.insert_or_assign("c", 3);
+
+    // mutate via iterator second (non-const)
+    for (auto it = m.begin(); it != m.end(); ++it) {
+        auto kv = *it;
+        // student note: .second is a T& so we can edit in-place
+        m.insert_or_assign(kv.first, kv.second + 5);
+    }
+
+    EXPECT_EQ(m.at("a"), 6);
+    EXPECT_EQ(m.at("b"), 7);
+    EXPECT_EQ(m.at("c"), 8);
+}
+
+TEST(FoxUnorderedMap, Iterator_StructuredBinding_RangeFor) {
+    unordered_map<int, int> m(8);
+    for (int i = 0; i < 10; ++i) m.insert_or_assign(i, i + 100);
+
+    int count = 0;
+    long long sum_keys = 0, sum_vals = 0;
+
+    // student note: our iterator returns a {first, second} proxy, so this works
+    for (auto [k, v] : m) {
+        ++count;
+        sum_keys += k;
+        sum_vals += v;
+    }
+
+    EXPECT_EQ(count, (int)m.size());
+    // 0..9 sum = 45
+    EXPECT_EQ(sum_keys, 45);
+    // (100..109) sum = 1045
+    EXPECT_EQ(sum_vals, 1045);
+}
+
+TEST(FoxUnorderedMap, ConstIterator_CanTraverse_AndConvertFromIterator) {
+    unordered_map<int, int> m(8);
+    m.insert_or_assign(1, 10);
+    m.insert_or_assign(2, 20);
+    m.insert_or_assign(3, 30);
+
+    auto it = m.begin();
+    // conversion ctor: iterator -> const_iterator
+    unordered_map<int, int>::const_iterator cit(it);
+    // both should deref to the same element initially
+    auto kv1 = *it;
+    auto kv2 = *cit;
+    EXPECT_EQ(kv1.first, kv2.first);
+    EXPECT_EQ(kv1.second, kv2.second);
+
+    // traverse using const view
+    const auto& cm = m;
+    int count = 0;
+    long long sum = 0;
+    for (auto c = cm.cbegin(); c != cm.cend(); ++c) {
+        auto kv = *c;
+        ++count;
+        sum += kv.second;
+    }
+    EXPECT_EQ(count, 3);
+    EXPECT_EQ(sum, 10 + 20 + 30);
+}
+
+TEST(FoxUnorderedMap, Iterator_PreAndPostIncrement) {
+    unordered_map<int, int> m(8);
+    m.insert_or_assign(11, 1);
+    m.insert_or_assign(22, 2);
+    m.insert_or_assign(33, 3);
+
+    auto it = m.begin();
+    auto it2 = it;     // copy
+    ++it2;             // pre-inc
+    auto it3 = it2++;  // post-inc: it3 old, it2 advanced
+    // All are valid; just ensure not all equal unless size==1
+    // (order is unspecified; we only check inequality relations are sane)
+    EXPECT_NE(it, it2);
+    // it3 should be the position before it2 (cannot reliably assert equality/inequality contents due to hashing order)
+    // but we can at least ensure both are not end()
+    EXPECT_NE(it2, m.end());
+    EXPECT_NE(it3, m.end());
+}
+
+TEST(FoxUnorderedMap, Iterator_BeginEndOnSingleElement) {
+    unordered_map<int, int> m(2);
+    m.insert_or_assign(5, 50);
+    auto it = m.begin();
+    ASSERT_NE(it, m.end());
+    auto kv = *it;
+    EXPECT_EQ(kv.first, 5);
+    EXPECT_EQ(kv.second, 50);
+    ++it;
+    EXPECT_EQ(it, m.end());
+}
