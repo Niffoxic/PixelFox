@@ -10,7 +10,7 @@ void DependencyResolver::Register(IManager* instance)
 {
     if (instance && !m_registeredManagers.contains(instance))
     {
-        m_registeredManagers.insert_or_assign(instance, true);
+        m_registeredManagers[instance] = true;
     }
 }
 
@@ -62,28 +62,20 @@ _Use_decl_annotations_
 bool DependencyResolver::UpdateLoopStart(float deltaTime) const
 {
     static bool first_update = true;
-    if (first_update) logger::debug("Update Loop Start!");
+    if (first_update) { logger::debug("Update Loop Start!"); }
 
-    const std::size_t n = m_initOrder.size();
-    if (n == 0) return true;
+    if (m_initOrder.empty()) { return true; }
 
-    IManager** arr = new IManager * [n];
+    for (auto it = m_initOrder.begin(); it != m_initOrder.end(); ++it)
     {
-        std::size_t idx = 0;
-        for (auto it = m_initOrder.begin(); it != m_initOrder.end(); ++it, ++idx)
-            arr[idx] = *it;
-    }
-
-    for (std::size_t i = n; i-- > 0; )
-    {
+        IManager* mgr = *it;
         if (first_update)
         {
-            logger::debug("Updating: {}", arr[i]->GetManagerName());
+            logger::debug("Updating (start): {}", mgr->GetManagerName());
         }
-        arr[i]->OnLoopStart(deltaTime);
+        mgr->OnLoopStart(deltaTime);
     }
 
-    delete[] arr;
     first_update = false;
     return true;
 }
@@ -91,53 +83,44 @@ bool DependencyResolver::UpdateLoopStart(float deltaTime) const
 bool DependencyResolver::UpdateLoopEnd() const
 {
     static bool first_update = true;
-    if (first_update) logger::debug("Update Loop End!");
+    if (first_update) { logger::debug("Update Loop End!"); }
 
-    const std::size_t n = m_initOrder.size();
-    if (n == 0) return true;
+    if (m_initOrder.empty()) { return true; }
 
-    IManager** arr = new IManager * [n];
+    for (auto it = m_initOrder.rbegin(); it != m_initOrder.rend(); ++it)
     {
-        std::size_t idx = 0;
-        for (auto it = m_initOrder.begin(); it != m_initOrder.end(); ++it, ++idx)
-            arr[idx] = *it;
-    }
-
-    for (std::size_t i = n; i-- > 0; )
-    {
+        IManager* mgr = *it;
         if (first_update)
         {
-            logger::debug("Updating: {}", arr[i]->GetManagerName());
+            logger::debug("Updating (end): {}", mgr->GetManagerName());
         }
-        arr[i]->OnLoopEnd();
+        mgr->OnLoopEnd();
     }
 
-    delete[] arr;
     first_update = false;
     return true;
 }
 
 bool DependencyResolver::Shutdown()
 {
-    bool ok = true;
-    if (m_initOrder.empty()) return true;
+    bool flag = true;
+    if (m_initOrder.empty()) { return true; }
 
-    fox::list<IManager*> rev; // TODO: add reverse iterator on list
-    for (IManager* mgr : m_initOrder) rev.push_front(mgr);
-    
-
-    for (IManager* mgr : rev)
+    for (auto it = m_initOrder.rbegin(); it != m_initOrder.rend(); ++it)
     {
+        IManager* mgr = *it;
         if (!mgr) { continue; }
+
         const auto name = mgr->GetManagerName();
+        
         if (!mgr->OnRelease())
         {
-            ok = false;
+            flag = false;
             logger::error("Failed to properly destroy: {}", name);
         }
     }
 
-    return ok;
+    return flag;
 }
 
 fox::list<IManager*> DependencyResolver::GraphSort()
