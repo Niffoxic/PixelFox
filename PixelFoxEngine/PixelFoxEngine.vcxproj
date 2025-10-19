@@ -164,7 +164,7 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_manager.h" />
     <ClInclude Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.h" />
     <ClInclude Include="include\pixel_engine\window_manager\inputs\mouse_inputs.h" />
-    <ClInclude Include="include\pixel_engine\window_manager\inputs\interface_inputs.h" />
+    <ClInclude Include="include\pixel_engine\core\interface\interface_inputs.h" />
     <ClInclude Include="include\pixel_engine\exceptions\base_exception.h" />
     <ClInclude Include="include\pixel_engine\utilities\logger\logger.h" />
     <ClInclude Include="pch.h" />

@@ -5,7 +5,7 @@
 #include <Windows.h>
 
 #include "core/vector.h"
-#include "interface_inputs.h"
+#include "pixel_engine/core/interface/interface_inputs.h"
 
 namespace pixel_engine
 {
