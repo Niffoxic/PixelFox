@@ -2,10 +2,11 @@
 
 #include "PixelFoxEngineAPI.h"
 
+#include "pixel_engine/utilities/logger/logger.h"
 #include "pixel_engine/core/interface/interface_manager.h"
 
 #include "core/unordered_map.h"
-#include "core/vector.h"
+#include "core/list.h"
 
 #include <string>
 #include <sal.h>
@@ -27,7 +28,7 @@ namespace pixel_engine
 		DependencyResolver(_Inout_ DependencyResolver&&)   = delete;
 
 		DependencyResolver& operator=(_In_ const DependencyResolver&)    = delete;
-		DependencyResolver& operator=(_Inout_ const DependencyResolver&) = delete;
+		DependencyResolver& operator=(_Inout_ DependencyResolver&&)      = delete;
 
 		//~ Features
 		void Register(_In_opt_ IManager* instance);
@@ -39,26 +40,27 @@ namespace pixel_engine
 		bool UpdateLoopEnd  () const;
 		bool Shutdown		();
 
-		template<typename...Args>
-		void AddDependency(_In_ IManager* late, _In_opt_ Args&&...early)
+		template<typename... Args>
+		void AddDependency(_In_ IManager* late, _In_opt_ Args... early)
 		{
-			(m_connections.insert_or_assign(late, early)...);
+			auto& deps = m_connections[late];
+			((early ? deps.push_front(early) : void()), ...);
 		}
 
 	private:
-		fox::vector<IManager*> GraphSort();
+		fox::list<IManager*> GraphSort();
 
 		void GraphDFS(
-			_In_ const IManager*						 node,
+			_In_	IManager*							 node,
 			_Inout_ fox::unordered_map<IManager*, bool>& visited,
 			_Inout_ fox::unordered_map<IManager*, bool>& stack,
-			_In_ fox::vector<IManager*>					 sorted
+			_Inout_ fox::list<IManager*>&				 sorted
 		);
 
 	private:
-		fox::unordered_map<IManager*, bool>					 m_registeredManagers{};
-		fox::unordered_map<IManager*, fox::vector<IManager>> m_connections		 {};
-		fox::vector<IManager*>								 m_managerNames		 {};
-		fox::vector<IManager*>								 m_initOrder		 {};
+		fox::unordered_map<IManager*, bool>					  m_registeredManagers{};
+		fox::unordered_map<IManager*, fox::list<IManager*>>   m_connections		  {};
+		fox::list<IManager*>								  m_managerNames	  {};
+		fox::list<IManager*>								  m_initOrder		   {};
 	};
 } // namespace pixel_engine

@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
 #include "pch.h"
-#include "PEWindowsManager.h"
+#include "windows_manager.h"
 
 #include "pixel_engine/exceptions/win_exception.h"
 
