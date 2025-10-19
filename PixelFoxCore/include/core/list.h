@@ -33,6 +33,13 @@ namespace fox
 
 	public:
 		list() noexcept  = default;
+
+		_NODISCARD bool empty() const 
+		{
+			return m_nSize == 0 || m_pHead == 0;
+		}
+
+		_NODISCARD size_t size() const { return m_nSize; }
 		
 		//~ copy and move
 		list(_In_ const list& other)
@@ -208,5 +215,24 @@ namespace fox
 			friend bool operator==(_In_ const const_iterator& a, _In_ const const_iterator& b) noexcept { return a.n == b.n; }
 			friend bool operator!=(_In_ const const_iterator& a, _In_ const const_iterator& b) noexcept { return a.n != b.n; }
 		};
+
+		_NODISCARD iterator		  begin ()		 noexcept { return iterator(m_pHead);		}
+		_NODISCARD iterator		  end   ()		 noexcept { return iterator(nullptr);		}
+		_NODISCARD const_iterator begin () const noexcept { return const_iterator(m_pHead); }
+		_NODISCARD const_iterator end   () const noexcept { return const_iterator(nullptr); }
+		_NODISCARD const_iterator cbegin() const noexcept { return const_iterator(m_pHead); }
+		_NODISCARD const_iterator cend  () const noexcept { return const_iterator(nullptr); }
+
+		_Ret_notnull_ T& front() noexcept
+		{
+			assert(m_pHead && "list::front() called on empty list");
+			return m_pHead->value;
+		}
+
+		_Ret_notnull_ const T& front() const noexcept
+		{
+			assert(m_pHead && "list::front() called on empty list");
+			return m_pHead->value;
+		}
 	};
 }

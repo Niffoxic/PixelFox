@@ -27,7 +27,7 @@
     <ClInclude Include="include\pixel_engine\PixelEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\window_manager\PEWindowsManager.h">
+    <ClInclude Include="include\pixel_engine\window_manager\windows_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.h">
@@ -57,7 +57,7 @@
     <ClInclude Include="include\pixel_engine\core\event\event_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\render_manager\api\render_manager.h">
+    <ClInclude Include="include\pixel_engine\render_manager\render_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\utilities\logger\logger.h">
@@ -67,6 +67,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\core\service\service_locator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\dependency\dependency_resolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -80,7 +83,7 @@
     <ClCompile Include="include\pixel_engine\PixelEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\pixel_engine\window_manager\PEWindowsManager.cpp">
+    <ClCompile Include="include\pixel_engine\window_manager\windows_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp">
@@ -89,13 +92,16 @@
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\pixel_engine\render_manager\api\render_manager.cpp">
+    <ClCompile Include="include\pixel_engine\render_manager\render_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\utilities\logger\logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

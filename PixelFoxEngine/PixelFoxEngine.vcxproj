@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="include\pixel_engine\core\dependency\dependency_resolver.h" />
     <ClInclude Include="include\pixel_engine\exceptions\win_exception.h" />
     <ClInclude Include="include\pixel_engine\core\event\event_queue.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_singleton.h" />
@@ -169,13 +170,14 @@
     <ClInclude Include="include\pixel_engine\utilities\logger\logger.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="include\pixel_engine\PixelEngine.h" />
-    <ClInclude Include="include\pixel_engine\window_manager\PEWindowsManager.h" />
+    <ClInclude Include="include\pixel_engine\window_manager\windows_manager.h" />
     <ClInclude Include="PixelFoxEngineAPI.h" />
-    <ClInclude Include="include\pixel_engine\render_manager\api\render_manager.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\render_manager.h" />
     <ClInclude Include="include\pixel_engine\core\service\service_locator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp" />
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />
@@ -187,8 +189,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\PixelEngine.cpp" />
-    <ClCompile Include="include\pixel_engine\window_manager\PEWindowsManager.cpp" />
-    <ClCompile Include="include\pixel_engine\render_manager\api\render_manager.cpp" />
+    <ClCompile Include="include\pixel_engine\window_manager\windows_manager.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\render_manager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

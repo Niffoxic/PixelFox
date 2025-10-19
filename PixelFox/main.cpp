@@ -1,9 +1,13 @@
-#include "pixel_engine/window_manager/PEWindowsManager.h"
+#include "pixel_engine/window_manager/windows_manager.h"
+#include "pixel_engine/render_manager/render_manager.h"
+
 #include "pixel_engine/exceptions/base_exception.h"
-#include "pixel_engine/core/event/event_queue.h"
 
 #include "pixel_engine/utilities/logger/logger.h"
+
 #include "pixel_engine/core/service/service_locator.h"
+#include "pixel_engine/core/event/event_queue.h"
+#include "pixel_engine/core/dependency/dependency_resolver.h"
 
 #include "resource.h"
 
@@ -75,15 +79,6 @@ int CALLBACK WinMain(
         }
         logger::progress_end(1, true);
 
-        std::thread worker([] 
-        {
-            logger::info(logger_config::LogCategory::System, "background job start");
-            logger::push_scope("Job");
-            logger::debug("doing things {}", 123);
-            logger::pop_scope();
-        });
-        worker.join();
-
         WINDOW_CREATE_DESC desc{};
         desc.Height      = 500u;
         desc.Width       = 800u;
@@ -91,12 +86,16 @@ int CALLBACK WinMain(
         desc.WindowTitle = "PixelFox";
 
         PEWindowsManager windowsManager{ desc };
+        PERenderManager renderManager{};
 
-        if (!windowsManager.OnInit())
-        {
-            MessageBox(nullptr, "Failed to initialize PEWindowsManager.", "PixelFox Error", MB_ICONERROR);
-            return EXIT_FAILURE;
-        }
+
+        DependencyResolver resolver{};
+        resolver.Register(&renderManager);
+        resolver.Register(&windowsManager);
+
+        resolver.AddDependency(&renderManager, &windowsManager);
+
+        resolver.Init();
 
         auto subA = EventQueue::Subscribe<WindowResizedEvent>([](const WindowResizedEvent& event)
         {
@@ -114,8 +113,8 @@ int CALLBACK WinMain(
         {
             if (PEWindowsManager::ProcessMessage()) return S_OK;
 
-            windowsManager.OnLoopStart(0.0f);
-            windowsManager.OnLoopEnd();
+            resolver.UpdateLoopStart(0.0f);
+            resolver.UpdateLoopEnd();
 
             EventQueue::DispatchAll();
 
@@ -123,7 +122,7 @@ int CALLBACK WinMain(
             logger::set_frame_index(++fi);
         }
 
-        windowsManager.OnRelease();
+        resolver.Shutdown();
         logger::close();
         return S_OK;
     }

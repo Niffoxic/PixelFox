@@ -262,7 +262,9 @@ namespace fox
             }
         }
 
-        _Must_inspect_result_ bool insert_or_assign(_In_ const Key& key, _In_ const T& value)
+        _Must_inspect_result_ bool insert_or_assign(
+            _In_ const Key& key,
+            _In_ const T& value)
         {
             grow_if_needed();
             const size_type idx = index_of(key);
@@ -353,7 +355,7 @@ namespace fox
             return n->value;
         }
 
-        _Must_inspect_result_ bool erase(_In_ const Key& key) noexcept
+        bool erase(_In_ const Key& key) noexcept
         {
             const size_type idx = index_of(key);
             node** link = &m_buckets[idx];
