@@ -14,17 +14,17 @@
 namespace fox
 {
 	template<class T>
-	class PFC_API list
+	class list
 	{
 		struct node
 		{
 			T	  value;
-			node* next;
+			node* next{ nullptr };
 
 			template<class...Args>
 			explicit node(_In_ Args&&... args)
 				noexcept(std::is_nothrow_constructible_v<T, Args...>)
-			: value(std::forward<Args>(args)...)
+			: value(std::forward<Args>(args)...), next(nullptr)
 			{}
 		};
 
@@ -102,7 +102,7 @@ namespace fox
 			clear();
 		}
 
-		void clear()
+		void clear() noexcept
 		{
 			node* left = m_pHead;
 			while (left)
@@ -111,7 +111,6 @@ namespace fox
 				delete left;
 				left = next;
 			}
-
 			m_pHead = nullptr;
 			m_nSize = 0;
 		}
@@ -176,7 +175,7 @@ namespace fox
 			using reference			= T&;
 
 					 iterator()				   noexcept = default;
-			explicit iterator(_In_opt node* x) noexcept : n(x) {}
+			explicit iterator(_In_opt_ node* x) noexcept : n(x) {}
 
 			reference operator* () const noexcept { return n->value;						 }
 			pointer   operator->() const noexcept { return &n->value;						 }
@@ -198,7 +197,7 @@ namespace fox
 			using reference				= const T&;
 
 					 const_iterator()					     noexcept = default;
-			explicit const_iterator(_In_opt const node* x)	 noexcept : n(x) {}
+			explicit const_iterator(_In_opt_ const node* x)	 noexcept : n(x) {}
 					 const_iterator(_In_ const iterator& it) noexcept : n(it.n) {}
 
 			reference		operator* () const noexcept	{ return n->value;								 }

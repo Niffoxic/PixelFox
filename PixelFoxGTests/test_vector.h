@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "core/vector.h"
 
 #include <array>
