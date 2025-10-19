@@ -436,5 +436,207 @@ namespace fox
             
             return *v;
         }
+
+        class const_iterator;
+
+        class iterator
+        {
+            // let const_iterator peek inside (needed for converting)
+            friend class unordered_map::const_iterator;
+            using map_t = unordered_map;
+
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using value_type        = void;
+            using difference_type   = std::ptrdiff_t;
+
+            struct ref
+            {
+                const Key& first;
+                T&         second;
+                const Key* operator->() const noexcept { return &first; }
+            };
+
+        private:
+            map_t*    _owner_map { nullptr };
+            size_type _next_index{ 0 };
+            node*     _current   { nullptr };
+
+            void skip_empty() noexcept
+            {
+                // hop buckets until we find a node
+                while (!_current && _owner_map && _next_index < _owner_map->m_bucket_count)
+                {
+                    _current = _owner_map->m_buckets[_next_index++];
+                }
+            }
+
+        public:
+            iterator() = default;
+
+            iterator(
+                _In_ map_t* owner,
+                _In_ size_type next_bucket_index,
+                _In_opt_ node* first_node) noexcept
+                :   _owner_map(owner),
+                    _next_index(next_bucket_index),
+                    _current(first_node)
+            {
+                if (!_current) skip_empty();
+            }
+
+            ref operator* () const noexcept { return { _current->key, _current->value }; }
+            ref operator->() const noexcept { return { _current->key, _current->value }; }
+
+            iterator& operator++() noexcept
+            {
+                if (_current) _current = _current->next;
+                if (!_current) skip_empty();
+                return *this;
+            }
+
+            iterator operator++(int) noexcept
+            {
+                iterator tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            friend bool operator==(const iterator& a, const iterator& b) noexcept
+            {
+                return a._owner_map  == b._owner_map
+                    && a._next_index == b._next_index
+                    && a._current    == b._current;
+            }
+            
+            friend bool operator!=(const iterator& a, const iterator& b) noexcept
+            {
+                return !(a == b);
+            }
+        };
+
+        class const_iterator
+        {
+            using map_t = unordered_map;
+
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using value_type        = void;
+            using difference_type   = std::ptrdiff_t;
+
+            struct ref
+            {
+                const Key& first;
+                const T&   second;
+                const Key* operator->() const noexcept { return &first; }
+            };
+
+        private:
+            const map_t* _owner_map { nullptr };
+            size_type    _next_index{ 0 };
+            const node*  _current   { nullptr };
+
+            void skip_empty() noexcept
+            {
+                while (!_current && _owner_map &&
+                    _next_index < _owner_map->m_bucket_count)
+                {
+                    _current = _owner_map->m_buckets[_next_index++];
+                }
+            }
+
+        public:
+            const_iterator() = default;
+
+            const_iterator(
+                _In_ const map_t* owner,
+                _In_ size_type next_bucket_index,
+                _In_opt_ const node* first_node) noexcept
+                :   _owner_map(owner),
+                    _next_index(next_bucket_index),
+                    _current(first_node)
+            {
+                if (!_current) skip_empty();
+            }
+
+            //~ convert non-const to const (we need friendship from iterator)
+            const_iterator(_In_ const iterator& it) noexcept
+                :   _owner_map(it._owner_map),
+                    _next_index(it._next_index), 
+                    _current(it._current)
+            {}
+
+            ref operator* () const noexcept { return { _current->key, _current->value }; }
+            ref operator->() const noexcept { return { _current->key, _current->value }; }
+
+            const_iterator& operator++() noexcept
+            {
+                if (_current) _current = _current->next;
+                if (!_current) skip_empty();
+                return *this;
+            }
+
+            const_iterator operator++(int) noexcept
+            {
+                const_iterator tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            friend bool operator==(
+                const const_iterator& a,
+                const const_iterator& b) noexcept
+            {
+                return a._owner_map  == b._owner_map
+                    && a._next_index == b._next_index
+                    && a._current    == b._current;
+            }
+            
+            friend bool operator!=(
+                const const_iterator& a,
+                const const_iterator& b) noexcept
+            {
+                return !(a == b);
+            }
+        };
+
+        //~ begin and end
+        iterator begin() noexcept
+        {
+            if (!m_buckets || m_bucket_count == 0) return end();
+            
+            for (size_type i = 0; i < m_bucket_count; ++i)
+            {
+                if (m_buckets[i]) return iterator(this, i + 1, m_buckets[i]);
+            }
+            
+            return end();
+        }
+
+        iterator end() noexcept
+        {
+            return iterator(this, m_bucket_count, nullptr);
+        }
+
+        const_iterator begin() const noexcept { return cbegin(); }
+        const_iterator end  () const noexcept { return cend();   }
+
+        const_iterator cbegin() const noexcept
+        {
+            if (!m_buckets || m_bucket_count == 0) return cend();
+            
+            for (size_type i = 0; i < m_bucket_count; ++i)
+            {
+                if (m_buckets[i]) 
+                    return const_iterator(this, i + 1, m_buckets[i]);
+            }
+            
+            return cend();
+        }
+
+        const_iterator cend() const noexcept
+        {
+            return const_iterator(this, m_bucket_count, nullptr);
+        }
     };
 }
