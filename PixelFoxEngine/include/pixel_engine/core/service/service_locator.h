@@ -80,9 +80,6 @@ namespace pixel_engine
 
 			CSingleton* ptr = Base::TryGet();
 
-			std::string message = std::string("For some reason ") + typeid(CSingleton).name() + " isnt initialized!";
-			assert(ptr && message.c_str());
-
 			const std::type_index key{ typeid(CSingleton) };
 
 			std::unique_lock lock(s_mutex);

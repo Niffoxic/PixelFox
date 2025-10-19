@@ -36,7 +36,7 @@
     <ClInclude Include="include\pixel_engine\window_manager\inputs\mouse_inputs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\window_manager\inputs\interface_inputs.h">
+    <ClInclude Include="include\pixel_engine\core\interface\interface_inputs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\core\interface\interface_manager.h">

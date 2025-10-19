@@ -25,7 +25,7 @@ namespace pixel_engine
 
         // if needed to initialize
         template<class... Args>
-        _Ret_notnull_ T& Init(Args&&... args)
+        _Ret_notnull_ static T& Init(Args&&... args)
         {
             if (auto* p = s_ptr.load(std::memory_order_acquire))
                 return *p;
