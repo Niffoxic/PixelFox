@@ -9,6 +9,12 @@
     <ClInclude Include="test_vector.h">
       <Filter>tests\core</Filter>
     </ClInclude>
+    <ClInclude Include="test_list.h">
+      <Filter>tests\core</Filter>
+    </ClInclude>
+    <ClInclude Include="test_unordered_map.h">
+      <Filter>tests\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
