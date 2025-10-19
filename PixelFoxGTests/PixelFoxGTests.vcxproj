@@ -117,6 +117,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="test_list.h" />
+    <ClInclude Include="test_unordered_map.h" />
     <ClInclude Include="test_vector.h" />
   </ItemGroup>
   <ItemGroup>
