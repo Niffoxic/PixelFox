@@ -90,7 +90,7 @@ namespace pixel_engine
 		};
 	} // namespace logger_config
 
-	struct LOGGER_CREATE_DESC
+	typedef struct _LOGGER_CREATE_DESC
 	{
 		std::string TerminalName		  = "PixelFox Logger";
 		bool        EnableTerminal		  = true;
@@ -109,7 +109,7 @@ namespace pixel_engine
 
 		logger_config::LogLevel  MinimumLevel = logger_config::LogLevel::Trace;
 		logger_config::LoggerTheme Theme{};
-	};
+	} LOGGER_CREATE_DESC;
 
 	/// <summary>
 	/// A Static Logger

@@ -61,6 +61,6 @@ namespace pixel_engine
 		fox::unordered_map<IManager*, bool>					  m_registeredManagers{};
 		fox::unordered_map<IManager*, fox::list<IManager*>>   m_connections		  {};
 		fox::list<IManager*>								  m_managerNames	  {};
-		fox::list<IManager*>								  m_initOrder		   {};
+		fox::list<IManager*>								  m_initOrder		  {};
 	};
 } // namespace pixel_engine

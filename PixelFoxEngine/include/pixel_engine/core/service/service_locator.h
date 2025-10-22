@@ -183,3 +183,9 @@ namespace pixel_engine
 // use it like: SERVICE_REGISTER_SINGLETON(RenderDevice, hwnd, init_desc)
 #define FOX_SERVICE_REGISTER_SINGLETON(classname, ...) \
     pixel_engine::ServiceLocator::RegisterSingleton<classname>(__VA_ARGS__)
+
+// Registers an instance of utilites
+// use it like: SERVICE_RESIGTER_UTILITY(logger, logger_desc)
+#define SERVICE_REGISTER_UTILITY(classname, ptr) \
+	pixel_engine::ServiceLocator::RegisterInstance<classname>((ptr), {});
+

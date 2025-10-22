@@ -1,13 +1,4 @@
-#include "pixel_engine/window_manager/windows_manager.h"
-#include "pixel_engine/render_manager/render_manager.h"
-
-#include "pixel_engine/exceptions/base_exception.h"
-
-#include "pixel_engine/utilities/logger/logger.h"
-
-#include "pixel_engine/core/service/service_locator.h"
-#include "pixel_engine/core/event/event_queue.h"
-#include "pixel_engine/core/dependency/dependency_resolver.h"
+#include ""
 
 #include "resource.h"
 
@@ -31,59 +22,13 @@ int CALLBACK WinMain(
 {
     try
     {
-        LOGGER_CREATE_DESC cfg{};
-        cfg.TerminalName          = "PixelFox Logger";
-        cfg.EnableTerminal        = true;
-        cfg.EnableAnsiTrueColor   = true;
-        cfg.DuplicateToDebugger   = true;
-        cfg.ShowTimestamps        = true;
-        cfg.ShowThreadId          = true;
-        cfg.ShowFileAndLine       = true;
-        cfg.ShowFunction          = true;
-        cfg.UseUtcTimestamps      = false;
-        cfg.UseRelativeTimestamps = false;
-        cfg.MinimumLevel          = logger_config::LogLevel::Trace;
-
-        logger::init(cfg);
-
-        logger::set_frame_index(1);
-
-        logger::trace("trace boot {}", 1);
-        logger::debug("dbg val = {}", 42);
-        logger::info("engine online");
-        logger::warning("low cache {}", 256);
-        logger::success("hot-reload ready");
-
-        using LC = logger_config::LogCategory;
-        logger::info(LC::Render, "shader compiled: {}", "pbr_lit.hlsl");
-        logger::debug(LC::Physics, "dt = {} ms", 16.6f);
-        logger::warning(LC::Network, "rtt high: {} ms", 180);
-        logger::error(LC::Physics, "working");
-
-        logger::push_scope("Loading");
-        logger::info("step 1");
-        logger::push_scope("Textures");
-        logger::info("A.dds");
-        logger::pop_scope();
-        logger::pop_scope();
-
-        logger::set_use_relative_timestamps(true);
-        logger::set_show_thread_id(true);
-        logger::set_level(logger_config::LogLevel::Trace);
-
-        logger::progress_begin(1, "Bake Lightmaps", 100);
-        for (uint64_t i = 0; i < 100; ++i)
-        {
-            Sleep(10);
-            logger::progress_update(1, i + 1, std::to_string(i) + " working");
-        }
-        logger::progress_end(1, true);
-
         WINDOW_CREATE_DESC desc{};
         desc.Height      = 500u;
         desc.Width       = 800u;
         desc.IconId      = IDI_ICON1;
         desc.WindowTitle = "PixelFox";
+
+        
 
         PEWindowsManager windowsManager{ desc };
         PERenderManager renderManager{};
