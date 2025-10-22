@@ -10,6 +10,26 @@
 
 namespace pixel_engine
 {
+	//~ Events
+	typedef struct _FULL_SCREEN_EVENT
+	{
+		UINT Width;
+		UINT Height;
+	} PFE_API FULL_SCREEN_EVENT;
+
+	typedef struct _WINDOWED_SCREEN_EVENT
+	{
+		UINT Width;
+		UINT Height;
+	} PFE_API WINDOWED_SCREEN_EVENT;
+
+	typedef struct _WINDOW_RESIZE_EVENT
+	{
+		UINT Width;
+		UINT Height;
+	} PFE_API WINDOW_RESIZE_EVENT;
+
+	//~ Event ends
 	typedef struct _WINDOW_CREATE_DESC
 	{
 		std::string WindowTitle;

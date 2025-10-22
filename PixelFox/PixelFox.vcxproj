@@ -20,9 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\application.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\application.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PixelFox.rc" />

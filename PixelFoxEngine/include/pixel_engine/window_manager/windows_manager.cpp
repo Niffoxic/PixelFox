@@ -5,6 +5,9 @@
 #include "windows_manager.h"
 
 #include "pixel_engine/exceptions/win_exception.h"
+#include "pixel_engine/core/event/event_queue.h"
+
+#include "pixel_engine/utilities/logger/logger.h"
 
 _Use_decl_annotations_
 pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC& desc)
@@ -19,7 +22,7 @@ pixel_engine::PEWindowsManager::~PEWindowsManager()
 {
 	if (not OnRelease()) 
 	{
-		// TODO: create a logger and record a failture in exiting.
+        logger::error("Failed to Delete Windows Manager");
 	}
 }
 
@@ -92,7 +95,18 @@ void pixel_engine::PEWindowsManager::SetFullScreen(bool flag)
 
     if (auto handle = GetWindowsHandle()) UpdateWindow(handle);
 
-	//~ TODO: Create EventManager and Send FullScreen and Windowed Screen Events;
+    RECT rt{};
+    if (auto handle = GetWindowsHandle())
+    {
+        GetClientRect(handle, &rt);
+    }
+    else return;
+    UINT width = rt.right - rt.left;
+    UINT height = rt.bottom - rt.top;
+
+    //~ Post Event to the queue
+    if (m_bFullScreen) EventQueue::Post<FULL_SCREEN_EVENT>({ width, height });
+    else EventQueue::Post<WINDOWED_SCREEN_EVENT>({ width, height });
 }
 
 _Use_decl_annotations_
@@ -155,7 +169,7 @@ bool pixel_engine::PEWindowsManager::InitWindowScreen()
 
     if (!AdjustWindowRect(&rect, style, FALSE))
     {
-        // TODO: Create Window Exception Handler
+        THROW_WIN("Failed to adjust windows rect!");
         return false;
     }
 
@@ -198,7 +212,7 @@ LRESULT pixel_engine::PEWindowsManager::MessageHandler(HWND hwnd, UINT message, 
     {
         m_nWindowsWidth  = LOWORD(lParam);
         m_nWindowsHeight = HIWORD(lParam);
-        // TODO: Create Event Manager and Send Window Resize Event;
+        EventQueue::Post<WINDOW_RESIZE_EVENT>({ m_nWindowsWidth, m_nWindowsHeight });
         return S_OK;
     }
     case WM_CLOSE:
