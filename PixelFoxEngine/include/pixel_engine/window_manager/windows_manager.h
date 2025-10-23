@@ -63,7 +63,8 @@ namespace pixel_engine
 		_NODISCARD _Check_return_ __forceinline
 		int GetWindowsHeight() const { return m_nWindowsHeight; }
 
-		void SetWindowTitle(_In_ const std::string& title) const;
+		void SetWindowTitle			(_In_ const std::string& title);
+		void SetWindowMessageOnTitle(_In_ const std::string& message) const;
 
 	private:
 		_NODISCARD _Check_return_ _Must_inspect_result_

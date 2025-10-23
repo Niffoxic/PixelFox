@@ -128,12 +128,23 @@ float pixel_engine::PEWindowsManager::GetAspectRatio() const
 }
 
 _Use_decl_annotations_
-void pixel_engine::PEWindowsManager::SetWindowTitle(const std::string& title) const
+void pixel_engine::PEWindowsManager::SetWindowTitle(const std::string& title)
 {
 	if (auto handle = GetWindowsHandle())
 	{
+        m_szWindowTitle = title;
 		SetWindowText(handle, title.c_str());
 	}
+}
+
+_Use_decl_annotations_
+void pixel_engine::PEWindowsManager::SetWindowMessageOnTitle(const std::string& message) const
+{
+    if (auto handle = GetWindowsHandle())
+    {
+        std::string convert = m_szWindowTitle + " " + message;
+        SetWindowText(handle, convert.c_str());
+    }
 }
 
 _Use_decl_annotations_

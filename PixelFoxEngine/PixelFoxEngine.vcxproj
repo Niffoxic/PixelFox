@@ -163,6 +163,7 @@
     <ClInclude Include="include\pixel_engine\exceptions\win_exception.h" />
     <ClInclude Include="include\pixel_engine\core\event\event_queue.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_singleton.h" />
+    <ClInclude Include="include\pixel_engine\utilities\clock\clock.h" />
     <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
     <ClInclude Include="include\pixel_engine\utilities\id_allocator.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_manager.h" />
@@ -182,6 +183,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp" />
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
+    <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\logger\logger.cpp" />

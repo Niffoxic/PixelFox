@@ -4,8 +4,7 @@
 #include "pixel_engine/exceptions/base_exception.h"
 #include "pixel_engine/core/event/event_queue.h"
 
-
-// TODO: Create Timer(clock).
+#include <sstream>
 
 pixel_engine::PixelEngine::PixelEngine(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
@@ -23,6 +22,7 @@ pixel_engine::PixelEngine::~PixelEngine()
 	logger::close();
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PixelEngine::Init(PIXEL_ENGINE_INIT_DESC const* desc)
 {
 	if (not m_dependecyResolver.Init())
@@ -45,10 +45,12 @@ bool pixel_engine::PixelEngine::Init(PIXEL_ENGINE_INIT_DESC const* desc)
 _Use_decl_annotations_
 HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc)
 {
+	m_clock.reset_clock();
 	logger::info("Starting Game Loop!");
 	BeginPlay();
 	while (true)
 	{
+		float dt = m_clock.tick();
 		if (PEWindowsManager::ProcessMessage())
 		{
 			logger::warning("Closing Application!");
@@ -56,11 +58,15 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 			logger::close();
 			return S_OK;
 		}
-		logger::info("running!");
 	
-		m_dependecyResolver.UpdateLoopStart(0.f);
-		Tick(0.0f);
+		m_dependecyResolver.UpdateLoopStart(dt);
+		Tick(dt);
 		m_dependecyResolver.UpdateLoopEnd();
+
+#if defined(DEBUG) || defined(_DEBUG)
+		std::string szDt = std::to_string(m_clock.time_elapsed());
+		m_pWindowsManager->SetWindowMessageOnTitle(szDt);
+#endif
 
 		EventQueue::DispatchAll();
 	}

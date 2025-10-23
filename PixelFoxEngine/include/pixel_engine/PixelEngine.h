@@ -4,7 +4,9 @@
 #include "pixel_engine/core/dependency/dependency_resolver.h"
 #include "pixel_engine/render_manager/render_manager.h"
 #include "pixel_engine/window_manager/windows_manager.h"
+
 #include "pixel_engine/utilities/logger/logger.h"
+#include "pixel_engine/utilities/clock/clock.h"
 
 #include <memory>
 #include <sal.h>
@@ -54,7 +56,9 @@ namespace pixel_engine
 		void SetManagerDependency();
 
 	private:
+		clock							  m_clock{};
 		DependencyResolver				  m_dependecyResolver{};
+		
 		std::unique_ptr<PEWindowsManager> m_pWindowsManager  { nullptr };
 		std::unique_ptr<PERenderManager>  m_pRenderManager   { nullptr };
 	};

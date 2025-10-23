@@ -14,7 +14,7 @@ int CALLBACK WinMain(
         WindowsDesc.Height = 500u;
         WindowsDesc.Width = 800u;
         WindowsDesc.IconId = IDI_ICON1;
-        WindowsDesc.WindowTitle = "Pixel Fox Game";
+        WindowsDesc.WindowTitle = "PixelFoxTheGame";
 
         pixel_engine::PIXEL_ENGINE_CONSTRUCT_DESC engineDesc{};
         engineDesc.WindowsDesc = &WindowsDesc;
