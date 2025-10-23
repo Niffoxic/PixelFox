@@ -26,6 +26,11 @@ namespace pixel_engine
         std::type_index type{ typeid(void) };
         std::size_t     index{ static_cast<std::size_t>(-1) };
         bool            valid{ false };
+
+        size_t operator()()
+        {
+            return index;
+        }
     };
 
     //~ Event queue Facade

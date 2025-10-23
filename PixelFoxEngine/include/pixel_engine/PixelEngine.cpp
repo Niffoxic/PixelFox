@@ -7,7 +7,7 @@
 
 // TODO: Create Timer(clock).
 
-pixel_engine::PixelEngine::PixelEngine(const PIXEL_ENGINE_CONSTRUCT_DESC& desc)
+pixel_engine::PixelEngine::PixelEngine(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
 	CreateManagers(desc);
 	CreateUtilities();
@@ -23,7 +23,7 @@ pixel_engine::PixelEngine::~PixelEngine()
 	logger::close();
 }
 
-bool pixel_engine::PixelEngine::Init(const PIXEL_ENGINE_INIT_DESC& desc)
+bool pixel_engine::PixelEngine::Init(PIXEL_ENGINE_INIT_DESC const* desc)
 {
 	if (not m_dependecyResolver.Init())
 	{
@@ -42,12 +42,21 @@ bool pixel_engine::PixelEngine::Init(const PIXEL_ENGINE_INIT_DESC& desc)
 	return true;
 }
 
-HRESULT pixel_engine::PixelEngine::Execute(const PIXEL_ENGINE_EXECUTE_DESC& desc)
+_Use_decl_annotations_
+HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc)
 {
+	logger::info("Starting Game Loop!");
 	BeginPlay();
 	while (true)
 	{
-		if (PEWindowsManager::ProcessMessage()) break;
+		if (PEWindowsManager::ProcessMessage())
+		{
+			logger::warning("Closing Application!");
+			m_dependecyResolver.Shutdown();
+			logger::close();
+			return S_OK;
+		}
+		logger::info("running!");
 	
 		m_dependecyResolver.UpdateLoopStart(0.f);
 		Tick(0.0f);
@@ -58,10 +67,10 @@ HRESULT pixel_engine::PixelEngine::Execute(const PIXEL_ENGINE_EXECUTE_DESC& desc
 	return S_OK;
 }
 
-bool pixel_engine::PixelEngine::CreateManagers(PIXEL_ENGINE_CONSTRUCT_DESC const& desc)
+bool pixel_engine::PixelEngine::CreateManagers(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
-	m_pWindowsManager = std::make_unique<PEWindowsManager>(desc.WindowsDesc);
-	m_pRenderManager  = std::make_unique<PERenderManager>(desc.RenderDesc);
+	m_pWindowsManager = std::make_unique<PEWindowsManager>(desc->WindowsDesc);
+	m_pRenderManager  = std::make_unique<PERenderManager>(desc->RenderDesc);
 
 	return true;
 }

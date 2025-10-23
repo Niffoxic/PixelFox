@@ -10,52 +10,32 @@
 
 namespace pixel_engine
 {
-	//~ Events
-	typedef struct _FULL_SCREEN_EVENT
-	{
-		UINT Width;
-		UINT Height;
-	} PFE_API FULL_SCREEN_EVENT;
-
-	typedef struct _WINDOWED_SCREEN_EVENT
-	{
-		UINT Width;
-		UINT Height;
-	} PFE_API WINDOWED_SCREEN_EVENT;
-
-	typedef struct _WINDOW_RESIZE_EVENT
-	{
-		UINT Width;
-		UINT Height;
-	} PFE_API WINDOW_RESIZE_EVENT;
-
-	//~ Event ends
 	typedef struct _WINDOW_CREATE_DESC
 	{
-		std::string WindowTitle;
-		_Field_range_(100, 1920) UINT Width;
-		_Field_range_(100, 1080) UINT Height;
-		_Field_range_(100, 200)  UINT IconId;
+		std::string					  WindowTitle{ "PixelEngine" };
+		_Field_range_(100, 1920) UINT Width		 { 800 };
+		_Field_range_(100, 1080) UINT Height	 { 800 };
+		_Field_range_(0, 200)    UINT IconId	 { 0 };
 	} PFE_API WINDOW_CREATE_DESC;
 
 	class PFE_API PEWindowsManager final: public IManager
 	{
 	public:
 		PEWindowsManager() = default;
-		explicit PEWindowsManager(_In_ const WINDOW_CREATE_DESC& desc);
+		explicit PEWindowsManager(_In_ const WINDOW_CREATE_DESC* desc);
 		~PEWindowsManager() override;
 
 		PEWindowsManager(_In_ const PEWindowsManager&) = delete;
-		PEWindowsManager(_Inout_ PEWindowsManager&&) = delete;
+		PEWindowsManager(_Inout_ PEWindowsManager&&)   = delete;
 
 		PEWindowsManager& operator=(_In_ const PEWindowsManager&) = delete;
-		PEWindowsManager& operator=(_Inout_ PEWindowsManager&&) = delete;
+		PEWindowsManager& operator=(_Inout_ PEWindowsManager&&)   = delete;
 
 		// if returns true means the system gotta shutdown now
 		_NODISCARD _Check_return_ static bool ProcessMessage();
 
 		PEKeyboardInputs Keyboard{};
-		PEMouseInputs	 Mouse{};
+		PEMouseInputs	 Mouse	 {};
 
 		//~ IManager Interface Implementation
 		_NODISCARD _Check_return_ bool OnInit() override;

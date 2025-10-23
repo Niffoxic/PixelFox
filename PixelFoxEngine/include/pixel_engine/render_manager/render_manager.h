@@ -1,6 +1,9 @@
 #pragma once
 #include "PixelFoxEngineAPI.h"
 #include "pixel_engine/core/interface/interface_manager.h"
+#include "core/unordered_map.h"
+#include "pixel_engine/core/event/event_queue.h"
+
 
 
 namespace pixel_engine
@@ -14,7 +17,7 @@ namespace pixel_engine
 	{
 	public:
 		PERenderManager() = default;
-		explicit PERenderManager(const RENDER_CREATE_DESC& desc){}
+		explicit PERenderManager(RENDER_CREATE_DESC const* desc){}
 
 		//~ interface implementation
 		_NODISCARD _Check_return_ bool OnInit() override;
@@ -25,5 +28,12 @@ namespace pixel_engine
 
 		void OnLoopStart(_In_ float deltaTime) override;
 		void OnLoopEnd() override;
+
+	private:
+		void SubscribeToEvents();
+		void UnSubscribeToEvents();
+
+	private:
+		fox::vector<SubToken> m_eventTokens{};
 	};
 }

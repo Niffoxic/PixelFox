@@ -6,16 +6,28 @@
 
 #include "pixel_engine/exceptions/win_exception.h"
 #include "pixel_engine/core/event/event_queue.h"
+#include "pixel_engine/core/event/event_windows.h"
 
 #include "pixel_engine/utilities/logger/logger.h"
 
 _Use_decl_annotations_
-pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC& desc)
+pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC* desc)
 {
-	m_nWindowsHeight = desc.Height;
-	m_nWindowsWidth  = desc.Width;
-	m_szWindowTitle  = desc.WindowTitle;
-    m_nIconID        = desc.IconId;
+    if (desc)
+    {
+        m_nWindowsHeight = desc->Height;
+        m_nWindowsWidth  = desc->Width;
+        m_szWindowTitle  = desc->WindowTitle;
+        m_nIconID        = desc->IconId;
+    }
+    else
+    {
+        logger::warning("No Description provided for Windows Manager creating default");
+        m_nWindowsHeight = 500u;
+        m_nWindowsWidth  = 500u;
+        m_szWindowTitle  = "Pixel Engine";
+        m_nIconID        = 0u;
+    }
 }
 
 pixel_engine::PEWindowsManager::~PEWindowsManager()

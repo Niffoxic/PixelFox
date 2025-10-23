@@ -72,6 +72,15 @@
     <ClInclude Include="include\pixel_engine\core\dependency\dependency_resolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\event\event_windows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\event\event_render.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\event\event_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
