@@ -9,7 +9,7 @@ namespace pixel_engine
 	class PFE_API clock
 	{
 	public:
-		using Timer = std::chrono::high_resolution_clock;
+		using Timer = std::chrono::steady_clock;
 		clock();
 		
 		clock(_In_ const clock&) = delete;

@@ -131,7 +131,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>PixelFoxCore.lib;PixelFoxEngine.lib;PixelFoxMath.lib;PixelFoxPhysics.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>PixelFoxCore.lib;PixelFoxEngine.lib;PixelFoxMath.lib;PixelFoxPhysics.lib;d3d11.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>call "$(ProjectDir)PixelFoxBuildEvent.bat" "$(TargetDir)" "$(Configuration)" "$(Platform)" "$(ProjectDir)" "$(SolutionDir)"

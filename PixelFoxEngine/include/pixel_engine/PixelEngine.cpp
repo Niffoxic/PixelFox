@@ -64,10 +64,34 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 		m_dependecyResolver.UpdateLoopEnd();
 
 #if defined(DEBUG) || defined(_DEBUG)
-		std::string szDt = std::to_string(m_clock.time_elapsed());
-		m_pWindowsManager->SetWindowMessageOnTitle(szDt);
-#endif
+		static float passed				= 0.0f;
+		static int   frame				= 0;
+		static float avg_frames			= 0.0f;
+		static float last_time_elapsed	= 0.0f;
 
+		frame++;
+		passed += dt;
+
+		if (passed >= 1.0f)
+		{
+			avg_frames	     += frame;
+			last_time_elapsed = m_clock.time_elapsed();
+
+			std::string message =
+				"Time Elapsed: "								+ 
+				std::to_string(last_time_elapsed)				+
+				" Frame Rate: "									+ 
+				std::to_string(frame)							+
+				" per second (Avg = "							+ 
+				std::to_string(avg_frames / last_time_elapsed)	+
+				")";
+
+			m_pWindowsManager->SetWindowMessageOnTitle(message);
+
+			passed = 0.0f;
+			frame  = 0;
+		}
+#endif
 		EventQueue::DispatchAll();
 	}
 	return S_OK;
@@ -76,7 +100,7 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 bool pixel_engine::PixelEngine::CreateManagers(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
 	m_pWindowsManager = std::make_unique<PEWindowsManager>(desc->WindowsDesc);
-	m_pRenderManager  = std::make_unique<PERenderManager>(desc->RenderDesc);
+	m_pRenderManager  = std::make_unique<PERenderManager>(m_pWindowsManager.get());
 
 	return true;
 }

@@ -16,7 +16,6 @@ namespace pixel_engine
 	typedef struct _PIXEL_ENGINE_CONSTRUCT_DESC
 	{
 		WINDOW_CREATE_DESC const* WindowsDesc;
-		RENDER_CREATE_DESC const* RenderDesc;
 	} PFE_API PIXEL_ENGINE_CONSTRUCT_DESC;
 
 	//~ data to send to application (init time)

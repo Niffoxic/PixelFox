@@ -16,23 +16,20 @@ void pixel_engine::clock::reset_clock()
 _Use_decl_annotations_
 float pixel_engine::clock::tick()
 {
-	const auto current = Timer::now();
-	auto delta		   = current - m_timeLastTick;
-	m_timeLastTick     = current;
-
+	const auto current						 = Timer::now();
+	const std::chrono::duration<float> delta = current - m_timeLastTick;
+	m_timeLastTick							 = current;
 	return delta.count();
 }
 
 _Use_decl_annotations_
 float pixel_engine::clock::time_elapsed() const
 {
-	const auto current = Timer::now();
-	return std::chrono::duration<float>(current - m_timeStart).count();
+	return std::chrono::duration<float>(Timer::now() - m_timeStart).count();
 }
 
 _Use_decl_annotations_
 float pixel_engine::clock::delta() const
 {
-	const auto current = Timer::now();
-	return std::chrono::duration<float>(current - m_timeLastTick).count();
+	return std::chrono::duration<float>(Timer::now() - m_timeLastTick).count();
 }
