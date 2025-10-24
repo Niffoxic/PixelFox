@@ -15,6 +15,9 @@
     <ClInclude Include="test_unordered_map.h">
       <Filter>tests\core</Filter>
     </ClInclude>
+    <ClInclude Include="test_math_vector2d.h">
+      <Filter>tests\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -25,6 +28,9 @@
     </Filter>
     <Filter Include="tests\core">
       <UniqueIdentifier>{9430886e-cf20-45ee-97c3-cf95b4130e19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests\math">
+      <UniqueIdentifier>{5ec3ad38-c3d6-4a97-b16e-5fde3acd0c71}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

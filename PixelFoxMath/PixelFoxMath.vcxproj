@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="include\fox_math\vector.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PixelFoxMathAPI.h" />
     <ClInclude Include="TestMath.h" />

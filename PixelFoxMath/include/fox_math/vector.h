@@ -116,14 +116,14 @@ namespace fox_math
 
         //~ Access through []
         _Check_return_ _NODISCARD
-        _CONSTEXPR20 T& operator[](_In_ uint32_t i) noexcept
+        _CONSTEXPR20 T& operator[](_In_ size_t i) noexcept
         {
             _ASSERTE(i < 2 && "Trying to Access Vector2D with higher Index Val");
             return (i == 0) ? x : y;
         }
 
         _Check_return_ _NODISCARD
-        _CONSTEXPR20 T operator[](_In_ int i) const noexcept
+        _CONSTEXPR20 T operator[](_In_ size_t i) const noexcept
         {
             _ASSERTE(i < 2 && "Trying to Access Vector2D with higher Index Val");
             return (i == 0) ? x : y;
