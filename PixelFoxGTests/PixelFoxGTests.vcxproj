@@ -66,7 +66,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxMath\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -118,6 +118,8 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="test_list.h" />
+    <ClInclude Include="test_math_matrix.h" />
+    <ClInclude Include="test_math_vector2d.h" />
     <ClInclude Include="test_unordered_map.h" />
     <ClInclude Include="test_vector.h" />
   </ItemGroup>

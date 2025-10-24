@@ -27,6 +27,15 @@
     <ClInclude Include="TestMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\fox_math\vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fox_math\matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fox_math\math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
