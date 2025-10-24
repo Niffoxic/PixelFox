@@ -1,35 +1,46 @@
 #include "pch.h"
 #include "clock.h"
 
-pixel_engine::clock::clock()
+pixel_engine::GameClock::GameClock()
 {
-	reset_clock();
+	ResetTime();
 }
 
-void pixel_engine::clock::reset_clock()
+void pixel_engine::GameClock::ResetTime()
 {
-	const auto current = Timer::now();
-	m_timeStart		   = current;
-	m_timeLastTick     = current;
-}
-
-_Use_decl_annotations_
-float pixel_engine::clock::tick()
-{
-	const auto current						 = Timer::now();
-	const std::chrono::duration<float> delta = current - m_timeLastTick;
-	m_timeLastTick							 = current;
-	return delta.count();
+	const TimePoint current = Timer::now();
+	
+	m_timeStart   .store(current, std::memory_order_seq_cst);
+	m_timeLastTick.store(current, std::memory_order_seq_cst);
 }
 
 _Use_decl_annotations_
-float pixel_engine::clock::time_elapsed() const
+float pixel_engine::GameClock::Tick()
 {
-	return std::chrono::duration<float>(Timer::now() - m_timeStart).count();
+    const TimePoint current = Timer::now();
+
+    const TimePoint last = m_timeLastTick.load(std::memory_order_acquire);
+    const std::chrono::duration<float> delta = current - last;
+    
+	m_timeLastTick.store(current, std::memory_order_release);
+
+    return delta.count();
 }
 
 _Use_decl_annotations_
-float pixel_engine::clock::delta() const
+float pixel_engine::GameClock::TimeElapsed() const
 {
-	return std::chrono::duration<float>(Timer::now() - m_timeLastTick).count();
+    const TimePoint start   = m_timeStart.load(std::memory_order_acquire);
+    const TimePoint current = Timer::now();
+    
+    return std::chrono::duration<float>(current - start).count();
+}
+
+_Use_decl_annotations_
+float pixel_engine::GameClock::DeltaTime() const
+{
+    const TimePoint last    = m_timeLastTick.load(std::memory_order_acquire);
+    const TimePoint current = Timer::now();
+
+    return std::chrono::duration<float>(current - last).count();
 }

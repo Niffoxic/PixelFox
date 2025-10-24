@@ -5,23 +5,21 @@
 #include "pixel_engine/core/interface/interface_frame.h"
 #include "pixel_engine/core/event/event_queue.h"
 #include "pixel_engine/window_manager/windows_manager.h"
+#include "pixel_engine/utilities/clock/clock.h"
 
-#include <wrl/client.h>
-#include <d3d11.h>
-#include <dxgi.h>
-#include <d3dcompiler.h>
-
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
+#include "api/render_api.h"
+#include <memory>
 
 namespace pixel_engine
 {
 	class PFE_API PERenderManager final: public IFrameObject
 	{
 	public:
-		 PERenderManager(_In_ PEWindowsManager* windows);
-		~PERenderManager() = default;
+		 PERenderManager(
+			 _In_ PEWindowsManager* windows,
+			 _In_ GameClock* clock);
+
+		~PERenderManager();
 
 		//~ interface implementation
 		_NODISCARD _Check_return_ bool Initialize() override;
@@ -34,29 +32,22 @@ namespace pixel_engine
 		void OnFrameEnd  () override;
 
 	private:
-		bool CreateDeviceAndDeviceContext();
-		bool CreateSwapChain			 ();
-		bool CreateRTV					 ();
-		bool CreateVertexShader			 ();
-		bool CreatePixelShader			 ();
-		bool CreateViewport				 ();
-
 		void SubscribeToEvents  ();
 		void UnSubscribeToEvents();
 
-	private:
-		PEWindowsManager*	  m_pWindowsManager{ nullptr };
-		fox::vector<SubToken> m_eventTokens	   {};
-		D3D11_VIEWPORT		  m_Viewport	   {};
-		size_t				  m_PaddedDataSize { 0u };
+		//~ Helpers
+		void SafeCloseEvent_(HANDLE& h);
 
-		Microsoft::WRL::ComPtr<ID3D11Device>			 m_pDevice       { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext>		 m_pDeviceContext{ nullptr };
-		Microsoft::WRL::ComPtr<IDXGISwapChain>			 m_pSwapchain    { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	 m_pRTV          { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11Buffer>			 m_pBackBuffer   { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pSRV		     { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>		 m_pPixelShader  { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>		 m_pVertexShader { nullptr };
+	private:
+		PEWindowsManager*	  m_pWindowsManager { nullptr };
+		GameClock*			  m_pClock			{ nullptr };
+		fox::vector<SubToken> m_eventTokens	    {};
+
+		//~ Manage render api
+		std::unique_ptr<PERenderAPI> m_pRenderAPI{ nullptr };
+
+		HANDLE m_handleStartEvent{ nullptr };
+		HANDLE m_handleEndEvent  { nullptr };
+		HANDLE m_handleThread    { nullptr };
 	};
 }

@@ -11,10 +11,11 @@ int CALLBACK WinMain(
     try
     {
         pixel_engine::WINDOW_CREATE_DESC WindowsDesc{};
-        WindowsDesc.Height      = 500u;
-        WindowsDesc.Width       = 800u;
+        WindowsDesc.Height      = 720;
+        WindowsDesc.Width       = 1280u;
         WindowsDesc.IconId      = IDI_ICON1;
         WindowsDesc.WindowTitle = "PixelFoxTheGame";
+        WindowsDesc.FullScreen  = false;
 
         pixel_engine::PIXEL_ENGINE_CONSTRUCT_DESC engineDesc{};
         engineDesc.WindowsDesc = &WindowsDesc;
