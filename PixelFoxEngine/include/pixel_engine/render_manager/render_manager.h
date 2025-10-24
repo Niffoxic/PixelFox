@@ -45,7 +45,9 @@ namespace pixel_engine
 
 	private:
 		PEWindowsManager*	  m_pWindowsManager{ nullptr };
-		fox::vector<SubToken> m_eventTokens{};
+		fox::vector<SubToken> m_eventTokens	   {};
+		D3D11_VIEWPORT		  m_Viewport	   {};
+		size_t				  m_PaddedDataSize { 0u };
 
 		Microsoft::WRL::ComPtr<ID3D11Device>			 m_pDevice       { nullptr };
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext>		 m_pDeviceContext{ nullptr };
