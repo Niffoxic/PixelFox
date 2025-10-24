@@ -18,14 +18,20 @@ namespace pixel_engine
 		void AttachWindowHandle(_In_ HWND hWnd);
 
 		//~ Interface Implementation
+		_NODISCARD _Check_return_
+			std::string GetObjectName() const override;
+
+		_NODISCARD _Check_return_ bool Initialize() override;
+		_NODISCARD _Check_return_ bool Release   () override;
+
 		_NODISCARD _Check_return_ 
 		bool ProcessMessage(
 			_In_ UINT message,
 			_In_ WPARAM wParam,
 			_In_ LPARAM lParam) override;
 		
-		void OnFrameBegin() noexcept override;
-		void OnFrameEnd	 () noexcept override;
+		void OnFrameBegin(float deltaTime) noexcept override;
+		void OnFrameEnd	 ()				   noexcept override;
 		
 		//~ Modifiers
 		void HideCursor			();

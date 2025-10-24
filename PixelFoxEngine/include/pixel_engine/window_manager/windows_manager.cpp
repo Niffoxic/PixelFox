@@ -32,7 +32,7 @@ pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC* desc)
 
 pixel_engine::PEWindowsManager::~PEWindowsManager()
 {
-	if (not OnRelease()) 
+	if (not Release()) 
 	{
         logger::error("Failed to Delete Windows Manager");
 	}
@@ -56,7 +56,7 @@ bool pixel_engine::PEWindowsManager::ProcessMessage()
 }
 
 _Use_decl_annotations_
-bool pixel_engine::PEWindowsManager::OnInit()
+bool pixel_engine::PEWindowsManager::Initialize()
 {
     if (!InitWindowScreen()) return false;
     if (auto handle = GetWindowsHandle())
@@ -65,19 +65,19 @@ bool pixel_engine::PEWindowsManager::OnInit()
 }
 
 _Use_decl_annotations_
-bool pixel_engine::PEWindowsManager::OnRelease()
+bool pixel_engine::PEWindowsManager::Release()
 {
 	return true;
 }
 
 _Use_decl_annotations_
-void pixel_engine::PEWindowsManager::OnLoopStart(float deltaTime)
+void pixel_engine::PEWindowsManager::OnFrameBegin(float deltaTime)
 {
-	Keyboard.OnFrameBegin();
-	Keyboard.OnFrameEnd();
+	Keyboard.OnFrameBegin(deltaTime);
+	Mouse   .OnFrameBegin(deltaTime);
 }
 
-void pixel_engine::PEWindowsManager::OnLoopEnd()
+void pixel_engine::PEWindowsManager::OnFrameEnd()
 {
 	Keyboard.OnFrameEnd();
 	Mouse.OnFrameEnd();
@@ -182,7 +182,7 @@ bool pixel_engine::PEWindowsManager::InitWindowScreen()
         return false;
     }
 
-    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+    DWORD style = WS_OVERLAPPEDWINDOW;
 
     RECT rect 
     { 0, 0,

@@ -3,7 +3,7 @@
 #include <sal.h>
 #include "PixelFoxEngineAPI.h"
 
-#include "pixel_engine/core/interface/interface_manager.h"
+#include "pixel_engine/core/interface/interface_frame.h"
 
 #include "inputs/keyboard_inputs.h"
 #include "inputs/mouse_inputs.h"
@@ -18,7 +18,7 @@ namespace pixel_engine
 		_Field_range_(0, 200)    UINT IconId	 { 0 };
 	} PFE_API WINDOW_CREATE_DESC;
 
-	class PFE_API PEWindowsManager final: public IManager
+	class PFE_API PEWindowsManager final: public IFrameObject
 	{
 	public:
 		PEWindowsManager() = default;
@@ -37,15 +37,15 @@ namespace pixel_engine
 		PEKeyboardInputs Keyboard{};
 		PEMouseInputs	 Mouse	 {};
 
-		//~ IManager Interface Implementation
-		_NODISCARD _Check_return_ bool OnInit() override;
-		_NODISCARD _Check_return_ bool OnRelease() override;
+		//~ IFrameObject Interface Implementation
+		_NODISCARD _Check_return_ bool Initialize() override;
+		_NODISCARD _Check_return_ bool Release   () override;
 
-		_NODISCARD _Check_return_ __forceinline
-		std::string GetManagerName() const override { return "WindowsManager"; }
+		_NODISCARD _Check_return_
+		std::string GetObjectName() const override { return "WindowsManager"; }
 
-		void OnLoopStart(_In_ float deltaTime) override;
-		void OnLoopEnd() override;
+		void OnFrameBegin(_In_ float deltaTime) override;
+		void OnFrameEnd() override;
 
 		//~ Queries
 		_NODISCARD _Ret_maybenull_ HWND		 GetWindowsHandle  () const;

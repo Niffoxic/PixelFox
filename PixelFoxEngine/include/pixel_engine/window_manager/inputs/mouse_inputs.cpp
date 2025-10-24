@@ -5,7 +5,8 @@
 
 pixel_engine::PEMouseInputs::PEMouseInputs()
 	:	m_nRawDeltaX(0), m_nRawDeltaY(0),
-		m_nMouseWheelDelta(0), m_bCursorVisible(true)
+		m_nMouseWheelDelta(0), m_bCursorVisible(true),
+        IInputHandler()
 {
 	ZeroMemory(m_bButtonDown, sizeof(m_bButtonDown));
 	ZeroMemory(m_bButtonPressed, sizeof(m_bButtonPressed));
@@ -21,6 +22,24 @@ void pixel_engine::PEMouseInputs::AttachWindowHandle(HWND hWnd)
 
 		m_pWindowHandle = hWnd;
 	}
+}
+
+_Use_decl_annotations_
+std::string pixel_engine::PEMouseInputs::GetObjectName() const
+{
+    return "PixelEngineMouseInput";
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PEMouseInputs::Initialize()
+{
+    return true;
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PEMouseInputs::Release()
+{
+    return true;
 }
 
 _Use_decl_annotations_
@@ -114,7 +133,7 @@ bool pixel_engine::PEMouseInputs::ProcessMessage(UINT message, WPARAM wParam, LP
     return false;
 }
 
-void pixel_engine::PEMouseInputs::OnFrameBegin() noexcept
+void pixel_engine::PEMouseInputs::OnFrameBegin(float deltaTime) noexcept
 {
 }
 

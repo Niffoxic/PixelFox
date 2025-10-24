@@ -6,7 +6,7 @@
 using namespace pixel_engine;
 
 _Use_decl_annotations_
-void DependencyResolver::Register(IManager* instance)
+void DependencyResolver::Register(IFrameObject* instance)
 {
     if (instance && !m_registeredManagers.contains(instance))
     {
@@ -16,9 +16,9 @@ void DependencyResolver::Register(IManager* instance)
 
 void DependencyResolver::Clear()
 {
-    m_connections.clear();
-    m_initOrder.clear();
-    m_managerNames.clear();
+    m_connections       .clear();
+    m_initOrder         .clear();
+    m_managerNames      .clear();
     m_registeredManagers.clear();
 }
 
@@ -40,18 +40,21 @@ bool DependencyResolver::Init()
     std::size_t i = 0;
     for (auto it = m_initOrder.begin(); it != m_initOrder.end(); ++it, ++i)
     {
-        IManager* mgr = *it;
-        if (!mgr->OnInit())
+        IFrameObject* mgr = *it;
+        if (!mgr->Initialize())
         {
-            logger::error("Failed to initialize manager: {}", mgr->GetManagerName());
+            logger::error("Failed to initialize manager: {}", mgr->GetObjectName());
             logger::progress_end(0, false);
             return false;
         }
         else
         {
-            logger::info("initializing: {}", mgr->GetManagerName());
+            logger::info("initializing: {}, Id:{}",
+                mgr->GetObjectName(),
+                mgr->GetInstanceID());
+
             logger::progress_update(0, static_cast<unsigned>(i + 1),
-                mgr->GetManagerName() + " initialized!");
+                mgr->GetObjectName() + " initialized!");
         }
     }
     logger::progress_end(0, true);
@@ -68,12 +71,12 @@ bool DependencyResolver::UpdateLoopStart(float deltaTime) const
 
     for (auto it = m_initOrder.begin(); it != m_initOrder.end(); ++it)
     {
-        IManager* mgr = *it;
+        IFrameObject* mgr = *it;
         if (first_update)
         {
-            logger::debug("Updating (start): {}", mgr->GetManagerName());
+            logger::debug("Updating (start): {}", mgr->GetObjectName());
         }
-        mgr->OnLoopStart(deltaTime);
+        mgr->OnFrameBegin(deltaTime);
     }
 
     first_update = false;
@@ -89,12 +92,12 @@ bool DependencyResolver::UpdateLoopEnd() const
 
     for (auto it = m_initOrder.rbegin(); it != m_initOrder.rend(); ++it)
     {
-        IManager* mgr = *it;
+        IFrameObject* mgr = *it;
         if (first_update)
         {
-            logger::debug("Updating (end): {}", mgr->GetManagerName());
+            logger::debug("Updating (end): {}", mgr->GetObjectName());
         }
-        mgr->OnLoopEnd();
+        mgr->OnFrameEnd();
     }
 
     first_update = false;
@@ -108,12 +111,12 @@ bool DependencyResolver::Shutdown()
 
     for (auto it = m_initOrder.rbegin(); it != m_initOrder.rend(); ++it)
     {
-        IManager* mgr = *it;
+        IFrameObject* mgr = *it;
         if (!mgr) { continue; }
 
-        const auto name = mgr->GetManagerName();
+        const auto name = mgr->GetObjectName();
         
-        if (!mgr->OnRelease())
+        if (!mgr->Release())
         {
             flag = false;
             logger::error("Failed to properly destroy: {}", name);
@@ -123,16 +126,16 @@ bool DependencyResolver::Shutdown()
     return flag;
 }
 
-fox::list<IManager*> DependencyResolver::GraphSort()
+fox::list<IFrameObject*> DependencyResolver::GraphSort()
 {
-    fox::unordered_map<IManager*, bool> visited;
-    fox::unordered_map<IManager*, bool> stack;
-    fox::list<IManager*>                post;
-    fox::list<IManager*>                sorted;
+    fox::unordered_map<IFrameObject*, bool> visited;
+    fox::unordered_map<IFrameObject*, bool> stack;
+    fox::list<IFrameObject*>                post;
+    fox::list<IFrameObject*>                sorted;
 
     for (auto it = m_registeredManagers.begin(); it != m_registeredManagers.end(); ++it)
     {
-        IManager* node = (*it).first;
+        IFrameObject* node = (*it).first;
         if (!visited.contains(node))
         {
             GraphDFS(node, visited, stack, post);
@@ -152,10 +155,10 @@ fox::list<IManager*> DependencyResolver::GraphSort()
 
 _Use_decl_annotations_
 void DependencyResolver::GraphDFS(
-    IManager*                            node,
-    fox::unordered_map<IManager*, bool>& visited,
-    fox::unordered_map<IManager*, bool>& stack,
-    fox::list<IManager*>&                post)
+    IFrameObject*                            node,
+    fox::unordered_map<IFrameObject*, bool>& visited,
+    fox::unordered_map<IFrameObject*, bool>& stack,
+    fox::list<IFrameObject*>&                post)
 {
     if (stack.contains(node))
     {
@@ -172,7 +175,7 @@ void DependencyResolver::GraphDFS(
         auto& deps = m_connections.at(node);
         for (auto it = deps.begin(); it != deps.end(); ++it)
         {
-            IManager* early = *it;
+            IFrameObject* early = *it;
             GraphDFS(early, visited, stack, post);
             if (post.empty()) return; // cycle found!
         }

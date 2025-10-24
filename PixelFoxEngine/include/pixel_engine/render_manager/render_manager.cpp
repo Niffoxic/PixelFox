@@ -10,12 +10,12 @@
 
 _Use_decl_annotations_
 pixel_engine::PERenderManager::PERenderManager(PEWindowsManager* windows)
-    : m_pWindowsManager(windows)
+    : m_pWindowsManager(windows), IFrameObject()
 {
 }
 
 _Use_decl_annotations_
-bool pixel_engine::PERenderManager::OnInit()
+bool pixel_engine::PERenderManager::Initialize()
 {
     logger::warning(pixel_engine::logger_config::LogCategory::Render,
         "Attempting to initialize RenderManager");
@@ -36,20 +36,20 @@ bool pixel_engine::PERenderManager::OnInit()
 }
 
 _Use_decl_annotations_
-bool pixel_engine::PERenderManager::OnRelease()
+bool pixel_engine::PERenderManager::Release()
 {
     UnSubscribeToEvents();
 	return true;
 }
 
 _Use_decl_annotations_
-void pixel_engine::PERenderManager::OnLoopStart(float deltaTime)
+void pixel_engine::PERenderManager::OnFrameBegin(float deltaTime)
 {
     const float clear[4] = { 0.72f, 0.23f, 0.62f, 1.0f };
     m_pDeviceContext->ClearRenderTargetView(m_pRTV.Get(), clear);
 }
 
-void pixel_engine::PERenderManager::OnLoopEnd()
+void pixel_engine::PERenderManager::OnFrameEnd()
 {
     m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
     m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0u);

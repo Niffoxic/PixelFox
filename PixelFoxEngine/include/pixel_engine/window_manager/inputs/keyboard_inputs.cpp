@@ -4,6 +4,7 @@
 
 
 pixel_engine::PEKeyboardInputs::PEKeyboardInputs() noexcept
+    : IInputHandler()
 {
     ClearAll();
 }
@@ -53,7 +54,7 @@ bool pixel_engine::PEKeyboardInputs::ProcessMessage(UINT message, WPARAM wParam,
 	return false;
 }
 
-void pixel_engine::PEKeyboardInputs::OnFrameBegin() noexcept
+void pixel_engine::PEKeyboardInputs::OnFrameBegin(float deltaTime) noexcept
 {
 }
 
@@ -141,4 +142,22 @@ _Use_decl_annotations_
 bool pixel_engine::PEKeyboardInputs::IsSuperPressed() const noexcept
 {
 	return m_keyDown[VK_LWIN] || m_keyDown[VK_RWIN];
+}
+
+_Use_decl_annotations_
+std::string pixel_engine::PEKeyboardInputs::GetObjectName() const
+{
+    return "PixelEngineWindowsKeyboardInputs";
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PEKeyboardInputs::Initialize()
+{
+    return true;
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PEKeyboardInputs::Release()
+{
+    return true;
 }
