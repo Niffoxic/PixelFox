@@ -18,6 +18,9 @@
     <ClInclude Include="test_math_vector2d.h">
       <Filter>tests\math</Filter>
     </ClInclude>
+    <ClInclude Include="test_math_matrix.h">
+      <Filter>tests\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

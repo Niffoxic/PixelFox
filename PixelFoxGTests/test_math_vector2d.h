@@ -9,7 +9,7 @@
 
 using fox_math::Vector2D;
 
-static constexpr float kEps = 1e-5f;
+static constexpr float kEps_matrix = 1e-5f;
 
 // -----------------------------
 // Integer type: basic behavior
@@ -102,15 +102,15 @@ TEST(Vector2D_Float, DotCrossLength)
     EXPECT_FLOAT_EQ(a.Cross(b), -2.0f);     // 1*4 - 2*3
 
     EXPECT_FLOAT_EQ(a.LengthSq(), 5.0f);
-    EXPECT_NEAR(a.Length(), std::sqrt(5.0f), kEps);
+    EXPECT_NEAR(a.Length(), std::sqrt(5.0f), kEps_matrix);
 }
 
 TEST(Vector2D_Float, NormalizeAndNormalized)
 {
     Vector2D<float> v(3.0f, 4.0f);
     auto n = v.Normalized();
-    EXPECT_NEAR(n.x, 3.0f / 5.0f, kEps);
-    EXPECT_NEAR(n.y, 4.0f / 5.0f, kEps);
+    EXPECT_NEAR(n.x, 3.0f / 5.0f, kEps_matrix);
+    EXPECT_NEAR(n.y, 4.0f / 5.0f, kEps_matrix);
 
     Vector2D<float> w(0.0f, 0.0f);
     auto nz = w.Normalized(); // stays zero, no NaNs
@@ -118,8 +118,8 @@ TEST(Vector2D_Float, NormalizeAndNormalized)
     EXPECT_FLOAT_EQ(nz.y, 0.0f);
 
     v.Normalize();
-    EXPECT_NEAR(v.x, 3.0f / 5.0f, kEps);
-    EXPECT_NEAR(v.y, 4.0f / 5.0f, kEps);
+    EXPECT_NEAR(v.x, 3.0f / 5.0f, kEps_matrix);
+    EXPECT_NEAR(v.y, 4.0f / 5.0f, kEps_matrix);
 }
 
 TEST(Vector2D_Float, Perpendiculars)
