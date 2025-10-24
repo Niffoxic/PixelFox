@@ -15,6 +15,13 @@
 
 namespace pixel_engine
 {
+	typedef struct _CONSTRUCT_RENDER_API_DESC
+	{
+		HANDLE StartEvent;
+		HANDLE ExitEvent;
+
+	} CONSTRUCT_RENDER_API_DESC;
+
 	typedef struct _INIT_RENDER_API_DESC
 	{
 		int	 Width;
@@ -26,8 +33,8 @@ namespace pixel_engine
 	class PFE_API PERenderAPI
 	{
 	public:
-		 PERenderAPI() = default;
-		~PERenderAPI() = default;
+		 PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc);
+		~PERenderAPI();
 
 		//~ no move or copy
 		PERenderAPI(_In_ const PERenderAPI&) = delete;
@@ -37,26 +44,49 @@ namespace pixel_engine
 		PERenderAPI& operator=(_Inout_ PERenderAPI&&)   = delete;
 
 		bool Init(const INIT_RENDER_API_DESC* desc);
+		
+		static DWORD WINAPI RenderThread(LPVOID ctx) 
+		{
+			return static_cast<PERenderAPI*>(ctx)->Execute();
+		}
+
+		DWORD Execute();
+
+		// Must be called from whoever wanna wait for preset
+		void WaitForPresent();
+
+	private:
 		void Present();
 
-	private:
 		bool CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc);
-		bool CreateSwapChain(const INIT_RENDER_API_DESC* desc);
-		bool CreateRTV(const INIT_RENDER_API_DESC* desc);
-		bool CreateVertexShader(const INIT_RENDER_API_DESC* desc);
-		bool CreatePixelShader(const INIT_RENDER_API_DESC* desc);
-		bool CreateViewport(const INIT_RENDER_API_DESC* desc);
+		bool CreateSwapChain			 (const INIT_RENDER_API_DESC* desc);
+		bool CreateRTV					 (const INIT_RENDER_API_DESC* desc);
+		bool CreateVertexShader			 (const INIT_RENDER_API_DESC* desc);
+		bool CreatePixelShader			 (const INIT_RENDER_API_DESC* desc);
+		bool CreateViewport				 (const INIT_RENDER_API_DESC* desc);
+
+		void TestImageUpdate();
+
 	private:
-		D3D11_VIEWPORT		  m_Viewport{};
+
+		//~ Thread Members
+		HANDLE m_handleStartEvent      { nullptr }; // render manager will own it
+		HANDLE m_handleExitEvent       { nullptr }; // render manager will signal it
+		
+		HANDLE m_handlePresentEvent    { nullptr }; // owned by render api so that I can signal if its ready to present
+		HANDLE m_handlePresentDoneEvent{ nullptr };
+
+		//~ Render Members
+		D3D11_VIEWPORT		  m_Viewport	  {};
 		size_t				  m_PaddedDataSize{ 0u };
 
-		Microsoft::WRL::ComPtr<ID3D11Device>			 m_pDevice{ nullptr };
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext>		 m_pDeviceContext{ nullptr };
-		Microsoft::WRL::ComPtr<IDXGISwapChain>			 m_pSwapchain{ nullptr };
-		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	 m_pRTV{ nullptr };
-		Microsoft::WRL::ComPtr<ID3D11Buffer>			 m_pBackBuffer{ nullptr };
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pSRV{ nullptr };
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>		 m_pPixelShader{ nullptr };
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>		 m_pVertexShader{ nullptr };
+		Microsoft::WRL::ComPtr<ID3D11Device>			 m_pDevice		  { nullptr };
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext>		 m_pDeviceContext { nullptr };
+		Microsoft::WRL::ComPtr<IDXGISwapChain>			 m_pSwapchain	  { nullptr };
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	 m_pRTV			  { nullptr };
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			 m_pCpuImageBuffer{ nullptr };
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pSRV			  { nullptr };
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>		 m_pPixelShader	  { nullptr };
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>		 m_pVertexShader  { nullptr };
 	};
 } // pixel_engine

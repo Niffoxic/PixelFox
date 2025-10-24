@@ -4,14 +4,18 @@
 #include "pixel_engine/core/event/event_windows.h"
 #include "pixel_engine/utilities/logger/logger.h"
 
-// TODO: Upload to GPU
-// via m_pDeviceContext->UpdateSubresource
-// (m_pBackBuffer.Get(), 0, nullptr, cpuBytes, 0, 0);
-
 _Use_decl_annotations_
 pixel_engine::PERenderManager::PERenderManager(PEWindowsManager* windows)
     : m_pWindowsManager(windows), IFrameObject()
 {
+}
+
+pixel_engine::PERenderManager::~PERenderManager()
+{
+    if (not Release()) 
+    {
+        logger::error("Failed to cleanly delete RenderManager");
+    }
 }
 
 _Use_decl_annotations_
@@ -22,18 +26,34 @@ bool pixel_engine::PERenderManager::Initialize()
 
     SubscribeToEvents();
 
-    //~ TODO: Initialize Render API
-    m_pRenderAPI = std::make_unique<PERenderAPI>();
+    //~ Initialize Render API
+    m_handleStartEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    m_handleEndEvent   = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+    CONSTRUCT_RENDER_API_DESC desc{};
+    desc.StartEvent = m_handleStartEvent;
+    desc.ExitEvent  = m_handleEndEvent;
+    m_pRenderAPI    = std::make_unique<PERenderAPI>(&desc);
 
     INIT_RENDER_API_DESC renderDesc{};
     renderDesc.FullScreen    = m_pWindowsManager->IsFullScreen() ? TRUE: FALSE;
     renderDesc.Height        = m_pWindowsManager->GetWindowsHeight();
     renderDesc.Width         = m_pWindowsManager->GetWindowsWidth();
     renderDesc.WindowsHandle = m_pWindowsManager->GetWindowsHandle();
-
-    logger::info("Creating with FullScreen?: {}", renderDesc.FullScreen);
     
-    if (not m_pRenderAPI->Init(&renderDesc))
+    if (not m_pRenderAPI->Init(&renderDesc)) return false;
+
+    m_handleThread = CreateThread(
+        nullptr,
+        0,
+        m_pRenderAPI->RenderThread,
+        m_pRenderAPI.get(),
+        0,
+        nullptr
+    );
+    if (not m_handleThread) return false;
+
+    SetEvent(m_handleStartEvent);
 
     logger::success(pixel_engine::logger_config::LogCategory::Render,
         "initialized RenderManager");
@@ -45,6 +65,20 @@ _Use_decl_annotations_
 bool pixel_engine::PERenderManager::Release()
 {
     UnSubscribeToEvents();
+
+    if (m_handleEndEvent) SetEvent(m_handleEndEvent);
+    
+    if (m_handleThread) 
+    {
+        WaitForSingleObject(m_handleThread, INFINITE);
+        CloseHandle(m_handleThread);
+        m_handleThread = nullptr;
+    }
+
+    SafeCloseEvent_(m_handleStartEvent);
+    SafeCloseEvent_(m_handleEndEvent);
+
+    m_pRenderAPI.reset();
 	return true;
 }
 
@@ -58,7 +92,7 @@ void pixel_engine::PERenderManager::OnFrameEnd()
 {
     if (m_pRenderAPI)
     {
-        m_pRenderAPI->Present();
+        m_pRenderAPI->WaitForPresent();
     }
 }
 
@@ -92,4 +126,23 @@ void pixel_engine::PERenderManager::UnSubscribeToEvents()
     {
         EventQueue::Unsubscribe(m_eventTokens[i]);
     }
+}
+
+void pixel_engine::PERenderManager::SafeCloseEvent_(HANDLE& h)
+{
+    if (!h) return;
+
+    DWORD flags = 0;
+    if (!GetHandleInformation(h, &flags))
+    {
+        logger::error("Failed to Close: Invalid!!");
+        h = nullptr;
+        return;
+    }
+
+    if (!CloseHandle(h)) 
+    {
+        logger::error("Failed to Close Handle!");
+    }
+    h = nullptr;
 }

@@ -6,6 +6,32 @@
 
 // TODO: Make logger thread safe!
 
+pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
+{
+    m_handleStartEvent = desc->StartEvent;
+    m_handleExitEvent  = desc->ExitEvent;
+
+    m_handlePresentEvent = CreateEvent(
+        nullptr,
+        TRUE,
+        FALSE,
+        nullptr
+    );
+
+    m_handlePresentDoneEvent = CreateEvent(
+        nullptr,
+        TRUE,
+        FALSE,
+        nullptr
+    );
+}
+
+pixel_engine::PERenderAPI::~PERenderAPI()
+{
+    if (m_handlePresentEvent)     CloseHandle(m_handlePresentEvent);
+    if (m_handlePresentDoneEvent) CloseHandle(m_handlePresentDoneEvent);
+}
+
 bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 {
     if (not CreateDeviceAndDeviceContext(desc)) return false;
@@ -18,10 +44,40 @@ bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
     return true;
 }
 
+DWORD pixel_engine::PERenderAPI::Execute()
+{
+    WaitForSingleObject(m_handleStartEvent, INFINITE);
+    
+    while (true)
+    {
+        if (WaitForSingleObject(m_handleExitEvent, 0) == WAIT_OBJECT_0)
+        {
+            return 0u;
+        }
+
+        //~ Prepare Images
+
+        //~ Wait for signal when to present
+        WaitForSingleObject(m_handlePresentEvent, INFINITE);
+        Present();
+        SetEvent(m_handlePresentDoneEvent); // present done
+    }
+    return 0;
+}
+
+void pixel_engine::PERenderAPI::WaitForPresent()
+{
+    ResetEvent(m_handlePresentDoneEvent);
+    SetEvent(m_handlePresentEvent);
+    WaitForSingleObject(m_handlePresentDoneEvent, INFINITE);
+}
+
 void pixel_engine::PERenderAPI::Present()
 {
-    const float clear[4] = { 0.72f, 0.23f, 0.62f, 1.0f };
+    const float clear[4] = { 1.f, 1.0f, 1.0f, 1.0f };
     m_pDeviceContext->ClearRenderTargetView(m_pRTV.Get(), clear);
+
+    TestImageUpdate();
 
     m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
     m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0u);
@@ -266,10 +322,12 @@ bool pixel_engine::PERenderAPI::CreatePixelShader(const INIT_RENDER_API_DESC* de
     }
 )";
 
-    D3D_SHADER_MACRO macros[] =
+    std::string wStr = std::to_string(desc->Width);
+    std::string hStr = std::to_string(desc->Height);
+    D3D_SHADER_MACRO macros[] = 
     {
-        { "WIDTH",  std::to_string(desc->Width).c_str() },
-        { "HEIGHT", std::to_string(desc->Height).c_str() },
+        { "WIDTH",  wStr.c_str() },
+        { "HEIGHT", hStr.c_str() },
         { nullptr, nullptr }
     };
 
@@ -334,8 +392,8 @@ bool pixel_engine::PERenderAPI::CreatePixelShader(const INIT_RENDER_API_DESC* de
     bdesc.CPUAccessFlags = 0u;
     bdesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
 
-    m_pBackBuffer.Reset();
-    hr = m_pDevice->CreateBuffer(&bdesc, nullptr, m_pBackBuffer.GetAddressOf());
+    m_pCpuImageBuffer.Reset();
+    hr = m_pDevice->CreateBuffer(&bdesc, nullptr, m_pCpuImageBuffer.GetAddressOf());
     if (FAILED(hr))
     {
         logger::error(
@@ -353,7 +411,7 @@ bool pixel_engine::PERenderAPI::CreatePixelShader(const INIT_RENDER_API_DESC* de
 
     m_pSRV.Reset();
     hr = m_pDevice->CreateShaderResourceView(
-        m_pBackBuffer.Get(),
+        m_pCpuImageBuffer.Get(),
         &srvd,
         m_pSRV.GetAddressOf());
 
@@ -374,26 +432,6 @@ bool pixel_engine::PERenderAPI::CreatePixelShader(const INIT_RENDER_API_DESC* de
     logger::success(
         pixel_engine::logger_config::LogCategory::Render,
         "Initialized and Configured Pixel Shader!");
-
-#pragma region TEST_REGION
-    const UINT w = desc->Width;
-    const UINT h = desc->Height;
-    const size_t testDataSize = size_t(w) * size_t(h) * 3u;
-    const size_t padded = (testDataSize + 3u) & ~size_t(3);
-
-    fox::vector<unsigned char> cpu(padded, 0);
-    for (UINT y = 0; y < h; ++y)
-    {
-        for (UINT x = 0; x < w; ++x)
-        {
-            size_t i = (size_t(y) * w + x) * 3u;
-            cpu[i + 0] = (unsigned char)(255.0f * (float)x / (float)w);
-            cpu[i + 1] = (unsigned char)(255.0f * (float)y / (float)h);
-            cpu[i + 2] = 33;
-        }
-    }
-    m_pDeviceContext->UpdateSubresource(m_pBackBuffer.Get(), 0, nullptr, cpu.data(), 0, 0);
-#pragma endregion
     return true;
 }
 
@@ -414,4 +452,25 @@ bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
         "Initialized and Configured Viewport");
 
     return true;
+}
+
+void pixel_engine::PERenderAPI::TestImageUpdate()
+{
+    const UINT w = m_Viewport.Width;
+    const UINT h = m_Viewport.Height;
+    const size_t testDataSize = size_t(w) * size_t(h) * 3u;
+    const size_t padded = (testDataSize + 3u) & ~size_t(3);
+
+    fox::vector<unsigned char> cpu(padded, 0);
+    for (UINT y = 0; y < h; ++y)
+    {
+        for (UINT x = 0; x < w; ++x)
+        {
+            size_t i = (size_t(y) * w + x) * 3u;
+            cpu[i + 0] = (unsigned char)(255.0f * (float)x / (float)w);
+            cpu[i + 1] = (unsigned char)(255.0f * (float)y / (float)h);
+            cpu[i + 2] = 33;
+        }
+    }
+    m_pDeviceContext->UpdateSubresource(m_pCpuImageBuffer.Get(), 0, nullptr, cpu.data(), 0, 0);
 }

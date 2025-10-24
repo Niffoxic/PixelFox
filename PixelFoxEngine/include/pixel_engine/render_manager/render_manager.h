@@ -15,7 +15,7 @@ namespace pixel_engine
 	{
 	public:
 		 PERenderManager(_In_ PEWindowsManager* windows);
-		~PERenderManager() = default;
+		~PERenderManager();
 
 		//~ interface implementation
 		_NODISCARD _Check_return_ bool Initialize() override;
@@ -31,9 +31,18 @@ namespace pixel_engine
 		void SubscribeToEvents  ();
 		void UnSubscribeToEvents();
 
+		//~ Helpers
+		void SafeCloseEvent_(HANDLE& h);
+
 	private:
-		PEWindowsManager*			 m_pWindowsManager{ nullptr };
-		std::unique_ptr<PERenderAPI> m_pRenderAPI	  { nullptr };
-		fox::vector<SubToken>		 m_eventTokens	  {};
+		PEWindowsManager*	  m_pWindowsManager{ nullptr };
+		fox::vector<SubToken> m_eventTokens	  {};
+
+		//~ Manage render api
+		std::unique_ptr<PERenderAPI> m_pRenderAPI{ nullptr };
+
+		HANDLE m_handleStartEvent{ nullptr };
+		HANDLE m_handleEndEvent  { nullptr };
+		HANDLE m_handleThread    { nullptr };
 	};
 }
