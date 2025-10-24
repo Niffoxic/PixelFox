@@ -19,6 +19,7 @@ pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC* desc)
         m_nWindowsWidth  = desc->Width;
         m_szWindowTitle  = desc->WindowTitle;
         m_nIconID        = desc->IconId;
+        m_bFullScreen    = desc->FullScreen;
     }
     else
     {
@@ -27,6 +28,7 @@ pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC* desc)
         m_nWindowsWidth  = 500u;
         m_szWindowTitle  = "Pixel Engine";
         m_nIconID        = 0u;
+        m_bFullScreen    = false;
     }
 }
 

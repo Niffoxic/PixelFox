@@ -12,10 +12,11 @@ namespace pixel_engine
 {
 	typedef struct _WINDOW_CREATE_DESC
 	{
-		std::string					  WindowTitle{ "PixelEngine" };
-		_Field_range_(100, 1920) UINT Width		 { 800 };
-		_Field_range_(100, 1080) UINT Height	 { 800 };
-		_Field_range_(0, 200)    UINT IconId	 { 0 };
+								 std::string WindowTitle{ "PixelEngine" };
+		_Field_range_(100, 1920) UINT		 Width		{ 800 };
+		_Field_range_(100, 1080) UINT		 Height		{ 800 };
+		_Field_range_(0, 200)    UINT		 IconId		{ 0 };
+								 bool		 FullScreen { false };
 	} PFE_API WINDOW_CREATE_DESC;
 
 	class PFE_API PEWindowsManager final: public IFrameObject

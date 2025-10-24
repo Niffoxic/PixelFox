@@ -6,14 +6,8 @@
 #include "pixel_engine/core/event/event_queue.h"
 #include "pixel_engine/window_manager/windows_manager.h"
 
-#include <wrl/client.h>
-#include <d3d11.h>
-#include <dxgi.h>
-#include <d3dcompiler.h>
-
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
+#include "api/render_api.h"
+#include <memory>
 
 namespace pixel_engine
 {
@@ -34,29 +28,12 @@ namespace pixel_engine
 		void OnFrameEnd  () override;
 
 	private:
-		bool CreateDeviceAndDeviceContext();
-		bool CreateSwapChain			 ();
-		bool CreateRTV					 ();
-		bool CreateVertexShader			 ();
-		bool CreatePixelShader			 ();
-		bool CreateViewport				 ();
-
 		void SubscribeToEvents  ();
 		void UnSubscribeToEvents();
 
 	private:
-		PEWindowsManager*	  m_pWindowsManager{ nullptr };
-		fox::vector<SubToken> m_eventTokens	   {};
-		D3D11_VIEWPORT		  m_Viewport	   {};
-		size_t				  m_PaddedDataSize { 0u };
-
-		Microsoft::WRL::ComPtr<ID3D11Device>			 m_pDevice       { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext>		 m_pDeviceContext{ nullptr };
-		Microsoft::WRL::ComPtr<IDXGISwapChain>			 m_pSwapchain    { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	 m_pRTV          { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11Buffer>			 m_pBackBuffer   { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pSRV		     { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>		 m_pPixelShader  { nullptr };
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>		 m_pVertexShader { nullptr };
+		PEWindowsManager*			 m_pWindowsManager{ nullptr };
+		std::unique_ptr<PERenderAPI> m_pRenderAPI	  { nullptr };
+		fox::vector<SubToken>		 m_eventTokens	  {};
 	};
 }
