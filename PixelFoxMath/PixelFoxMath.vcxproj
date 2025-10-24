@@ -157,6 +157,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="include\fox_math\math.h" />
     <ClInclude Include="include\fox_math\matrix.h" />
+    <ClInclude Include="include\fox_math\transform.h" />
     <ClInclude Include="include\fox_math\vector.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PixelFoxMathAPI.h" />
