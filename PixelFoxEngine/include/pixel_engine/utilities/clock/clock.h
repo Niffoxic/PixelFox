@@ -1,32 +1,36 @@
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
+#include <windows.h> 
 #include <chrono>
+#include <atomic>
 #include <sal.h>
 
 namespace pixel_engine
 {
-	class PFE_API clock
+	class PFE_API GameClock
 	{
 	public:
 		using Timer = std::chrono::steady_clock;
-		clock();
+		using TimePoint = Timer::time_point;
 		
-		clock(_In_ const clock&) = delete;
-		clock(_Inout_ clock&&)   = delete;
+		GameClock();
+		
+		GameClock(_In_ const GameClock&) = delete;
+		GameClock(_Inout_ GameClock&&)   = delete;
 
-		clock& operator=(_In_ const clock&) = delete;
-		clock& operator=(_Inout_ clock&&)   = delete;
+		GameClock& operator=(_In_ const GameClock&) = delete;
+		GameClock& operator=(_Inout_ GameClock&&)   = delete;
 
-		//~ clock features
-		void reset_clock();
+		//~ GameClock features
+		void ResetTime();
 		
 		// returns delta time in seconds
-		_NODISCARD _Check_return_ float tick		();
-		_NODISCARD _Check_return_ float time_elapsed() const; // total time in secs
-		_NODISCARD _Check_return_ float delta	    () const;
+		_NODISCARD _Check_return_ float Tick	   ();
+		_NODISCARD _Check_return_ float TimeElapsed() const; // total time in secs
+		_NODISCARD _Check_return_ float DeltaTime  () const;
 	private:
-		Timer::time_point m_timeStart;
-		Timer::time_point m_timeLastTick;
+		std::atomic<TimePoint> m_timeStart;
+		std::atomic<TimePoint> m_timeLastTick;
 	};
 } // namespace pixel_engine

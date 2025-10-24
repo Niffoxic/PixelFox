@@ -9,6 +9,8 @@
 #include <d3dcompiler.h>
 #include <windows.h>
 
+#include "pixel_engine/utilities/clock/clock.h"
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -28,6 +30,7 @@ namespace pixel_engine
 		int	 Height;
 		HWND WindowsHandle;
 		BOOL FullScreen;
+		GameClock* Clock;
 	} PFE_API INIT_RENDER_API_DESC;
 
 	class PFE_API PERenderAPI
@@ -56,7 +59,9 @@ namespace pixel_engine
 		void WaitForPresent();
 
 	private:
-		void Present();
+		void CleanFrame();
+		void WriteFrame(float deltaTime);
+		void PresentFrame();
 
 		bool CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc);
 		bool CreateSwapChain			 (const INIT_RENDER_API_DESC* desc);
@@ -65,9 +70,12 @@ namespace pixel_engine
 		bool CreatePixelShader			 (const INIT_RENDER_API_DESC* desc);
 		bool CreateViewport				 (const INIT_RENDER_API_DESC* desc);
 
-		void TestImageUpdate();
+		void TestImageUpdate(float deltaTime);
 
 	private:
+
+		//~ Core
+		GameClock* m_pClock{ nullptr };
 
 		//~ Thread Members
 		HANDLE m_handleStartEvent      { nullptr }; // render manager will own it

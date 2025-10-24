@@ -5,6 +5,7 @@
 #include "pixel_engine/core/interface/interface_frame.h"
 #include "pixel_engine/core/event/event_queue.h"
 #include "pixel_engine/window_manager/windows_manager.h"
+#include "pixel_engine/utilities/clock/clock.h"
 
 #include "api/render_api.h"
 #include <memory>
@@ -14,7 +15,10 @@ namespace pixel_engine
 	class PFE_API PERenderManager final: public IFrameObject
 	{
 	public:
-		 PERenderManager(_In_ PEWindowsManager* windows);
+		 PERenderManager(
+			 _In_ PEWindowsManager* windows,
+			 _In_ GameClock* clock);
+
 		~PERenderManager();
 
 		//~ interface implementation
@@ -35,8 +39,9 @@ namespace pixel_engine
 		void SafeCloseEvent_(HANDLE& h);
 
 	private:
-		PEWindowsManager*	  m_pWindowsManager{ nullptr };
-		fox::vector<SubToken> m_eventTokens	  {};
+		PEWindowsManager*	  m_pWindowsManager { nullptr };
+		GameClock*			  m_pClock			{ nullptr };
+		fox::vector<SubToken> m_eventTokens	    {};
 
 		//~ Manage render api
 		std::unique_ptr<PERenderAPI> m_pRenderAPI{ nullptr };

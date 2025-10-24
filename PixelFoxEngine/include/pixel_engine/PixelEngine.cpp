@@ -45,12 +45,12 @@ bool pixel_engine::PixelEngine::Init(PIXEL_ENGINE_INIT_DESC const* desc)
 _Use_decl_annotations_
 HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc)
 {
-	m_clock.reset_clock();
+	m_pClock->ResetTime();
 	logger::info("Starting Game Loop!");
 	BeginPlay();
 	while (true)
 	{
-		float dt = m_clock.tick();
+		float dt = m_pClock->Tick();
 		if (PEWindowsManager::ProcessMessage())
 		{
 			logger::warning("Closing Application!");
@@ -75,7 +75,7 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 		if (passed >= 1.0f)
 		{
 			avg_frames	     += frame;
-			last_time_elapsed = m_clock.time_elapsed();
+			last_time_elapsed = m_pClock->TimeElapsed();
 
 			std::string message =
 				"Time Elapsed: "								+ 
@@ -99,8 +99,10 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 
 bool pixel_engine::PixelEngine::CreateManagers(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
+	m_pClock		  = std::make_unique<GameClock>();
 	m_pWindowsManager = std::make_unique<PEWindowsManager>(desc->WindowsDesc);
-	m_pRenderManager  = std::make_unique<PERenderManager>(m_pWindowsManager.get());
+	m_pRenderManager  = std::make_unique<PERenderManager>
+		(m_pWindowsManager.get(), m_pClock.get());
 
 	return true;
 }
@@ -133,4 +135,3 @@ void pixel_engine::PixelEngine::SetManagerDependency()
 		m_pWindowsManager.get()
 	);
 }
-

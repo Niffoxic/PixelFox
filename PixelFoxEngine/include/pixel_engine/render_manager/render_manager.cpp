@@ -5,10 +5,11 @@
 #include "pixel_engine/utilities/logger/logger.h"
 
 _Use_decl_annotations_
-pixel_engine::PERenderManager::PERenderManager(PEWindowsManager* windows)
-    : m_pWindowsManager(windows), IFrameObject()
-{
-}
+pixel_engine::PERenderManager::PERenderManager(
+    PEWindowsManager* windows,
+    GameClock* clock)
+    : m_pWindowsManager(windows), m_pClock(clock), IFrameObject()
+{}
 
 pixel_engine::PERenderManager::~PERenderManager()
 {
@@ -40,6 +41,7 @@ bool pixel_engine::PERenderManager::Initialize()
     renderDesc.Height        = m_pWindowsManager->GetWindowsHeight();
     renderDesc.Width         = m_pWindowsManager->GetWindowsWidth();
     renderDesc.WindowsHandle = m_pWindowsManager->GetWindowsHandle();
+    renderDesc.Clock         = m_pClock;
     
     if (not m_pRenderAPI->Init(&renderDesc)) return false;
 
@@ -53,8 +55,26 @@ bool pixel_engine::PERenderManager::Initialize()
     );
     if (not m_handleThread) return false;
 
-    SetEvent(m_handleStartEvent);
+    //~ Boosts affinity and priority heheheheheh
+    DWORD_PTR systemMask = 0, processMask = 0;
+    if (GetProcessAffinityMask(GetCurrentProcess(), &processMask, &systemMask))
+    {
+        //~ Pin render api thread to the first available physical core
+        DWORD_PTR renderCore = 1ull << (std::countr_zero(processMask));
+        SetThreadAffinityMask(m_handleThread, renderCore);
+    }
 
+    //~ High priority for smoother frame pacing
+    SetThreadPriority(m_handleThread, THREAD_PRIORITY_HIGHEST);
+    SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    SetThreadDescription(m_handleThread, L"RenderAPIThread");
+
+    if (m_handleStartEvent)
+    {
+        SetEvent(m_handleStartEvent);
+    }
+    else return false;
+    
     logger::success(pixel_engine::logger_config::LogCategory::Render,
         "initialized RenderManager");
 
