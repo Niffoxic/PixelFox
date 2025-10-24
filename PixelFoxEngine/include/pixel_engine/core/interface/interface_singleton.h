@@ -23,7 +23,7 @@ namespace pixel_engine
         ISingleton& operator=(const ISingleton&) = delete;
         ISingleton& operator=(ISingleton&&) = delete;
 
-        // if needed to initialize
+        // if needed to Initialize
         template<class... Args>
         _Ret_notnull_ static T& Init(Args&&... args)
         {

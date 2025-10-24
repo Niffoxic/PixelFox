@@ -188,4 +188,3 @@ namespace pixel_engine
 // use it like: SERVICE_RESIGTER_UTILITY(logger, logger_desc)
 #define SERVICE_REGISTER_UTILITY(classname, ptr) \
 	pixel_engine::ServiceLocator::RegisterInstance<classname>((ptr), {});
-

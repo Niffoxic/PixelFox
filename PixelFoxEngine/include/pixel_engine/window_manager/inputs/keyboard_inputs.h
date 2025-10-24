@@ -35,14 +35,20 @@ namespace pixel_engine
 		PEKeyboardInputs& operator=(_In_ const PEKeyboardInputs&) = delete;
 		PEKeyboardInputs& operator=(_Inout_ PEKeyboardInputs&&)   = delete;
 
-		//~ For Systems
+		//~ Inherited via IInputHandler
+		_NODISCARD _Check_return_
+		std::string GetObjectName() const override;
+		
+		_NODISCARD _Check_return_ bool Initialize() override;
+		_NODISCARD _Check_return_ bool Release   () override;
+		
 		_Check_return_ _NODISCARD bool ProcessMessage(
 			_In_ UINT message,
 			_In_ WPARAM wParam,
 			_In_ LPARAM lParam) noexcept override;
 
-		void OnFrameBegin() noexcept override;
-		void OnFrameEnd  () noexcept override;
+		void OnFrameBegin(float deltaTime) noexcept override;
+		void OnFrameEnd  ()				   noexcept override;
 
 		//~ Queries
 		_Check_return_ _NODISCARD bool IsKeyPressed  (_FOX_VK_VALID int virtualKey) const noexcept;
