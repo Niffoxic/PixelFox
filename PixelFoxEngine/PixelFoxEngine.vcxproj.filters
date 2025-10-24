@@ -72,6 +72,18 @@
     <ClInclude Include="include\pixel_engine\core\dependency\dependency_resolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\event\event_windows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\event\event_render.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\core\event\event_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\utilities\clock\clock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -102,6 +114,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

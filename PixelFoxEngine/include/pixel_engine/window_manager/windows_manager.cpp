@@ -6,16 +6,28 @@
 
 #include "pixel_engine/exceptions/win_exception.h"
 #include "pixel_engine/core/event/event_queue.h"
+#include "pixel_engine/core/event/event_windows.h"
 
 #include "pixel_engine/utilities/logger/logger.h"
 
 _Use_decl_annotations_
-pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC& desc)
+pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC* desc)
 {
-	m_nWindowsHeight = desc.Height;
-	m_nWindowsWidth  = desc.Width;
-	m_szWindowTitle  = desc.WindowTitle;
-    m_nIconID        = desc.IconId;
+    if (desc)
+    {
+        m_nWindowsHeight = desc->Height;
+        m_nWindowsWidth  = desc->Width;
+        m_szWindowTitle  = desc->WindowTitle;
+        m_nIconID        = desc->IconId;
+    }
+    else
+    {
+        logger::warning("No Description provided for Windows Manager creating default");
+        m_nWindowsHeight = 500u;
+        m_nWindowsWidth  = 500u;
+        m_szWindowTitle  = "Pixel Engine";
+        m_nIconID        = 0u;
+    }
 }
 
 pixel_engine::PEWindowsManager::~PEWindowsManager()
@@ -116,12 +128,23 @@ float pixel_engine::PEWindowsManager::GetAspectRatio() const
 }
 
 _Use_decl_annotations_
-void pixel_engine::PEWindowsManager::SetWindowTitle(const std::string& title) const
+void pixel_engine::PEWindowsManager::SetWindowTitle(const std::string& title)
 {
 	if (auto handle = GetWindowsHandle())
 	{
+        m_szWindowTitle = title;
 		SetWindowText(handle, title.c_str());
 	}
+}
+
+_Use_decl_annotations_
+void pixel_engine::PEWindowsManager::SetWindowMessageOnTitle(const std::string& message) const
+{
+    if (auto handle = GetWindowsHandle())
+    {
+        std::string convert = m_szWindowTitle + " " + message;
+        SetWindowText(handle, convert.c_str());
+    }
 }
 
 _Use_decl_annotations_

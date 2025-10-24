@@ -1,18 +1,6 @@
-#include ""
-
+#include "application.h"
+#include "pixel_engine/exceptions/base_exception.h"
 #include "resource.h"
-
-#include <string>
-#include <thread>
-
-//~ Only Tests for now
-
-using namespace pixel_engine;
-
-struct WindowResizedEvent
-{
-    std::string message;
-};
 
 int CALLBACK WinMain(
     _In_ HINSTANCE     hInstance,
@@ -22,54 +10,20 @@ int CALLBACK WinMain(
 {
     try
     {
-        WINDOW_CREATE_DESC desc{};
-        desc.Height      = 500u;
-        desc.Width       = 800u;
-        desc.IconId      = IDI_ICON1;
-        desc.WindowTitle = "PixelFox";
+        pixel_engine::WINDOW_CREATE_DESC WindowsDesc{};
+        WindowsDesc.Height      = 500u;
+        WindowsDesc.Width       = 800u;
+        WindowsDesc.IconId      = IDI_ICON1;
+        WindowsDesc.WindowTitle = "PixelFoxTheGame";
 
-        
+        pixel_engine::PIXEL_ENGINE_CONSTRUCT_DESC engineDesc{};
+        engineDesc.WindowsDesc = &WindowsDesc;
 
-        PEWindowsManager windowsManager{ desc };
-        PERenderManager renderManager{};
+        pixel_game::Application application{&engineDesc};
 
+        if (not application.Init({})) return E_FAIL;
 
-        DependencyResolver resolver{};
-        resolver.Register(&renderManager);
-        resolver.Register(&windowsManager);
-
-        resolver.AddDependency(&renderManager, &windowsManager);
-
-        resolver.Init();
-
-        auto subA = EventQueue::Subscribe<WindowResizedEvent>([](const WindowResizedEvent& event)
-        {
-            logger::info(logger_config::LogCategory::Editor, "event: {}", event.message);
-            MessageBox(nullptr, event.message.c_str(), "Mesage", MB_OK);
-        });
-
-        EventQueue::Post(WindowResizedEvent{ "Is It woking?" });
-
-        logger::info("fmt ints {} {} hex 0x{:X}", 7, 11, 255);
-        logger::warning(logger_config::LogCategory::Asset, "cache {}% full", 78.5f);
-
-        // loop
-        while (true)
-        {
-            if (PEWindowsManager::ProcessMessage()) return S_OK;
-
-            resolver.UpdateLoopStart(0.0f);
-            resolver.UpdateLoopEnd();
-
-            EventQueue::DispatchAll();
-
-            static uint64_t fi = 1;
-            logger::set_frame_index(++fi);
-        }
-
-        resolver.Shutdown();
-        logger::close();
-        return S_OK;
+        return application.Execute({});
     }
     catch (const pixel_engine::BaseException& ex)
     {
