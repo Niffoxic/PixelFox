@@ -10,6 +10,7 @@
 #include <windows.h>
 
 #include "pixel_engine/utilities/clock/clock.h"
+#include "pixel_engine/render_manager/components/camera.h"
 
 #include "buffer/image.h"
 
@@ -80,8 +81,11 @@ namespace pixel_engine
 
 		//~ Rendering Tests
 		void TestImageUpdate(float deltaTime);
+		void InitCameraOnce();
 
 	private:
+		//~ Tests
+		Camera2D m_camera{};
 
 		//~ Core
 		GameClock* m_pClock{ nullptr };

@@ -7,6 +7,7 @@
 #include "core/vector.h"
 #include "pixel_engine/core/types.h"
 
+
 namespace pixel_engine
 {
 	class PFE_API PEImageBuffer

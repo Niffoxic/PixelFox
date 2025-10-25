@@ -4,6 +4,13 @@
 
 namespace pixel_engine
 {
+	typedef struct _PFE_RECT
+	{
+		float x;
+		float y;
+		float w;
+		float h;
+	} PFE_RECT;
 
 	typedef struct _PFE_FORMAT_R8_UINT
 	{

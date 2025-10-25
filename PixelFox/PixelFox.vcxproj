@@ -125,7 +125,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxEngine\include;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxPhysics;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxEngine\include;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxMath\include;$(SolutionDir)PixelFoxPhysics;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxEngine\include;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxPhysics;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include;$(SolutionDir)PixelFoxEngine;$(SolutionDir)PixelFoxEngine\include;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxMath\include;$(SolutionDir)PixelFoxPhysics;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>

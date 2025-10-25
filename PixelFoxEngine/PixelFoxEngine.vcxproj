@@ -119,7 +119,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include\;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxMath\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -142,7 +142,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;$(SolutionDir)PixelFoxCore;$(SolutionDir)PixelFoxCore\include\;$(SolutionDir)PixelFoxMath;$(SolutionDir)PixelFoxMath\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,6 +172,7 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_text.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\buffer\image.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\camera.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_defines.h" />
     <ClInclude Include="include\pixel_engine\utilities\clock\clock.h" />
     <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\buffer\image.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\camera.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />

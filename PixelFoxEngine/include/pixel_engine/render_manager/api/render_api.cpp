@@ -4,7 +4,8 @@
 #include "pixel_engine/utilities/logger/logger.h" 
 #include "core/vector.h"
 
-// TODO: Make logger thread safe!
+#include "fox_math/math.h"
+#include <cmath>
 
 pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 {
@@ -516,18 +517,107 @@ bool pixel_engine::PERenderAPI::CreateImageBuffer(const INIT_RENDER_API_DESC* de
 
 void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
 {
-    //~ draw a vertical line
-    int center = m_Viewport.Width / 2;
-    for (int y = 0; y < m_Viewport.Height; y++)
+    InitCameraOnce();
+
+    struct RGB { uint8_t r, g, b; };
+
+    auto InBounds = [](int x, int y, int W, int H) noexcept
     {
-        m_imageBuffer->WriteAt(y, center, { 0, 0, 0 });
-    }
+        return (uint32_t)x < (uint32_t)W && (uint32_t)y < (uint32_t)H;
+    };
+
+    auto Plot = [&](int x, int y, RGB c) noexcept 
+    {
+        if (InBounds(x, y, (int)m_imageBuffer->Width(), (int)m_imageBuffer->Height()))
+            m_imageBuffer->WriteAt(y, x, { c.r,c.g,c.b });
+    };
+
+    auto WorldToPixel = [&](const FVector2D& w) noexcept 
+    {
+        const FVector2D s = m_camera.WorldToScreen(w);
+        return std::pair<int, int>{ (int)std::lround(s.x), (int)std::lround(s.y) };
+    };
     
+    auto DotW = [&](const FVector2D& w, RGB c) noexcept 
+    {
+        auto [x, y] = WorldToPixel(w);
+        Plot(x, y, c);
+    };
+
+    auto CrossW = [&](const FVector2D& w, int half, RGB c) noexcept
+    {
+        auto [x, y] = WorldToPixel(w);
+        for (int i = -half; i <= half; ++i) { Plot(x + i, y, c); Plot(x, y + i, c); }
+    };
+
+    auto BoxW = [&](const FVector2D& w, int half, RGB c) noexcept 
+    {
+        auto [x, y] = WorldToPixel(w);
+        const int l = x - half, r = x + half, t = y - half, b = y + half;
+        for (int i = l; i <= r; ++i) { Plot(i, t, c); Plot(i, b, c); }
+        for (int j = t; j <= b; ++j) { Plot(l, j, c); Plot(r, j, c); }
+    };
+
+    auto Clear = [&](RGB c) noexcept 
+    {
+        for (uint32_t y = 0; y < m_imageBuffer->Height(); ++y)
+            for (uint32_t x = 0; x < m_imageBuffer->Width(); ++x)
+                m_imageBuffer->WriteAt(y, x, { c.r,c.g,c.b });
+    };
+
+    static FVector2D sFollow{ 0.f, 0.f };
+    static bool sBound = false;
+    if (!sBound) 
+    {
+        m_camera.SetFollowTarget(&sFollow);
+        m_camera.SetFollowSmoothing(0.20f);
+        m_camera.SetZoom(60.0f);
+        m_camera.SetRotation(0.f);
+        sBound = true;
+    }
+
+    static float t = 0.f; t += deltaTime;
+    sFollow.x = 6.0f * std::cos(t * 0.8f);
+    sFollow.y = 4.0f * std::sin(t * 1.1f);
+
+    m_camera.OnFrameBegin(deltaTime);
+
+    Clear({ 240,240,240 });
+
+    DotW({ -10.f,-10.f }, { 120,120,120 });
+    DotW({ 10.f,-10.f }, { 120,120,120 });
+    DotW({ 10.f, 10.f }, { 120,120,120 });
+    DotW({ -10.f, 10.f }, { 120,120,120 });
+
+    CrossW({ 0.f,0.f }, 5, { 30, 30, 30 });
+    BoxW({ 0.f,0.f }, 8, { 30, 30, 30 });
+
+    BoxW(sFollow, 6, { 255, 80, 80 });
+    CrossW(sFollow, 4, { 80,200,120 });
+    DotW(sFollow, { 20, 20,255 });
+
+    m_camera.OnFrameEnd();
+
     m_pDeviceContext->UpdateSubresource(
         m_pCpuImageBuffer.Get(),
-        0,
-        nullptr,
+        0, nullptr,
         m_imageBuffer->Data(),
         (UINT)m_imageBuffer->RowPitch(),
         0);
+}
+
+void pixel_engine::PERenderAPI::InitCameraOnce()
+{
+    static bool s_inited = false;
+    if (s_inited) return;
+    s_inited = true;
+
+    m_camera.SetViewportSize(m_Viewport.Width, m_Viewport.Height);
+    m_camera.SetViewportOrigin({ m_Viewport.Width * 0.5f, m_Viewport.Height * 0.5f });
+    m_camera.SetScreenYDown(true);
+    m_camera.SetPosition({ 0.f, 0.f });
+    m_camera.SetZoom(50.0f);
+
+    m_camera.EnableWorldClamp(false);
+    m_camera.Initialize();
 }
