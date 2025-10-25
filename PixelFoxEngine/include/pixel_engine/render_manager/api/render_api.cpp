@@ -34,12 +34,8 @@ pixel_engine::PERenderAPI::~PERenderAPI()
 
 bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 {
-    if (not CreateDeviceAndDeviceContext(desc)) return false;
-    if (not CreateSwapChain(desc))              return false;
-    if (not CreateRTV(desc))                    return false;
-    if (not CreateVertexShader(desc))           return false;
-    if (not CreatePixelShader(desc))            return false;
-    if (not CreateViewport(desc))               return false;
+    if (not InitializeDirectX(desc))   return false;
+    if (not InitializeRenderAPI(desc)) return false;
 
     if (desc->Clock) m_pClock = desc->Clock;
 
@@ -95,6 +91,9 @@ void pixel_engine::PERenderAPI::CleanFrame()
 {
     const float clear[4] = { 1.f, 1.0f, 1.0f, 1.0f };
     m_pDeviceContext->ClearRenderTargetView(m_pRTV.Get(), clear);
+
+    //~ TODO: Replace with PESwapchain
+    m_imageBuffer->ClearImageBuffer({ 255, 255, 255 });
 }
 
 void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
@@ -108,6 +107,18 @@ void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
 void pixel_engine::PERenderAPI::PresentFrame()
 {
     m_pSwapchain->Present(1u, 0u);
+}
+
+bool pixel_engine::PERenderAPI::InitializeDirectX(const INIT_RENDER_API_DESC* desc)
+{
+    if (not CreateDeviceAndDeviceContext(desc)) return false;
+    if (not CreateSwapChain(desc))              return false;
+    if (not CreateRTV(desc))                    return false;
+    if (not CreateVertexShader(desc))           return false;
+    if (not CreatePixelShader(desc))            return false;
+    if (not CreateViewport(desc))               return false;
+
+    return true;
 }
 
 bool pixel_engine::PERenderAPI::CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc)
@@ -479,215 +490,44 @@ bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
     return true;
 }
 
+bool pixel_engine::PERenderAPI::InitializeRenderAPI(const INIT_RENDER_API_DESC* desc)
+{
+    if (not CreateImageBuffer(desc)) return false;
+    return true;
+}
+
+bool pixel_engine::PERenderAPI::CreateImageBuffer(const INIT_RENDER_API_DESC* desc)
+{
+    PE_IMAGE_BUFFER_DESC imageDesc{};
+    imageDesc.Height = desc->Height;
+    imageDesc.Width  = desc->Width;
+    m_imageBuffer    = std::make_unique<PEImageBuffer>(imageDesc);
+
+    if (m_imageBuffer->Empty())
+    {
+        logger::error("Failed to create render api image buffer!");
+        return false;
+    }
+
+    return true;
+}
+
 // ================== I M TESTING HERE ===========================
-
-struct TestRGB { unsigned char r, g, b; };
-
-struct TestSurface
-{
-    unsigned char* data = nullptr;
-    UINT width = 0;
-    UINT height = 0;
-    size_t stride = 0;
-    UINT channels = 3;
-
-    inline void Put(UINT x, UINT y, TestRGB c) noexcept
-    {
-        if (x >= width || y >= height) return;
-        unsigned char* p = data + y * stride + x * channels;
-        p[0] = c.r; p[1] = c.g; p[2] = c.b;
-    }
-};
-
-inline size_t TestRowPitchRGB(UINT w) noexcept
-{
-    const size_t raw = size_t(w) * 3u;
-    return (raw + 3u) & ~size_t(3);
-}
-
-inline TestSurface TestMakeSurface(unsigned char* buf, UINT w, UINT h, UINT channels = 3) noexcept
-{
-    TestSurface s{};
-    s.data = buf;
-    s.width = w;
-    s.height = h;
-    s.channels = channels;
-    s.stride = TestRowPitchRGB(w);
-    return s;
-}
-
-inline TestRGB TestRGBu(unsigned char r, unsigned char g, unsigned char b) noexcept { return { r, g, b }; }
-
-// color palette
-inline TestRGB TestPalette(int idx) noexcept
-{
-    switch (idx & 7)
-    {
-    case 0: return TestRGBu(20, 20, 20);    // near-black
-    case 1: return TestRGBu(240, 240, 240); // near-white
-    case 2: return TestRGBu(255, 85, 85);   // red-ish
-    case 3: return TestRGBu(85, 255, 170);  // mint
-    case 4: return TestRGBu(85, 170, 255);  // sky
-    case 5: return TestRGBu(255, 210, 64);  // gold
-    case 6: return TestRGBu(160, 96, 255);  // violet
-    default:return TestRGBu(64, 192, 96);   // green
-    }
-}
-
-inline void TestClear(TestSurface& s, TestRGB c) noexcept
-{
-    for (UINT y = 0; y < s.height; ++y)
-    {
-        unsigned char* row = s.data + y * s.stride;
-        for (UINT x = 0; x < s.width; ++x)
-        {
-            row[x * 3 + 0] = c.r;
-            row[x * 3 + 1] = c.g;
-            row[x * 3 + 2] = c.b;
-        }
-    }
-}
-
-// Bresenham line
-inline void TestDrawLine32(unsigned cx0, unsigned cy0, unsigned cx1, unsigned cy1,
-    TestRGB col,
-    TestSurface& s, UINT w, UINT h)
-{
-    (void)cx0;
-    (void)cy0;
-
-    (void)cx1;
-    (void)cy1;
-
-    (void)col;
-    (void)s;
-    (void)w;
-    (void)h;
-}
-
-//~ Solid border around 32x32 virtual canvas
-inline bool TestIsBorder32(int cx, int cy)
-{
-    return (cx == 0 || cy == 0 || cx == 31 || cy == 31);
-}
-
-//~ Filled circle mask on 32x32 grid
-inline bool TestInCircle32(int cx, int cy, float centerX, float centerY, float radius)
-{
-    float dx = float(cx) - centerX;
-    float dy = float(cy) - centerY;
-    return (dx * dx + dy * dy) <= (radius * radius);
-}
-
-//~ Checkboard pattern on 32x32 grid
-inline TestRGB TestChecker32(int cx, int cy, TestRGB a, TestRGB b)
-{
-    return (((cx ^ cy) & 1) ? b : a);
-}
-
-inline TestRGB TestSample32(int cx, int cy, float t)
-{
-    // Base: soft checkerboard
-    TestRGB base = TestChecker32(cx, cy, TestPalette(0), TestPalette(0)); // very dark background
-
-    // Subtle gradient tint
-    float gx = (cx / 31.0f);
-    float gy = (cy / 31.0f);
-    unsigned char tint = (unsigned char)(18.0f * (gx * 0.6f + gy * 0.4f));
-    base.r = (unsigned char)std::min(255, base.r + tint);
-    base.g = (unsigned char)std::min(255, base.g + tint);
-    base.b = (unsigned char)std::min(255, base.b + tint);
-
-    // Border
-    if (TestIsBorder32(cx, cy))
-        return TestPalette(4); // sky-blue border
-
-    // Smiley face in the center
-    if (TestInCircle32(cx, cy, 16.0f, 16.0f, 10.5f))
-    {
-        // Face base
-        TestRGB face = TestPalette(5);
-        bool eyeL = (cx >= 11 && cx <= 13 && cy >= 12 && cy <= 13);
-        bool eyeR = (cx >= 19 && cx <= 21 && cy >= 12 && cy <= 13);
-        if (eyeL || eyeR) return TestPalette(1);
-
-        if (cy >= 19 && cy <= 21 && cx >= 11 && cx <= 21)
-        {
-            float mx = (cx - 16.0f);
-            float my = (cy - 19.0f);
-            float curve = my - (mx * mx) * 0.04f;
-            if (curve >= -0.7f && curve <= 1.2f)
-                return TestPalette(2);
-        }
-
-        return face;
-    }
-
-    // Animated sparkle dot orbiting the face
-    float ang = t * 2.1f; // radians/sec
-    int sx = int(16.0f + 14.0f * std::cos(ang));
-    int sy = int(16.0f + 14.0f * std::sin(ang));
-    if (cx == sx && cy == sy)
-        return TestPalette(6);
-
-    if (((cx + cy) % 7) == 0) return TestRGBu(28, 28, 48);
-    if (((cx - cy) % 9) == 0) return TestRGBu(22, 36, 64);
-
-    return base;
-}
-
-inline void TestBlitCell32ToSurface(TestSurface& s, int cx, int cy, TestRGB c)
-{
-    const UINT w = s.width, h = s.height;
-    const UINT x0 = (UINT)((uint64_t)cx * w / 32u);
-    const UINT y0 = (UINT)((uint64_t)cy * h / 32u);
-    const UINT x1 = (UINT)((uint64_t)(cx + 1) * w / 32u);
-    const UINT y1 = (UINT)((uint64_t)(cy + 1) * h / 32u);
-    for (UINT y = y0; y < y1; ++y)
-    {
-        unsigned char* row = s.data + y * s.stride;
-        for (UINT x = x0; x < x1; ++x)
-        {
-            unsigned char* p = row + x * 3u;
-            p[0] = c.r; p[1] = c.g; p[2] = c.b;
-        }
-    }
-}
-
-inline void TestRenderVirtual32(TestSurface& s, float t)
-{
-    for (int cy = 0; cy < 32; ++cy)
-    {
-        for (int cx = 0; cx < 32; ++cx)
-        {
-            const TestRGB col = TestSample32(cx, cy, t);
-            TestBlitCell32ToSurface(s, cx, cy, col);
-        }
-    }
-}
 
 void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
 {
-    static float t = 0.0f;
-    t += deltaTime;
-
-    const UINT w = m_Viewport.Width;
-    const UINT h = m_Viewport.Height;
-
-    const size_t rowPitch = TestRowPitchRGB(w);
-    const size_t bytes = rowPitch * size_t(h);
-
-    fox::vector<unsigned char> cpu(bytes, 0);
-
-    TestSurface surface = TestMakeSurface(cpu.data(), w, h, 3);
-
-    TestRenderVirtual32(surface, t);
+    //~ draw a vertical line
+    int center = m_Viewport.Width / 2;
+    for (int y = 0; y < m_Viewport.Height; y++)
+    {
+        m_imageBuffer->WriteAt(y, center, { 0, 0, 0 });
+    }
     
     m_pDeviceContext->UpdateSubresource(
         m_pCpuImageBuffer.Get(),
         0,
         nullptr,
-        cpu.data(),
-        (UINT)rowPitch,
+        m_imageBuffer->Data(),
+        (UINT)m_imageBuffer->RowPitch(),
         0);
 }

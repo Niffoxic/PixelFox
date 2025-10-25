@@ -156,7 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="include\pixel_engine\core\core.h" />
+    <ClInclude Include="include\pixel_engine\core\types.h" />
     <ClInclude Include="include\pixel_engine\core\dependency\dependency_resolver.h" />
     <ClInclude Include="include\pixel_engine\core\event\event_engine.h" />
     <ClInclude Include="include\pixel_engine\core\event\event_render.h" />
@@ -170,6 +170,7 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_sprite.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_light.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_text.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\api\buffer\image.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_defines.h" />
     <ClInclude Include="include\pixel_engine\utilities\clock\clock.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp" />
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\api\buffer\image.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
