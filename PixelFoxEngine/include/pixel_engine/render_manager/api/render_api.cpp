@@ -14,14 +14,14 @@ pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 
     m_handlePresentEvent = CreateEvent(
         nullptr,
-        TRUE,
+        FALSE,
         FALSE,
         nullptr
     );
 
     m_handlePresentDoneEvent = CreateEvent(
         nullptr,
-        TRUE,
+        FALSE,
         FALSE,
         nullptr
     );
@@ -45,45 +45,54 @@ bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 
 DWORD pixel_engine::PERenderAPI::Execute()
 {
+    logger::info("[RenderThread] Waiting for Start Event...");
     WaitForSingleObject(m_handleStartEvent, INFINITE);
-    HANDLE waits[2] = { m_handleExitEvent, m_handlePresentEvent };
-    
+    logger::info("[RenderThread] Start Event received: render loop begin.");
+
+    const HANDLE waits[2] = { m_handleExitEvent, m_handlePresentEvent };
+
     while (true)
     {
         if (WaitForSingleObject(m_handleExitEvent, 0) == WAIT_OBJECT_0)
         {
+            logger::info("[RenderThread] Exit signal received — shutting down.");
+            SetEvent(m_handlePresentDoneEvent);
             return 0u;
         }
 
-        //~ Prepare Images
         CleanFrame();
-        float dt = m_pClock ? m_pClock->DeltaTime() : 0.0f;
+        const float dt = m_pClock ? m_pClock->DeltaTime() : 0.0f;
         WriteFrame(dt);
 
-        //~ Wait for signal when to present or if quit is fired
-        DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
-
-        if (flag == WAIT_OBJECT_0) // exit called probably
+        const DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
+        if (flag == WAIT_OBJECT_0) // exit
         {
+            SetEvent(m_handlePresentDoneEvent);
             return 0u;
         }
         else if (flag == WAIT_OBJECT_0 + 1)
         {
             PresentFrame();
-            SetEvent(m_handlePresentDoneEvent); // present done
+            SetEvent(m_handlePresentDoneEvent);
         }
-        else 
+        else if (flag == WAIT_FAILED)
         {
-            // Unknown error
-            return 0u; // TODO: Need to think about returns for error codes
+            const DWORD err = GetLastError();
+            logger::info("[RenderThread] WaitForMultipleObjects WAIT_FAILED (GetLastError=0x{:08X}) — aborting.", err);
+            SetEvent(m_handlePresentDoneEvent);
+            return 0u;
+        }
+        else
+        {
+            logger::info("[RenderThread] Unexpected WaitForMultipleObjects result (0x{:X}) — aborting.", flag);
+            SetEvent(m_handlePresentDoneEvent);
+            return 0u;
         }
     }
-    return 0;
 }
 
 void pixel_engine::PERenderAPI::WaitForPresent()
 {
-    ResetEvent(m_handlePresentDoneEvent);
     SetEvent(m_handlePresentEvent);
     WaitForSingleObject(m_handlePresentDoneEvent, INFINITE);
 }
@@ -528,26 +537,37 @@ void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
 
     auto Plot = [&](int x, int y, RGB c) noexcept 
     {
-        if (InBounds(x, y, (int)m_imageBuffer->Width(), (int)m_imageBuffer->Height()))
+        if (InBounds(x, y,  (int)m_imageBuffer->Width(),
+                            (int)m_imageBuffer->Height()))
             m_imageBuffer->WriteAt(y, x, { c.r,c.g,c.b });
     };
 
-    auto WorldToPixel = [&](const FVector2D& w) noexcept 
+    auto WorldToPixel = [&](const FVector2D& w) noexcept
     {
         const FVector2D s = m_camera.WorldToScreen(w);
         return std::pair<int, int>{ (int)std::lround(s.x), (int)std::lround(s.y) };
     };
-    
+
     auto DotW = [&](const FVector2D& w, RGB c) noexcept 
     {
-        auto [x, y] = WorldToPixel(w);
-        Plot(x, y, c);
+        auto [x, y] = WorldToPixel(w); Plot(x, y, c);
     };
 
-    auto CrossW = [&](const FVector2D& w, int half, RGB c) noexcept
+    auto CrossW = [&](const FVector2D& w, int half, RGB c) noexcept 
     {
         auto [x, y] = WorldToPixel(w);
         for (int i = -half; i <= half; ++i) { Plot(x + i, y, c); Plot(x, y + i, c); }
+    };
+
+    auto CrossScreen = [&](int cx, int cy, int half, RGB c) noexcept
+    {
+        const int W = (int)m_imageBuffer->Width();
+        const int H = (int)m_imageBuffer->Height();
+        for (int i = -half; i <= half; ++i)
+        {
+            if ((uint32_t)(cx + i) < (uint32_t)W) m_imageBuffer->WriteAt((uint32_t)cy, (uint32_t)(cx + i), { c.r,c.g,c.b });
+            if ((uint32_t)(cy + i) < (uint32_t)H) m_imageBuffer->WriteAt((uint32_t)(cy + i), (uint32_t)cx, { c.r,c.g,c.b });
+        }
     };
 
     auto BoxW = [&](const FVector2D& w, int half, RGB c) noexcept 
@@ -558,15 +578,47 @@ void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
         for (int j = t; j <= b; ++j) { Plot(l, j, c); Plot(r, j, c); }
     };
 
-    auto Clear = [&](RGB c) noexcept 
+    auto Line = [&](int x0, int y0, int x1, int y1, RGB c) noexcept 
     {
-        for (uint32_t y = 0; y < m_imageBuffer->Height(); ++y)
-            for (uint32_t x = 0; x < m_imageBuffer->Width(); ++x)
-                m_imageBuffer->WriteAt(y, x, { c.r,c.g,c.b });
+        int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+        for (;;) {
+            Plot(x0, y0, c);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = err << 1;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
     };
 
+    auto LineW = [&](const FVector2D& A, const FVector2D& B, RGB c) noexcept 
+    {
+        const auto a = WorldToPixel(A);
+        const auto b = WorldToPixel(B);
+        Line(a.first, a.second, b.first, b.second, c);
+    };
+
+    auto RectOutlineW = [&](FVector2D minP, FVector2D maxP, RGB c) noexcept 
+    {
+        FVector2D p0{ minP.x, minP.y }, p1{ maxP.x, minP.y };
+        FVector2D p2{ maxP.x, maxP.y }, p3{ minP.x, maxP.y };
+        LineW(p0, p1, c); LineW(p1, p2, c); LineW(p2, p3, c); LineW(p3, p0, c);
+    };
+
+    auto hash2i = [](int x, int y) noexcept -> uint32_t
+    {
+        uint32_t h = 2166136261u;
+        h ^= (uint32_t)x + 0x9e3779b9u + (h << 6) + (h >> 2);
+        h ^= (uint32_t)y + 0x85ebca6bu + (h << 6) + (h >> 2);
+        h *= 16777619u;
+        return h;
+    };
+
+    // animated follow target
     static FVector2D sFollow{ 0.f, 0.f };
     static bool sBound = false;
+    
     if (!sBound) 
     {
         m_camera.SetFollowTarget(&sFollow);
@@ -582,19 +634,88 @@ void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
 
     m_camera.OnFrameBegin(deltaTime);
 
-    Clear({ 240,240,240 });
+    // Build 32x32 tile once
+    static bool sInit = false;
+    static uint8_t sTile[32][32][3]; // RGB
+    if (!sInit)
+    {
+        auto h = [](int x, int y)->uint32_t {
+            uint32_t v = 2166136261u;
+            v ^= (uint32_t)x + 0x9e3779b9u + (v << 6) + (v >> 2);
+            v ^= (uint32_t)y + 0x85ebca6bu + (v << 6) + (v >> 2);
+            v *= 16777619u;
+            return v;
+            };
+        for (int ty = 0; ty < 32; ++ty)
+        {
+            for (int tx = 0; tx < 32; ++tx)
+            {
+                // Stable pattern inside the tile
+                uint32_t v = h(tx, ty);
+                uint8_t g = (uint8_t)(140 + (v & 0x3F));
+                uint8_t r = (uint8_t)(18 + ((v >> 6) & 0x1F));
+                uint8_t b = (uint8_t)(18 + ((v >> 11) & 0x1F));
+                sTile[ty][tx][0] = r;
+                sTile[ty][tx][1] = g;
+                sTile[ty][tx][2] = b;
+            }
+        }
+        sInit = true;
+    }
 
-    DotW({ -10.f,-10.f }, { 120,120,120 });
-    DotW({ 10.f,-10.f }, { 120,120,120 });
-    DotW({ 10.f, 10.f }, { 120,120,120 });
-    DotW({ -10.f, 10.f }, { 120,120,120 });
+    const uint32_t W = m_imageBuffer->Width();
+    const uint32_t H = m_imageBuffer->Height();
 
+    // Anchor tiles to world origin
+    const FVector2D s00 = m_camera.WorldToScreen({ 0.f, 0.f });
+
+    // Compute positive wrap offsets in [0,31]
+    auto wrap32 = [](int v) { v %= 32; if (v < 0) v += 32; return v; };
+    const int offX = wrap32((int)std::floor(s00.x));
+    const int offY = wrap32((int)std::floor(s00.y));
+
+    // Start drawing tiles so that the grid aligns with world origin
+    const int startX = -offX;
+    const int startY = -offY;
+
+    // Blit tile across the screen
+    for (int y = startY; y < (int)H; y += 32)
+    {
+        for (int x = startX; x < (int)W; x += 32)
+        {
+            // Blit 32x32
+            const int maxY = std::min(y + 32, (int)H);
+            const int maxX = std::min(x + 32, (int)W);
+            for (int py = std::max(0, y); py < maxY; ++py)
+            {
+                const int sy = py - y; // tile y
+                for (int px = std::max(0, x); px < maxX; ++px)
+                {
+                    const int sx = px - x; // tile x
+                    const uint8_t r = sTile[sy][sx][0];
+                    const uint8_t g = sTile[sy][sx][1];
+                    const uint8_t b = sTile[sy][sx][2];
+                    m_imageBuffer->WriteAt((uint32_t)py, (uint32_t)px, { r, g, b });
+                }
+            }
+        }
+    }
+    
+    // origin markers
     CrossW({ 0.f,0.f }, 5, { 30, 30, 30 });
     BoxW({ 0.f,0.f }, 8, { 30, 30, 30 });
 
+    // static obstacles
+    RectOutlineW({ -8.f,-2.f }, { -4.f, 2.f }, { 255,120, 60 }); // left
+    RectOutlineW({ 3.f, 4.f }, { 7.f, 7.f }, { 60,160,255 }); // top-right
+    RectOutlineW({ 8.f,-5.f }, { 11.f,-1.f }, { 180, 80,220 }); // far right
+    RectOutlineW({ -10.f, 3.f }, { -6.f, 6.f }, { 80,200,120 }); // top-left
+
+    // the followed target
     BoxW(sFollow, 6, { 255, 80, 80 });
     CrossW(sFollow, 4, { 80,200,120 });
     DotW(sFollow, { 20, 20,255 });
+    CrossScreen((int)(m_Viewport.Width * 0.5f), (int)(m_Viewport.Height * 0.5f), 6, { 255, 255, 0 });
 
     m_camera.OnFrameEnd();
 

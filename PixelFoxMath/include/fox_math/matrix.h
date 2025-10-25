@@ -21,7 +21,7 @@ namespace fox_math
     public:
         //~ Constructors
         _Success_(true)
-            _CONSTEXPR20 Matrix2DAffine() noexcept
+        _CONSTEXPR20 Matrix2DAffine() noexcept
             : matrix{ { T(1), T(0), T(0) },
                       { T(0), T(1), T(0) } } //~ setting identity by default
         {}
