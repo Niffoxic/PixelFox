@@ -10,6 +10,9 @@
 #include <windows.h>
 
 #include "pixel_engine/utilities/clock/clock.h"
+#include "pixel_engine/render_manager/components/camera.h"
+
+#include "buffer/image.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -63,6 +66,8 @@ namespace pixel_engine
 		void WriteFrame(float deltaTime);
 		void PresentFrame();
 
+		//~ DirectX Creation
+		bool InitializeDirectX			 (const INIT_RENDER_API_DESC* desc);
 		bool CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc);
 		bool CreateSwapChain			 (const INIT_RENDER_API_DESC* desc);
 		bool CreateRTV					 (const INIT_RENDER_API_DESC* desc);
@@ -70,12 +75,23 @@ namespace pixel_engine
 		bool CreatePixelShader			 (const INIT_RENDER_API_DESC* desc);
 		bool CreateViewport				 (const INIT_RENDER_API_DESC* desc);
 
+		//~ RenderAPI Core creation
+		bool InitializeRenderAPI(const INIT_RENDER_API_DESC* desc);
+		bool CreateImageBuffer  (const INIT_RENDER_API_DESC* desc);
+
+		//~ Rendering Tests
 		void TestImageUpdate(float deltaTime);
+		void InitCameraOnce();
 
 	private:
+		//~ Tests
+		Camera2D m_camera{};
 
 		//~ Core
 		GameClock* m_pClock{ nullptr };
+
+		//~ Image Buffers( local)
+		std::unique_ptr<PEImageBuffer> m_imageBuffer{ nullptr };
 
 		//~ Thread Members
 		HANDLE m_handleStartEvent      { nullptr }; // render manager will own it

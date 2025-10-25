@@ -105,10 +105,16 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\core\core.h">
+    <ClInclude Include="include\pixel_engine\core\types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\api\buffer\image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -147,6 +153,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\api\buffer\image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -115,3 +115,6 @@ namespace fox_math
         }
     };
 } // namespace fox_math
+
+//~ types
+using FTransform2D = fox_math::Transform2D<float>;

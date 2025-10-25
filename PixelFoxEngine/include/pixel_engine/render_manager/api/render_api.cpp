@@ -4,7 +4,8 @@
 #include "pixel_engine/utilities/logger/logger.h" 
 #include "core/vector.h"
 
-// TODO: Make logger thread safe!
+#include "fox_math/math.h"
+#include <cmath>
 
 pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 {
@@ -13,14 +14,14 @@ pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 
     m_handlePresentEvent = CreateEvent(
         nullptr,
-        TRUE,
+        FALSE,
         FALSE,
         nullptr
     );
 
     m_handlePresentDoneEvent = CreateEvent(
         nullptr,
-        TRUE,
+        FALSE,
         FALSE,
         nullptr
     );
@@ -34,12 +35,8 @@ pixel_engine::PERenderAPI::~PERenderAPI()
 
 bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 {
-    if (not CreateDeviceAndDeviceContext(desc)) return false;
-    if (not CreateSwapChain(desc))              return false;
-    if (not CreateRTV(desc))                    return false;
-    if (not CreateVertexShader(desc))           return false;
-    if (not CreatePixelShader(desc))            return false;
-    if (not CreateViewport(desc))               return false;
+    if (not InitializeDirectX(desc))   return false;
+    if (not InitializeRenderAPI(desc)) return false;
 
     if (desc->Clock) m_pClock = desc->Clock;
 
@@ -48,45 +45,54 @@ bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 
 DWORD pixel_engine::PERenderAPI::Execute()
 {
+    logger::info("[RenderThread] Waiting for Start Event...");
     WaitForSingleObject(m_handleStartEvent, INFINITE);
-    HANDLE waits[2] = { m_handleExitEvent, m_handlePresentEvent };
-    
+    logger::info("[RenderThread] Start Event received: render loop begin.");
+
+    const HANDLE waits[2] = { m_handleExitEvent, m_handlePresentEvent };
+
     while (true)
     {
         if (WaitForSingleObject(m_handleExitEvent, 0) == WAIT_OBJECT_0)
         {
+            logger::info("[RenderThread] Exit signal received — shutting down.");
+            SetEvent(m_handlePresentDoneEvent);
             return 0u;
         }
 
-        //~ Prepare Images
         CleanFrame();
-        float dt = m_pClock ? m_pClock->DeltaTime() : 0.0f;
+        const float dt = m_pClock ? m_pClock->DeltaTime() : 0.0f;
         WriteFrame(dt);
 
-        //~ Wait for signal when to present or if quit is fired
-        DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
-
-        if (flag == WAIT_OBJECT_0) // exit called probably
+        const DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
+        if (flag == WAIT_OBJECT_0) // exit
         {
+            SetEvent(m_handlePresentDoneEvent);
             return 0u;
         }
         else if (flag == WAIT_OBJECT_0 + 1)
         {
             PresentFrame();
-            SetEvent(m_handlePresentDoneEvent); // present done
+            SetEvent(m_handlePresentDoneEvent);
         }
-        else 
+        else if (flag == WAIT_FAILED)
         {
-            // Unknown error
-            return 0u; // TODO: Need to think about returns for error codes
+            const DWORD err = GetLastError();
+            logger::info("[RenderThread] WaitForMultipleObjects WAIT_FAILED (GetLastError=0x{:08X}) — aborting.", err);
+            SetEvent(m_handlePresentDoneEvent);
+            return 0u;
+        }
+        else
+        {
+            logger::info("[RenderThread] Unexpected WaitForMultipleObjects result (0x{:X}) — aborting.", flag);
+            SetEvent(m_handlePresentDoneEvent);
+            return 0u;
         }
     }
-    return 0;
 }
 
 void pixel_engine::PERenderAPI::WaitForPresent()
 {
-    ResetEvent(m_handlePresentDoneEvent);
     SetEvent(m_handlePresentEvent);
     WaitForSingleObject(m_handlePresentDoneEvent, INFINITE);
 }
@@ -95,6 +101,9 @@ void pixel_engine::PERenderAPI::CleanFrame()
 {
     const float clear[4] = { 1.f, 1.0f, 1.0f, 1.0f };
     m_pDeviceContext->ClearRenderTargetView(m_pRTV.Get(), clear);
+
+    //~ TODO: Replace with PESwapchain
+    m_imageBuffer->ClearImageBuffer({ 255, 255, 255 });
 }
 
 void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
@@ -108,6 +117,18 @@ void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
 void pixel_engine::PERenderAPI::PresentFrame()
 {
     m_pSwapchain->Present(1u, 0u);
+}
+
+bool pixel_engine::PERenderAPI::InitializeDirectX(const INIT_RENDER_API_DESC* desc)
+{
+    if (not CreateDeviceAndDeviceContext(desc)) return false;
+    if (not CreateSwapChain(desc))              return false;
+    if (not CreateRTV(desc))                    return false;
+    if (not CreateVertexShader(desc))           return false;
+    if (not CreatePixelShader(desc))            return false;
+    if (not CreateViewport(desc))               return false;
+
+    return true;
 }
 
 bool pixel_engine::PERenderAPI::CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc)
@@ -479,215 +500,245 @@ bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
     return true;
 }
 
+bool pixel_engine::PERenderAPI::InitializeRenderAPI(const INIT_RENDER_API_DESC* desc)
+{
+    if (not CreateImageBuffer(desc)) return false;
+    return true;
+}
+
+bool pixel_engine::PERenderAPI::CreateImageBuffer(const INIT_RENDER_API_DESC* desc)
+{
+    PE_IMAGE_BUFFER_DESC imageDesc{};
+    imageDesc.Height = desc->Height;
+    imageDesc.Width  = desc->Width;
+    m_imageBuffer    = std::make_unique<PEImageBuffer>(imageDesc);
+
+    if (m_imageBuffer->Empty())
+    {
+        logger::error("Failed to create render api image buffer!");
+        return false;
+    }
+
+    return true;
+}
+
 // ================== I M TESTING HERE ===========================
-
-struct TestRGB { unsigned char r, g, b; };
-
-struct TestSurface
-{
-    unsigned char* data = nullptr;
-    UINT width = 0;
-    UINT height = 0;
-    size_t stride = 0;
-    UINT channels = 3;
-
-    inline void Put(UINT x, UINT y, TestRGB c) noexcept
-    {
-        if (x >= width || y >= height) return;
-        unsigned char* p = data + y * stride + x * channels;
-        p[0] = c.r; p[1] = c.g; p[2] = c.b;
-    }
-};
-
-inline size_t TestRowPitchRGB(UINT w) noexcept
-{
-    const size_t raw = size_t(w) * 3u;
-    return (raw + 3u) & ~size_t(3);
-}
-
-inline TestSurface TestMakeSurface(unsigned char* buf, UINT w, UINT h, UINT channels = 3) noexcept
-{
-    TestSurface s{};
-    s.data = buf;
-    s.width = w;
-    s.height = h;
-    s.channels = channels;
-    s.stride = TestRowPitchRGB(w);
-    return s;
-}
-
-inline TestRGB TestRGBu(unsigned char r, unsigned char g, unsigned char b) noexcept { return { r, g, b }; }
-
-// color palette
-inline TestRGB TestPalette(int idx) noexcept
-{
-    switch (idx & 7)
-    {
-    case 0: return TestRGBu(20, 20, 20);    // near-black
-    case 1: return TestRGBu(240, 240, 240); // near-white
-    case 2: return TestRGBu(255, 85, 85);   // red-ish
-    case 3: return TestRGBu(85, 255, 170);  // mint
-    case 4: return TestRGBu(85, 170, 255);  // sky
-    case 5: return TestRGBu(255, 210, 64);  // gold
-    case 6: return TestRGBu(160, 96, 255);  // violet
-    default:return TestRGBu(64, 192, 96);   // green
-    }
-}
-
-inline void TestClear(TestSurface& s, TestRGB c) noexcept
-{
-    for (UINT y = 0; y < s.height; ++y)
-    {
-        unsigned char* row = s.data + y * s.stride;
-        for (UINT x = 0; x < s.width; ++x)
-        {
-            row[x * 3 + 0] = c.r;
-            row[x * 3 + 1] = c.g;
-            row[x * 3 + 2] = c.b;
-        }
-    }
-}
-
-// Bresenham line
-inline void TestDrawLine32(unsigned cx0, unsigned cy0, unsigned cx1, unsigned cy1,
-    TestRGB col,
-    TestSurface& s, UINT w, UINT h)
-{
-    (void)cx0;
-    (void)cy0;
-
-    (void)cx1;
-    (void)cy1;
-
-    (void)col;
-    (void)s;
-    (void)w;
-    (void)h;
-}
-
-//~ Solid border around 32x32 virtual canvas
-inline bool TestIsBorder32(int cx, int cy)
-{
-    return (cx == 0 || cy == 0 || cx == 31 || cy == 31);
-}
-
-//~ Filled circle mask on 32x32 grid
-inline bool TestInCircle32(int cx, int cy, float centerX, float centerY, float radius)
-{
-    float dx = float(cx) - centerX;
-    float dy = float(cy) - centerY;
-    return (dx * dx + dy * dy) <= (radius * radius);
-}
-
-//~ Checkboard pattern on 32x32 grid
-inline TestRGB TestChecker32(int cx, int cy, TestRGB a, TestRGB b)
-{
-    return (((cx ^ cy) & 1) ? b : a);
-}
-
-inline TestRGB TestSample32(int cx, int cy, float t)
-{
-    // Base: soft checkerboard
-    TestRGB base = TestChecker32(cx, cy, TestPalette(0), TestPalette(0)); // very dark background
-
-    // Subtle gradient tint
-    float gx = (cx / 31.0f);
-    float gy = (cy / 31.0f);
-    unsigned char tint = (unsigned char)(18.0f * (gx * 0.6f + gy * 0.4f));
-    base.r = (unsigned char)std::min(255, base.r + tint);
-    base.g = (unsigned char)std::min(255, base.g + tint);
-    base.b = (unsigned char)std::min(255, base.b + tint);
-
-    // Border
-    if (TestIsBorder32(cx, cy))
-        return TestPalette(4); // sky-blue border
-
-    // Smiley face in the center
-    if (TestInCircle32(cx, cy, 16.0f, 16.0f, 10.5f))
-    {
-        // Face base
-        TestRGB face = TestPalette(5);
-        bool eyeL = (cx >= 11 && cx <= 13 && cy >= 12 && cy <= 13);
-        bool eyeR = (cx >= 19 && cx <= 21 && cy >= 12 && cy <= 13);
-        if (eyeL || eyeR) return TestPalette(1);
-
-        if (cy >= 19 && cy <= 21 && cx >= 11 && cx <= 21)
-        {
-            float mx = (cx - 16.0f);
-            float my = (cy - 19.0f);
-            float curve = my - (mx * mx) * 0.04f;
-            if (curve >= -0.7f && curve <= 1.2f)
-                return TestPalette(2);
-        }
-
-        return face;
-    }
-
-    // Animated sparkle dot orbiting the face
-    float ang = t * 2.1f; // radians/sec
-    int sx = int(16.0f + 14.0f * std::cos(ang));
-    int sy = int(16.0f + 14.0f * std::sin(ang));
-    if (cx == sx && cy == sy)
-        return TestPalette(6);
-
-    if (((cx + cy) % 7) == 0) return TestRGBu(28, 28, 48);
-    if (((cx - cy) % 9) == 0) return TestRGBu(22, 36, 64);
-
-    return base;
-}
-
-inline void TestBlitCell32ToSurface(TestSurface& s, int cx, int cy, TestRGB c)
-{
-    const UINT w = s.width, h = s.height;
-    const UINT x0 = (UINT)((uint64_t)cx * w / 32u);
-    const UINT y0 = (UINT)((uint64_t)cy * h / 32u);
-    const UINT x1 = (UINT)((uint64_t)(cx + 1) * w / 32u);
-    const UINT y1 = (UINT)((uint64_t)(cy + 1) * h / 32u);
-    for (UINT y = y0; y < y1; ++y)
-    {
-        unsigned char* row = s.data + y * s.stride;
-        for (UINT x = x0; x < x1; ++x)
-        {
-            unsigned char* p = row + x * 3u;
-            p[0] = c.r; p[1] = c.g; p[2] = c.b;
-        }
-    }
-}
-
-inline void TestRenderVirtual32(TestSurface& s, float t)
-{
-    for (int cy = 0; cy < 32; ++cy)
-    {
-        for (int cx = 0; cx < 32; ++cx)
-        {
-            const TestRGB col = TestSample32(cx, cy, t);
-            TestBlitCell32ToSurface(s, cx, cy, col);
-        }
-    }
-}
 
 void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
 {
-    static float t = 0.0f;
-    t += deltaTime;
+    InitCameraOnce();
 
-    const UINT w = m_Viewport.Width;
-    const UINT h = m_Viewport.Height;
+    struct RGB { uint8_t r, g, b; };
 
-    const size_t rowPitch = TestRowPitchRGB(w);
-    const size_t bytes = rowPitch * size_t(h);
+    auto InBounds = [](int x, int y, int W, int H) noexcept
+    {
+        return (uint32_t)x < (uint32_t)W && (uint32_t)y < (uint32_t)H;
+    };
 
-    fox::vector<unsigned char> cpu(bytes, 0);
+    auto Plot = [&](int x, int y, RGB c) noexcept 
+    {
+        if (InBounds(x, y,  (int)m_imageBuffer->Width(),
+                            (int)m_imageBuffer->Height()))
+            m_imageBuffer->WriteAt(y, x, { c.r,c.g,c.b });
+    };
 
-    TestSurface surface = TestMakeSurface(cpu.data(), w, h, 3);
+    auto WorldToPixel = [&](const FVector2D& w) noexcept
+    {
+        const FVector2D s = m_camera.WorldToScreen(w);
+        return std::pair<int, int>{ (int)std::lround(s.x), (int)std::lround(s.y) };
+    };
 
-    TestRenderVirtual32(surface, t);
+    auto DotW = [&](const FVector2D& w, RGB c) noexcept 
+    {
+        auto [x, y] = WorldToPixel(w); Plot(x, y, c);
+    };
+
+    auto CrossW = [&](const FVector2D& w, int half, RGB c) noexcept 
+    {
+        auto [x, y] = WorldToPixel(w);
+        for (int i = -half; i <= half; ++i) { Plot(x + i, y, c); Plot(x, y + i, c); }
+    };
+
+    auto CrossScreen = [&](int cx, int cy, int half, RGB c) noexcept
+    {
+        const int W = (int)m_imageBuffer->Width();
+        const int H = (int)m_imageBuffer->Height();
+        for (int i = -half; i <= half; ++i)
+        {
+            if ((uint32_t)(cx + i) < (uint32_t)W) m_imageBuffer->WriteAt((uint32_t)cy, (uint32_t)(cx + i), { c.r,c.g,c.b });
+            if ((uint32_t)(cy + i) < (uint32_t)H) m_imageBuffer->WriteAt((uint32_t)(cy + i), (uint32_t)cx, { c.r,c.g,c.b });
+        }
+    };
+
+    auto BoxW = [&](const FVector2D& w, int half, RGB c) noexcept 
+    {
+        auto [x, y] = WorldToPixel(w);
+        const int l = x - half, r = x + half, t = y - half, b = y + half;
+        for (int i = l; i <= r; ++i) { Plot(i, t, c); Plot(i, b, c); }
+        for (int j = t; j <= b; ++j) { Plot(l, j, c); Plot(r, j, c); }
+    };
+
+    auto Line = [&](int x0, int y0, int x1, int y1, RGB c) noexcept 
+    {
+        int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+        for (;;) {
+            Plot(x0, y0, c);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = err << 1;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    };
+
+    auto LineW = [&](const FVector2D& A, const FVector2D& B, RGB c) noexcept 
+    {
+        const auto a = WorldToPixel(A);
+        const auto b = WorldToPixel(B);
+        Line(a.first, a.second, b.first, b.second, c);
+    };
+
+    auto RectOutlineW = [&](FVector2D minP, FVector2D maxP, RGB c) noexcept 
+    {
+        FVector2D p0{ minP.x, minP.y }, p1{ maxP.x, minP.y };
+        FVector2D p2{ maxP.x, maxP.y }, p3{ minP.x, maxP.y };
+        LineW(p0, p1, c); LineW(p1, p2, c); LineW(p2, p3, c); LineW(p3, p0, c);
+    };
+
+    auto hash2i = [](int x, int y) noexcept -> uint32_t
+    {
+        uint32_t h = 2166136261u;
+        h ^= (uint32_t)x + 0x9e3779b9u + (h << 6) + (h >> 2);
+        h ^= (uint32_t)y + 0x85ebca6bu + (h << 6) + (h >> 2);
+        h *= 16777619u;
+        return h;
+    };
+
+    // animated follow target
+    static FVector2D sFollow{ 0.f, 0.f };
+    static bool sBound = false;
     
+    if (!sBound) 
+    {
+        m_camera.SetFollowTarget(&sFollow);
+        m_camera.SetFollowSmoothing(0.20f);
+        m_camera.SetZoom(60.0f);
+        m_camera.SetRotation(0.f);
+        sBound = true;
+    }
+
+    static float t = 0.f; t += deltaTime;
+    sFollow.x = 6.0f * std::cos(t * 0.8f);
+    sFollow.y = 4.0f * std::sin(t * 1.1f);
+
+    m_camera.OnFrameBegin(deltaTime);
+
+    // Build 32x32 tile once
+    static bool sInit = false;
+    static uint8_t sTile[32][32][3]; // RGB
+    if (!sInit)
+    {
+        auto h = [](int x, int y)->uint32_t {
+            uint32_t v = 2166136261u;
+            v ^= (uint32_t)x + 0x9e3779b9u + (v << 6) + (v >> 2);
+            v ^= (uint32_t)y + 0x85ebca6bu + (v << 6) + (v >> 2);
+            v *= 16777619u;
+            return v;
+            };
+        for (int ty = 0; ty < 32; ++ty)
+        {
+            for (int tx = 0; tx < 32; ++tx)
+            {
+                // Stable pattern inside the tile
+                uint32_t v = h(tx, ty);
+                uint8_t g = (uint8_t)(140 + (v & 0x3F));
+                uint8_t r = (uint8_t)(18 + ((v >> 6) & 0x1F));
+                uint8_t b = (uint8_t)(18 + ((v >> 11) & 0x1F));
+                sTile[ty][tx][0] = r;
+                sTile[ty][tx][1] = g;
+                sTile[ty][tx][2] = b;
+            }
+        }
+        sInit = true;
+    }
+
+    const uint32_t W = m_imageBuffer->Width();
+    const uint32_t H = m_imageBuffer->Height();
+
+    // Anchor tiles to world origin
+    const FVector2D s00 = m_camera.WorldToScreen({ 0.f, 0.f });
+
+    // Compute positive wrap offsets in [0,31]
+    auto wrap32 = [](int v) { v %= 32; if (v < 0) v += 32; return v; };
+    const int offX = wrap32((int)std::floor(s00.x));
+    const int offY = wrap32((int)std::floor(s00.y));
+
+    // Start drawing tiles so that the grid aligns with world origin
+    const int startX = -offX;
+    const int startY = -offY;
+
+    // Blit tile across the screen
+    for (int y = startY; y < (int)H; y += 32)
+    {
+        for (int x = startX; x < (int)W; x += 32)
+        {
+            // Blit 32x32
+            const int maxY = std::min(y + 32, (int)H);
+            const int maxX = std::min(x + 32, (int)W);
+            for (int py = std::max(0, y); py < maxY; ++py)
+            {
+                const int sy = py - y; // tile y
+                for (int px = std::max(0, x); px < maxX; ++px)
+                {
+                    const int sx = px - x; // tile x
+                    const uint8_t r = sTile[sy][sx][0];
+                    const uint8_t g = sTile[sy][sx][1];
+                    const uint8_t b = sTile[sy][sx][2];
+                    m_imageBuffer->WriteAt((uint32_t)py, (uint32_t)px, { r, g, b });
+                }
+            }
+        }
+    }
+    
+    // origin markers
+    CrossW({ 0.f,0.f }, 5, { 30, 30, 30 });
+    BoxW({ 0.f,0.f }, 8, { 30, 30, 30 });
+
+    // static obstacles
+    RectOutlineW({ -8.f,-2.f }, { -4.f, 2.f }, { 255,120, 60 }); // left
+    RectOutlineW({ 3.f, 4.f }, { 7.f, 7.f }, { 60,160,255 }); // top-right
+    RectOutlineW({ 8.f,-5.f }, { 11.f,-1.f }, { 180, 80,220 }); // far right
+    RectOutlineW({ -10.f, 3.f }, { -6.f, 6.f }, { 80,200,120 }); // top-left
+
+    // the followed target
+    BoxW(sFollow, 6, { 255, 80, 80 });
+    CrossW(sFollow, 4, { 80,200,120 });
+    DotW(sFollow, { 20, 20,255 });
+    CrossScreen((int)(m_Viewport.Width * 0.5f), (int)(m_Viewport.Height * 0.5f), 6, { 255, 255, 0 });
+
+    m_camera.OnFrameEnd();
+
     m_pDeviceContext->UpdateSubresource(
         m_pCpuImageBuffer.Get(),
-        0,
-        nullptr,
-        cpu.data(),
-        (UINT)rowPitch,
+        0, nullptr,
+        m_imageBuffer->Data(),
+        (UINT)m_imageBuffer->RowPitch(),
         0);
+}
+
+void pixel_engine::PERenderAPI::InitCameraOnce()
+{
+    static bool s_inited = false;
+    if (s_inited) return;
+    s_inited = true;
+
+    m_camera.SetViewportSize(m_Viewport.Width, m_Viewport.Height);
+    m_camera.SetViewportOrigin({ m_Viewport.Width * 0.5f, m_Viewport.Height * 0.5f });
+    m_camera.SetScreenYDown(true);
+    m_camera.SetPosition({ 0.f, 0.f });
+    m_camera.SetZoom(50.0f);
+
+    m_camera.EnableWorldClamp(false);
+    m_camera.Initialize();
 }

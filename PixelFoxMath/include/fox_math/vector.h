@@ -8,7 +8,8 @@
 
 namespace fox_math
 {
-    template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+    template<typename T = int,
+        typename = std::enable_if_t<std::is_arithmetic_v<T>>>
     class Vector2D
     {
     public:
@@ -296,3 +297,6 @@ namespace fox_math
         return { v.x * s, v.y * s };
     }
 } // namespace fox_math
+
+    //~ type defines
+using FVector2D = fox_math::Vector2D<float>;

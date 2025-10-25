@@ -2,7 +2,7 @@
 
 #include "PixelFoxEngineAPI.h"
 
-#include "pixel_engine/core/core.h"
+#include "pixel_engine/core/types.h"
 
 namespace pixel_engine
 {

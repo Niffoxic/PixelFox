@@ -1,33 +1,31 @@
 #pragma once
 
 #include "PixelFoxMathAPI.h"
+#include <sal.h>
 
 namespace fox_math 
 {
-    // ============================================================
-        // Constants (double precision) + templated typed variants
-        // ============================================================
-    inline constexpr double PI = 3.14159265358979323846;
-    inline constexpr double TWO_PI = 6.28318530717958647692;
-    inline constexpr double HALF_PI = 1.57079632679489661923;
-    inline constexpr double DEG2RADd = PI / 180.0;
-    inline constexpr double RAD2DEGd = 180.0 / PI;
+    //~ Constants
+    inline _CONSTEXPR20 double PI       = 3.14159265358979323846;
+    inline _CONSTEXPR20 double TWO_PI   = 6.28318530717958647692;
+    inline _CONSTEXPR20 double HALF_PI  = 1.57079632679489661923;
+    inline _CONSTEXPR20 double DEG2RADd = PI / 180.0;
+    inline _CONSTEXPR20 double RAD2DEGd = 180.0 / PI;
+
+    template<typename T,typename = std::enable_if_t<std::is_floating_point_v<T>>>
+    inline _CONSTEXPR20 T PI_v = static_cast<T>(PI);
 
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-    inline constexpr T PI_v = static_cast<T>(PI);
+    inline _CONSTEXPR20 T TWO_PI_v = static_cast<T>(TWO_PI);
 
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-    inline constexpr T TWO_PI_v = static_cast<T>(TWO_PI);
+    inline _CONSTEXPR20 T HALF_PI_v = static_cast<T>(HALF_PI);
 
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-    inline constexpr T HALF_PI_v = static_cast<T>(HALF_PI);
+    inline _CONSTEXPR20 T DEG2RAD_v = static_cast<T>(DEG2RADd);
 
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-    inline constexpr T DEG2RAD_v = static_cast<T>(DEG2RADd);
-
-    template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
-    inline constexpr T RAD2DEG_v = static_cast<T>(RAD2DEGd);
-
+    inline _CONSTEXPR20 T RAD2DEG_v = static_cast<T>(RAD2DEGd);
 
     template<typename T>
     _Check_return_ _NODISCARD
@@ -75,7 +73,7 @@ namespace fox_math
         return a + (b - a) * t;
     }
 
-    // SmoothStep edge0->edge1 (cubic Hermite), clamps t to [0,1]
+    // SmoothStep edge0 to edge1 [0,1]
     template<typename T, typename U>
     _Check_return_ _NODISCARD
     _CONSTEXPR20 auto SmoothStep(_In_ T edge0, _In_ T edge1, _In_ U x) noexcept

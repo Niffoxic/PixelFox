@@ -21,7 +21,7 @@ namespace fox_math
     public:
         //~ Constructors
         _Success_(true)
-            _CONSTEXPR20 Matrix2DAffine() noexcept
+        _CONSTEXPR20 Matrix2DAffine() noexcept
             : matrix{ { T(1), T(0), T(0) },
                       { T(0), T(1), T(0) } } //~ setting identity by default
         {}
@@ -108,10 +108,10 @@ namespace fox_math
             const T invDet = T(1) / det;
 
             Matrix2DAffine r;
-            r.matrix[0][0] = matrix[1][1] * invDet;
+            r.matrix[0][0] = matrix[1][1]  * invDet;
             r.matrix[0][1] = -matrix[0][1] * invDet;
             r.matrix[1][0] = -matrix[1][0] * invDet;
-            r.matrix[1][1] = matrix[0][0] * invDet;
+            r.matrix[1][1] = matrix[0][0]  * invDet;
 
             r.matrix[0][2] = -(r.matrix[0][0] * matrix[0][2] + r.matrix[0][1] * matrix[1][2]);
             r.matrix[1][2] = -(r.matrix[1][0] * matrix[0][2] + r.matrix[1][1] * matrix[1][2]);
@@ -221,3 +221,5 @@ namespace fox_math
         }
     };
 } // namespace fox_math
+
+using FMatrix2DAffine = fox_math::Matrix2DAffine<float>;
