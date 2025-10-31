@@ -227,184 +227,194 @@ namespace
         ExpectContiguous(v);
     }
 
-    //TEST(Vector_Constructors, CountValueInit) 
-    //{
-    //    FOX_VECTOR<int> v(4);
-    //    ASSERT_EQ(v.size(), 4u);
-    //    for (auto x : v) EXPECT_EQ(x, 0);
-    //}
+    TEST(Vector_Constructors, CountValueInit) 
+    {
+        FOX_VECTOR<int> v(4);
+        ASSERT_EQ(v.size(), 4u);
+        for (auto x : v) EXPECT_EQ(x, 0);
+    }
 
-    //TEST(Vector_Constructors, RangeCtor_InputIterator) 
-    //{
-    //    int a[]{ 1,2,3,4 };
-    //    FOX_VECTOR<int> v(InputIter<int>(a), InputIter<int>(a + 4));
-    //    ASSERT_EQ(v.size(), 4u);
-    //    EXPECT_EQ(v[0], 1); EXPECT_EQ(v[3], 4);
-    //}
+    TEST(Vector_Constructors, RangeCtor_InputIterator) 
+    {
+        int a[]{ 1,2,3,4 };
+        FOX_VECTOR<int> v(InputIter<int>(a), InputIter<int>(a + 4));
+        ASSERT_EQ(v.size(), 4u);
+        EXPECT_EQ(v[0], 1); EXPECT_EQ(v[3], 4);
+    }
 
-    //TEST(Vector_Constructors, RangeCtor_ForwardIterator)
-    //{
-    //    int a[]{ 5,6,7 };
-    //    FOX_VECTOR<int> v(FwdIter<int>(a), FwdIter<int>(a + 3));
-    //    ASSERT_EQ(v.size(), 3u);
-    //    EXPECT_EQ(v[1], 6);
-    //}
+    TEST(Vector_Constructors, RangeCtor_ForwardIterator)
+    {
+        int a[]{ 5,6,7 };
+        FOX_VECTOR<int> v(FwdIter<int>(a), FwdIter<int>(a + 3));
+        ASSERT_EQ(v.size(), 3u);
+        EXPECT_EQ(v[1], 6);
+    }
 
-    //TEST(Vector_Constructors, InitializerList)
-    //{
-    //    FOX_VECTOR<std::string> v{ "a","bb","ccc" };
-    //    ASSERT_EQ(v.size(), 3u);
-    //    EXPECT_EQ(v.front(), "a");
-    //    EXPECT_EQ(v.back(), "ccc");
-    //}
+    TEST(Vector_Constructors, InitializerList)
+    {
+        FOX_VECTOR<std::string> v{ "a","bb","ccc" };
+        ASSERT_EQ(v.size(), 3u);
+        EXPECT_EQ(v.front(), "a");
+        EXPECT_EQ(v.back(), "ccc");
+    }
 
-    //TEST(Vector_Constructors, CopyAndMove)
-    //{
-    //    FOX_VECTOR<int> a{ 1,2,3 };
-    //    FOX_VECTOR<int> b = a; // copy
-    //    ASSERT_EQ(b.size(), 3u);
-    //    EXPECT_EQ(b[1], 2);
-
-    //    FOX_VECTOR<int> c = std::move(a);
-    //    ASSERT_EQ(c.size(), 3u);
-    //    EXPECT_EQ(c[2], 3);
-    //}
+    TEST(Vector_Constructors, CopyAndMove)
+    {
+        FOX_VECTOR<int> a{ 1,2,3 };
+        FOX_VECTOR<int> b = a; // copy
+        ASSERT_EQ(b.size(), 3u);
+        EXPECT_EQ(b[1], 2);
+        FOX_VECTOR<int> c = std::move(a);
+        ASSERT_EQ(c.size(), 3u);
+        EXPECT_EQ(c[2], 3);
+    }
 
 //    // ---------- 2) Assignment & assign() ----------
-//    TEST(Vector_Assignment, CopyMoveAssign) {
-//        FOX_VECTOR<int> a{ 1,2,3 };
-//        FOX_VECTOR<int> b; b = a;
-//        ASSERT_EQ(b.size(), 3u); EXPECT_EQ(b[0], 1);
-//        FOX_VECTOR<int> c; c = std::move(a);
-//        ASSERT_EQ(c.size(), 3u); EXPECT_EQ(c[1], 2);
-//    }
-//
-//    TEST(Vector_Assignment, AssignCountValue) {
-//        FOX_VECTOR<int> v; v.assign(5, 42);
-//        ASSERT_EQ(v.size(), 5u);
-//        for (auto x : v) EXPECT_EQ(x, 42);
-//    }
-//
-//    TEST(Vector_Assignment, AssignRangeAndInitList) {
-//        int a[]{ 7,8,9 };
-//        FOX_VECTOR<int> v; v.assign(std::begin(a), std::end(a));
-//        ASSERT_EQ(v.size(), 3u); EXPECT_EQ(v[2], 9);
-//        v.assign({ 1,2 });
-//        ASSERT_EQ(v.size(), 2u); EXPECT_EQ(v[1], 2);
-//    }
+    TEST(Vector_Assignment, CopyMoveAssign)
+    {
+        FOX_VECTOR<int> a{ 1,2,3 };
+        FOX_VECTOR<int> b; b = a;
+        ASSERT_EQ(b.size(), 3u); EXPECT_EQ(b[0], 1);
+        FOX_VECTOR<int> c; c = std::move(a);
+        ASSERT_EQ(c.size(), 3u); EXPECT_EQ(c[1], 2);
+    }
+////
+    TEST(Vector_Assignment, AssignCountValue) 
+    {
+        FOX_VECTOR<int> v; v.assign(5, 42);
+        ASSERT_EQ(v.size(), 5u);
+        for (auto x : v) EXPECT_EQ(x, 42);
+    }
+////
+    TEST(Vector_Assignment, AssignRangeAndInitList)
+    {
+        int a[]{ 7,8,9 };
+        FOX_VECTOR<int> v; v.assign(std::begin(a), std::end(a));
+        ASSERT_EQ(v.size(), 3u); EXPECT_EQ(v[2], 9);
+        v.assign({ 1,2 });
+        ASSERT_EQ(v.size(), 2u); EXPECT_EQ(v[1], 2);
+    }
 //
 //    // ---------- 3) Allocator semantics ----------
-//    TEST(Vector_Allocator, CountingAllocatorBasic) {
-//        using A = CountingAllocator<int>;
-//        A::alloc_count = A::dealloc_count = 0;
-//        {
-//            FOX_VECTOR<int, A> v; v.push_back(1); v.push_back(2);
-//            EXPECT_GE(A::alloc_count, 2u);
-//        }
-//        EXPECT_GE(A::dealloc_count, 2u);
-//    }
+    TEST(Vector_Allocator, CountingAllocatorBasic)
+    {
+        using A = CountingAllocator<int>;
+        A::alloc_count = A::dealloc_count = 0;
+        {
+            FOX_VECTOR<int, A> v; v.push_back(1); v.push_back(2);
+            EXPECT_GE(A::alloc_count, 2u);
+        }
+        EXPECT_GE(A::dealloc_count, 2u);
+    }
 //
-//    TEST(Vector_Allocator, PropagationOnMove) {
-//        using A = CountingAllocator<int, /*POCS*/false, /*POCCA*/false, /*POCMA*/true, /*AlwaysEqual*/false>;
-//        FOX_VECTOR<int, A> a(A{}); a.push_back(1);
-//        FOX_VECTOR<int, A> b(A{}); b = std::move(a); // if POCMA true, allocator propagates
-//        (void)b; SUCCEED();
-//    }
+    TEST(Vector_Allocator, PropagationOnMove) 
+    {
+        using A = CountingAllocator<int, /*POCS*/true, /*POCCA*/false, /*POCMA*/true, /*AlwaysEqual*/false>;
+        FOX_VECTOR<int, A> a(A{}); 
+        a.push_back(1);
+        FOX_VECTOR<int, A> b(A{});
+        b = std::move(a); // if POCMA true, allocator propagates
+        (void)b; SUCCEED();
+    }
 //
 //    // ---------- 4) Element access ----------
-//    TEST(Vector_ElementAccess, AtAndIndex) {
-//        FOX_VECTOR<int> v{ 1,2,3 };
-//        EXPECT_EQ(v[0], 1);
-//        EXPECT_EQ(v.at(1), 2);
-//        EXPECT_THROW((void)v.at(3), std::out_of_range);
-//        EXPECT_EQ(*v.data(), 1);
-//    }
+    TEST(Vector_ElementAccess, AtAndIndex) 
+    {
+        FOX_VECTOR<int> v{ 1,2,3 };
+        EXPECT_EQ(v[0], 1);
+        EXPECT_EQ(v.at(1), 2);
+        EXPECT_THROW((void)v.at(3), std::out_of_range);
+        EXPECT_EQ(*v.data(), 1);
+    }
 //
-//    TEST(Vector_ElementAccess, FrontBack) {
-//        FOX_VECTOR<int> v{ 10,20,30 };
-//        EXPECT_EQ(v.front(), 10);
-//        EXPECT_EQ(v.back(), 30);
-//    }
-//
+    TEST(Vector_ElementAccess, FrontBack) 
+    {
+        FOX_VECTOR<int> v{ 10,20,30 };
+        EXPECT_EQ(v.front(), 10);
+        EXPECT_EQ(v.back(), 30);
+    }
+
 //    // ---------- 5) Iterators ----------
-//    TEST(Vector_Iterators, BasicForwardAndReverse) {
-//        FOX_VECTOR<int> v{ 1,2,3,4 };
-//        int sum = 0; for (auto it = v.begin(); it != v.end(); ++it) sum += *it;
-//        EXPECT_EQ(sum, 10);
-//        int rsum = 0; for (auto it = v.rbegin(); it != v.rend(); ++it) rsum += *it;
-//        EXPECT_EQ(rsum, 10);
-//        ExpectContiguous(v);
-//    }
-//
+    TEST(Vector_Iterators, BasicForwardAndReverse)
+    {
+        FOX_VECTOR<int> v{ 1,2,3,4 };
+        int sum = 0; for (auto it = v.begin(); it != v.end(); ++it) sum += *it;
+        EXPECT_EQ(sum, 10);
+        int rsum = 0; for (auto it = v.rbegin(); it != v.rend(); ++it) rsum += *it;
+        EXPECT_EQ(rsum, 10);
+        ExpectContiguous(v);
+    }
+
 //    // ---------- 6) Capacity & reserve/shrink ----------
-//    TEST(Vector_Capacity, ReserveAndCapacity) {
-//        FOX_VECTOR<int> v; v.reserve(100);
-//        EXPECT_GE(v.capacity(), 100u);
-//        EXPECT_EQ(v.size(), 0u);
-//    }
+    TEST(Vector_Capacity, ReserveAndCapacity)
+    {
+        FOX_VECTOR<int> v; v.reserve(100);
+        EXPECT_GE(v.capacity(), 100u);
+        EXPECT_EQ(v.size(), 0u);
+    }
 //
-//    TEST(Vector_Capacity, ShrinkToFit) {
-//        FOX_VECTOR<int> v; v.reserve(64);
-//        v.push_back(1); v.push_back(2);
-//        auto cap_before = v.capacity();
-//        v.shrink_to_fit();
-//        EXPECT_LE(v.capacity(), cap_before);
-//    }
+    TEST(Vector_Capacity, ShrinkToFit) {
+        FOX_VECTOR<int> v; v.reserve(64);
+        v.push_back(1); v.push_back(2);
+        auto cap_before = v.capacity();
+        v.shrink_to_fit();
+        EXPECT_LE(v.capacity(), cap_before);
+    }
 //
-//    TEST(Vector_Capacity, ResizeIncreaseValueInit) {
-//        FOX_VECTOR<int> v; v.resize(5);
-//        ASSERT_EQ(v.size(), 5u);
-//        for (int x : v) EXPECT_EQ(x, 0);
-//    }
+    TEST(Vector_Capacity, ResizeIncreaseValueInit) {
+        FOX_VECTOR<int> v; v.resize(5);
+        ASSERT_EQ(v.size(), 5u);
+        for (int x : v) EXPECT_EQ(x, 0);
+    }
 //
-//    TEST(Vector_Capacity, ResizeDecreaseDestroys) {
-//        ResetCounter();
-//        {
-//            FOX_VECTOR<Counter> v; v.resize(10);
-//            EXPECT_EQ(Counter::live, 10);
-//            v.resize(3);
-//            EXPECT_EQ(Counter::live, 3);
-//        }
-//        EXPECT_EQ(Counter::live, 0);
-//    }
+    TEST(Vector_Capacity, ResizeDecreaseDestroys) {
+        ResetCounter();
+        {
+            FOX_VECTOR<Counter> v; v.resize(10);
+            EXPECT_EQ(Counter::live, 10);
+            v.resize(3);
+            EXPECT_EQ(Counter::live, 3);
+        }
+        EXPECT_EQ(Counter::live, 0);
+    }
 //
 //    // ---------- 7) Modifiers: push/emplace/pop ----------
-//    TEST(Vector_Modifiers, PushBackAndEmplaceBack) {
-//        FOX_VECTOR<std::pair<int, int>> v;
-//        v.emplace_back(1, 2);
-//        v.push_back({ 3,4 });
-//        ASSERT_EQ(v.size(), 2u);
-//        EXPECT_EQ(v[0].second, 2);
-//    }
+    TEST(Vector_Modifiers, PushBackAndEmplaceBack) {
+        FOX_VECTOR<std::pair<int, int>> v;
+        v.emplace_back(1, 2);
+        v.push_back({ 3,4 });
+        ASSERT_EQ(v.size(), 2u);
+        EXPECT_EQ(v[0].second, 2);
+    }
 //
-//    TEST(Vector_Modifiers, PopBack) {
-//        FOX_VECTOR<int> v{ 1,2,3 };
-//        v.pop_back();
-//        ASSERT_EQ(v.size(), 2u);
-//        EXPECT_EQ(v.back(), 2);
-//    }
+    TEST(Vector_Modifiers, PopBack) {
+        FOX_VECTOR<int> v{ 1,2,3 };
+        v.pop_back();
+        ASSERT_EQ(v.size(), 2u);
+        EXPECT_EQ(v.back(), 2);
+    }
 //
 //    // ---------- 8) Insert/Erase variants ----------
-//    TEST(Vector_InsertErase, InsertSingleNoRealloc) {
-//        FOX_VECTOR<int> v; v.reserve(10); v.push_back(1); v.push_back(3);
-//        auto it = v.insert(v.begin() + 1, 2);
-//        ASSERT_EQ(v.size(), 3u);
-//        EXPECT_EQ(*it, 2);
-//        EXPECT_EQ((std::vector<int>{v.begin(), v.end()}), (std::vector<int>{1, 2, 3}));
-//    }
+    TEST(Vector_InsertErase, InsertSingleNoRealloc) {
+        FOX_VECTOR<int> v; v.reserve(10); v.push_back(1); v.push_back(3);
+        auto it = v.insert(v.begin() + 1, 2);
+        ASSERT_EQ(v.size(), 3u);
+        EXPECT_EQ(*it, 2);
+        EXPECT_EQ((std::vector<int>{v.begin(), v.end()}), (std::vector<int>{1, 2, 3}));
+    }
 //
-//    TEST(Vector_InsertErase, InsertCount) {
-//        FOX_VECTOR<int> v{ 1,5 };
-//        v.insert(v.begin() + 1, 3, 2);
-//        EXPECT_EQ((std::vector<int>{v.begin(), v.end()}), (std::vector<int>{1, 2, 2, 2, 5}));
-//    }
+    TEST(Vector_InsertErase, InsertCount) {
+        FOX_VECTOR<int> v{ 1,5 };
+        v.insert(v.begin() + 1, 3, 2);
+        EXPECT_EQ((std::vector<int>{v.begin(), v.end()}), (std::vector<int>{1, 2, 2, 2, 5}));
+    }
 //
-//    TEST(Vector_InsertErase, InsertRange) {
-//        FOX_VECTOR<int> v{ 1,6 };
-//        int a[]{ 2,3,4,5 };
-//        v.insert(v.begin() + 1, std::begin(a), std::end(a));
-//        EXPECT_EQ((std::vector<int>{v.begin(), v.end()}), (std::vector<int>{1, 2, 3, 4, 5, 6}));
-//    }
+    //TEST(Vector_InsertErase, InsertRange) {
+    //    FOX_VECTOR<int> v{ 1,6 };
+    //    int a[]{ 2,3,4,5 };
+    //    v.insert(v.begin() + 1, std::begin(a), std::end(a));
+    //    EXPECT_EQ((std::vector<int>{v.begin(), v.end()}), (std::vector<int>{1, 2, 3, 4, 5, 6}));
+    //}
 //
 //    TEST(Vector_InsertErase, InsertInitList) {
 //        FOX_VECTOR<int> v{ 1,6 };
