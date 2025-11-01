@@ -67,8 +67,8 @@ void pixel_engine::Camera2D::SetZoom(float zoom) noexcept
         return;
     }
 
-    m_transformCamera.Scale = { zoom, zoom };
-    m_bDirty                = true;
+    m_nZoom  = zoom;
+    m_bDirty = true;
 }
 
 void pixel_engine::Camera2D::SetScale(const FVector2D& s) noexcept
@@ -101,7 +101,7 @@ float pixel_engine::Camera2D::GetRotation() const noexcept
 
 float pixel_engine::Camera2D::GetZoom() const noexcept
 {
-    return m_transformCamera.Scale.x;
+    return m_nZoom;
 }
 
 const FVector2D& pixel_engine::Camera2D::GetScale() const noexcept
@@ -189,6 +189,19 @@ FVector2D pixel_engine::Camera2D::WorldToScreen(const FVector2D& pWorld) const n
 
     return {vec.x + m_vecViewOriginPx.x + shake.first,
             vec.y + m_vecViewOriginPx.y + shake.second};
+}
+
+FVector2D pixel_engine::Camera2D::WorldToScreen(const FVector2D& pWorld, const uint32_t& tile) const noexcept
+{
+    FVector2D vec = WorldToView(pWorld);
+    vec = m_matScreen.TransformPoint(vec);
+    auto shake = GetShakeNoise();
+
+    return 
+    {
+        vec.x * static_cast<float>(tile) + m_vecViewOriginPx.x + shake.first,
+        vec.y * static_cast<float>(tile) + m_vecViewOriginPx.y + shake.second
+    };
 }
 
 FVector2D pixel_engine::Camera2D::ScreenToWorld(const FVector2D& pScreen) const noexcept
@@ -328,14 +341,14 @@ bool pixel_engine::Camera2D::IsShaking() const noexcept
 
 void pixel_engine::Camera2D::RebuildCached() noexcept
 {
-    m_matInvView = m_transformCamera.ToMatrix();
-    m_matInvView = m_matInvView.Inversed();
+    const FMatrix2DAffine camWorld = m_transformCamera.ToMatrix();
 
-    const float zx = m_transformCamera.Scale.x;
-    const float zy = m_transformCamera.Scale.y;
+    m_matView = camWorld.Inversed();
+    m_matInvView = camWorld;
+
     const float sy = m_bYDown ? 1.f : -1.f;
 
-    m_matScreen = FMatrix2DAffine::Scale(zx, sy * zy);
+    m_matScreen = FMatrix2DAffine::Scale(m_nZoom, sy * m_nZoom);
 }
 
 void pixel_engine::Camera2D::ApplyClamp() noexcept

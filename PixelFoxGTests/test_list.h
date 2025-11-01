@@ -1,7 +1,3 @@
-/*
- * LLM Generated TestCode
- * reason: limited time I can't implement and write its google test within time constraints
-*/
 #pragma once
 #include "pch.h"
 #include "core/list.h"

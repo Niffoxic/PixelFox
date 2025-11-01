@@ -1,4 +1,15 @@
 #pragma once
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
+#include "PixelFoxCoreAPI.h"
+
 #include <cstddef>
 #include <type_traits>
 #include <functional>

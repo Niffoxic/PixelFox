@@ -136,7 +136,7 @@ bool pixel_engine::PEImageBuffer::WriteAt(size_t atRow, size_t atColumn, const P
 {
     if (!IsInside(atRow, atColumn))
     {
-        logger::error("Attempting to write outside the image buffer");
+        //logger::error("Attempting to write outside the image buffer");
         return false;
     }
 

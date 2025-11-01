@@ -70,6 +70,9 @@ namespace pixel_engine
         _NODISCARD FVector2D WorldToView  (_In_ const FVector2D& pWorld)  const noexcept;
         _NODISCARD FVector2D ViewToWorld  (_In_ const FVector2D& pView)   const noexcept;
         _NODISCARD FVector2D WorldToScreen(_In_ const FVector2D& pWorld)  const noexcept;
+        _NODISCARD FVector2D WorldToScreen(
+            _In_ const FVector2D& pWorld,
+            _In_ const uint32_t& tile) const noexcept;
         _NODISCARD FVector2D ScreenToWorld(_In_ const FVector2D& pScreen) const noexcept;
 
         //~ for culling
@@ -118,6 +121,7 @@ namespace pixel_engine
         bool         m_bDirty         { true };
 
         //~ Cached
+        float           m_nZoom{ 1.0f };
         FMatrix2DAffine m_matView;
         FMatrix2DAffine m_matInvView;
         FMatrix2DAffine m_matScreen;

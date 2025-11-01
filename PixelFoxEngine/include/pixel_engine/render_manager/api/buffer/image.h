@@ -80,7 +80,7 @@ namespace pixel_engine
 
 		//~ Data accessors
 		_NODISCARD _Ret_notnull_
-		__forceinline image_data	  Data()		noexcept { return m_imageData.data(); }
+		__forceinline image_data	   Data()		noexcept { return m_imageData.data(); }
 
 		_NODISCARD _Ret_notnull_
 		__forceinline const_image_data Data() const noexcept { return m_imageData.data(); }
@@ -94,7 +94,7 @@ namespace pixel_engine
 		_NODISCARD _Check_return_
 		__forceinline size_t ImageSize() const noexcept { return m_imageSize;		  }
 		_NODISCARD _Check_return_
-		__forceinline bool Empty	  () const noexcept { return m_imageData.empty(); }
+		__forceinline bool   Empty	  () const noexcept { return m_imageData.empty(); }
 
 	private:
 		UINT                       m_height;
