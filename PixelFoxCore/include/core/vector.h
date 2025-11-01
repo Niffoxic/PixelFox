@@ -16,6 +16,7 @@
 #include <utility>
 #include <cassert>
 #include <algorithm>
+#include <compare> 
 #include <memory>
 #include <type_traits>
 #include <limits>
@@ -35,6 +36,8 @@ namespace fox
         using pointer = T*;
         using const_pointer = const T*;
         using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
+
 
         //~ related to allocator
         using alloc_type = _Alloc;
@@ -154,7 +157,88 @@ namespace fox
             return *this;
         }
 
-        // ~~~ element access ~~~
+        //~ overload operators
+        friend bool operator==(const vector& a, const vector& b) noexcept
+        {
+            if (a.m_nSize != b.m_nSize) return false;
+            for (size_type i = 0; i < a.m_nSize; ++i)
+                if (!(a.m_data[i] == b.m_data[i])) return false;
+            return true;
+        }
+
+        friend bool operator!=(const vector& a, const vector& b) noexcept
+        {
+            return !(a == b);
+        }
+
+        friend bool operator<(const vector& a, const vector& b)
+        {
+            const size_type n = (a.m_nSize < b.m_nSize) ? a.m_nSize : b.m_nSize;
+            for (size_type i = 0; i < n; ++i) {
+                if (a.m_data[i] < b.m_data[i])  return true;
+                if (b.m_data[i] < a.m_data[i])  return false;
+            }
+            return a.m_nSize < b.m_nSize;
+        }
+
+        friend bool operator>(const vector& a, const vector& b) { return b < a; }
+        friend bool operator<=(const vector& a, const vector& b) { return !(b < a); }
+        friend bool operator>=(const vector& a, const vector& b) { return !(a < b); }
+
+        friend auto operator<=>(const vector& a, const vector& b)
+        {
+            using elem_cmp = std::compare_three_way_result_t<const value_type&, const value_type&>;
+
+            const size_type n = (a.m_nSize < b.m_nSize) ? a.m_nSize : b.m_nSize;
+
+            for (size_type i = 0; i < n; ++i)
+            {
+                auto r = (a.m_data[i] <=> b.m_data[i]);
+                if (r != 0) return r;
+            }
+
+            if (a.m_nSize < b.m_nSize) return std::strong_ordering::less;
+            if (a.m_nSize > b.m_nSize) return std::strong_ordering::greater;
+            return std::strong_ordering::equal;
+        }
+
+        void swap(vector& other) noexcept(
+            alloc_traits::propagate_on_container_swap::value ||
+            alloc_traits::is_always_equal::value)
+        {
+            if constexpr (alloc_traits::propagate_on_container_swap::value) 
+            {
+                using std::swap;
+                swap(m_allocator, other.m_allocator);
+                swap(m_data, other.m_data);
+                swap(m_nSize, other.m_nSize);
+                swap(m_nCapacity, other.m_nCapacity);
+            }
+            else
+            {
+                if (m_allocator == other.m_allocator)
+                {
+                    using std::swap;
+                    swap(m_data, other.m_data);
+                    swap(m_nSize, other.m_nSize);
+                    swap(m_nCapacity, other.m_nCapacity);
+                }
+                else 
+                {
+                    using std::swap;
+                    swap(m_data, other.m_data);
+                    swap(m_nSize, other.m_nSize);
+                    swap(m_nCapacity, other.m_nCapacity);
+                }
+            }
+        }
+
+        friend void swap(vector& a, vector& b) noexcept(noexcept(a.swap(b)))
+        {
+            a.swap(b);
+        }
+
+        //~ element access
         reference operator[](_In_ size_type index)
         {
             if (index >= m_nSize)
@@ -179,12 +263,20 @@ namespace fox
         _Check_return_ _Ret_maybenull_ pointer data() noexcept { return m_data; }
         _Check_return_ _Ret_maybenull_ const_pointer data() const noexcept { return m_data; }
 
-        // ~~~ capacity queries ~~~
+        //~ capacity queries
         bool   empty() const noexcept { return m_nSize == 0; }
         size_t size() const noexcept { return m_nSize; }
         size_t capacity() const noexcept { return m_nCapacity; }
 
-        // ~~~ modifiers ~~~
+        constexpr size_type max_size() const noexcept
+        {
+            return std::min<size_type>(
+                alloc_traits::max_size(m_allocator),
+                static_cast<size_type>(
+                    std::numeric_limits<difference_type>::max()));
+        }
+
+        //~ modifiers
         void resize(_In_ const size_type& n)
         {
             destroy(m_nSize);
@@ -192,6 +284,16 @@ namespace fox
             if (!n) return;
             allocate(n);
             construct(n);
+        }
+
+        void resize(_In_ const size_type& n, const value_type& val) 
+        {
+            reserve(n);
+
+            for (size_t i = 0; i < n; i++)
+            {
+                alloc_traits::construct(m_allocator, m_data + i, val);
+            }
         }
 
         void reserve(_In_ const size_type& n)
@@ -203,7 +305,7 @@ namespace fox
             m_nSize = 0;
         }
 
-        // assign count copies of value (variadic kept, but guarded)
+        //~ assign count
         template<typename... Args,
             typename = std::enable_if_t<std::is_constructible_v<T, Args&&...>>>
         void assign(_In_ const size_type& count, _In_ Args&&... args)
@@ -219,6 +321,12 @@ namespace fox
         }
 
         //~ utilities
+        void clear()
+        {
+            destroy(m_nSize);
+            m_nSize = 0;
+        }
+
         void push_back(_In_ const value_type& val)
         {
             if (m_nSize + 1 > m_nCapacity) reallocate();
@@ -297,7 +405,7 @@ namespace fox
             alloc_traits::destroy(m_allocator, m_data + m_nSize);
         }
 
-        // assign from range (disabled for integrals)
+        //~ assign from range
         template<typename InputIt,
             typename = std::enable_if_t<!std::is_integral_v<InputIt>>>
         void assign(_In_ InputIt first, _In_ InputIt last)
@@ -323,7 +431,6 @@ namespace fox
         class Iterator
         {
         public:
-            using difference_type   = std::ptrdiff_t;
             using iterator_category = std::random_access_iterator_tag;
             using value_type        = T;
             using reference         = T&;
@@ -499,6 +606,180 @@ namespace fox
             return begin() + static_cast<std::ptrdiff_t>(index);
         }
 
+        template <class InputIt,
+        std::enable_if_t<!std::is_integral_v<InputIt>, int> = 0>
+        Iterator insert(Iterator pos, InputIt first, InputIt last)
+        {
+            if (first == last) return pos;
+
+            using Cat = typename std::iterator_traits<InputIt>::iterator_category;
+            const size_type index0 = static_cast<size_type>(pos - begin());
+
+            if constexpr (std::is_base_of_v<std::forward_iterator_tag, Cat>)
+            {
+                const size_type count = static_cast<size_type>(std::distance(first, last));
+                if (count == 0) return pos;
+
+                if (m_nSize + count > m_nCapacity)
+                    reallocate(m_nSize + count);
+
+                pos = begin() + index0;
+
+                if (index0 == m_nSize)
+                {
+                    for (auto it = first; it != last; ++it)
+                    {
+                        alloc_traits::construct(m_allocator, m_data + m_nSize, *it);
+                        ++m_nSize;
+                    }
+                    return begin() + index0;
+                }
+
+                for (size_type i = m_nSize; i-- > index0; )
+                {
+                    alloc_traits::construct(m_allocator, m_data + (i + count), std::move(m_data[i]));
+                    alloc_traits::destroy(m_allocator, m_data + i);
+                }
+
+                size_type k = 0;
+                for (auto it = first; it != last; ++it, ++k)
+                    alloc_traits::construct(m_allocator, m_data + (index0 + k), *it);
+
+                m_nSize += count;
+                return begin() + index0;
+            }
+            else
+            {
+                Iterator first_inserted = begin() + index0;
+                size_type idx = index0;
+                bool grabbed = false;
+
+                for (; first != last; ++first, ++idx)
+                {
+                    Iterator ins = insert(begin() + idx, *first);
+                    if (!grabbed) { first_inserted = ins; grabbed = true; }
+                }
+
+                return first_inserted;
+            }
+        }
+
+        Iterator insert(Iterator pos, Iterator start, Iterator end)
+        {
+            const size_type src_first = static_cast<size_type>(start - begin());
+            const size_type src_last = static_cast<size_type>(end - begin());
+            const size_type count = (src_last > src_first) ? (src_last - src_first) : 0;
+            if (count == 0) return pos;
+
+            pointer tmp = alloc_traits::allocate(m_allocator, count);
+            for (size_type i = 0; i < count; ++i)
+                alloc_traits::construct(m_allocator,
+                    tmp + i, m_data[src_first + i]);
+
+            size_type index0 = static_cast<size_type>(pos - begin());
+            if (m_nSize + count > m_nCapacity)
+                reallocate(m_nSize + count);
+
+            pos = begin() + index0;
+
+            if (index0 == m_nSize)
+            {
+                for (size_type i = 0; i < count; ++i)
+                {
+                    alloc_traits::construct(m_allocator, m_data + m_nSize, tmp[i]);
+                    ++m_nSize;
+                }
+            }
+            else
+            {
+                for (size_type i = m_nSize; i-- > index0; )
+                {
+                    alloc_traits::construct(m_allocator, m_data + (i + count), std::move(m_data[i]));
+                    alloc_traits::destroy(m_allocator, m_data + i);
+                }
+
+                for (size_type k = 0; k < count; ++k)
+                    alloc_traits::construct(m_allocator, m_data + (index0 + k), tmp[k]);
+
+                m_nSize += count;
+            }
+
+            for (size_type i = 0; i < count; ++i)
+                alloc_traits::destroy(m_allocator, tmp + i);
+            alloc_traits::deallocate(m_allocator, tmp, count);
+
+            return begin() + index0;
+        }
+
+        Iterator insert(Iterator position, std::initializer_list<value_type> init)
+        {
+            return insert(position, std::begin(init), std::end(init));
+        }
+
+        template<class... Args>
+        Iterator emplace(Iterator position, Args&&... args)
+        {
+            const size_type index = static_cast<size_type>(position - begin());
+
+            if (m_nSize == m_nCapacity)
+                reallocate();
+
+            position = begin() + index;
+
+            if (index == m_nSize)
+            {
+                alloc_traits::construct(m_allocator, m_data + m_nSize, std::forward<Args>(args)...);
+                ++m_nSize;
+                return begin() + index;
+            }
+
+            alloc_traits::construct(m_allocator, m_data + m_nSize, std::move(m_data[m_nSize - 1]));
+
+            for (size_type i = m_nSize - 1; i > index; --i)
+                m_data[i] = std::move(m_data[i - 1]);
+
+            alloc_traits::destroy(m_allocator, m_data + index);
+            alloc_traits::construct(m_allocator, m_data + index, std::forward<Args>(args)...);
+
+            ++m_nSize;
+            return begin() + index;
+        }
+
+        Iterator erase(Iterator at) 
+        {
+            if (at == end()) return end();
+
+            size_type index = std::distance(begin(), at);
+
+            for (size_type i = index; i < m_nSize - 1; ++i)
+            {
+                m_data[i] = std::move(m_data[i + 1]);
+            }
+            --m_nSize;
+            alloc_traits::destroy(m_allocator, m_data + m_nSize);
+
+            return begin() + index;
+        }
+
+        Iterator erase(Iterator first, Iterator last)
+        {
+            if (first == last) return first;
+
+            const size_type idx_first = static_cast<size_type>(first - begin());
+            const size_type idx_last  = static_cast<size_type>(last - begin());
+            const size_type count     = idx_last - idx_first;
+
+            for (size_type i = idx_first; i + count < m_nSize; ++i)
+                m_data[i] = std::move(m_data[i + count]);
+
+            for (size_type i = 0; i < count; ++i)
+                alloc_traits::destroy(m_allocator, m_data + (m_nSize - 1 - i));
+
+            m_nSize -= count;
+
+            return begin() + idx_first;
+        }
+
     private:
         //~ helpers
         void allocate(_In_ const size_type& n)
@@ -547,7 +828,7 @@ namespace fox
             m_nSize = i;
         }
 
-        // optional growth helper (kept for your future use)
+        //~ growth helper
         void reallocate(_In_ const size_type& newCap = 0)
         {
             const size_type desired = newCap ? newCap : ((m_nCapacity + 1) << 1);
@@ -573,4 +854,5 @@ namespace fox
         size_type  m_nCapacity{ 0u };
         pointer    m_data{ nullptr };
     };
+
 } // namespace fox
