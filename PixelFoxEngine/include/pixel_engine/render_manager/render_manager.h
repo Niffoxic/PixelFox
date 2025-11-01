@@ -32,11 +32,17 @@ namespace pixel_engine
 		void OnFrameEnd  () override;
 
 	private:
+		bool InitializeCamera2D ();
+		bool InitializeRenderAPI();
+
 		void SubscribeToEvents  ();
 		void UnSubscribeToEvents();
 
 		//~ Helpers
 		void SafeCloseEvent_(HANDLE& h);
+
+		//~ tests
+		void HandleCameraInput(float deltaTime);
 
 	private:
 		PEWindowsManager*	  m_pWindowsManager { nullptr };
@@ -45,6 +51,7 @@ namespace pixel_engine
 
 		//~ Manage render api
 		std::unique_ptr<PERenderAPI> m_pRenderAPI{ nullptr };
+		std::unique_ptr<Camera2D> m_pCamera		 { nullptr };
 
 		HANDLE m_handleStartEvent{ nullptr };
 		HANDLE m_handleEndEvent  { nullptr };

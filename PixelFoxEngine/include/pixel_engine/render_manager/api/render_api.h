@@ -34,6 +34,7 @@ namespace pixel_engine
 		HWND WindowsHandle;
 		BOOL FullScreen;
 		GameClock* Clock;
+		Camera2D* Camera;
 	} PFE_API INIT_RENDER_API_DESC;
 
 	class PFE_API PERenderAPI
@@ -81,14 +82,11 @@ namespace pixel_engine
 
 		//~ Rendering Tests
 		void TestImageUpdate(float deltaTime);
-		void InitCameraOnce();
 
 	private:
-		//~ Tests
-		Camera2D m_camera{};
-
 		//~ Core
-		GameClock* m_pClock{ nullptr };
+		GameClock* m_pClock { nullptr };
+		Camera2D*  m_pCamera{ nullptr };
 
 		//~ Image Buffers( local)
 		std::unique_ptr<PEImageBuffer> m_imageBuffer{ nullptr };
