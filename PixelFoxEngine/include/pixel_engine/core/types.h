@@ -1,6 +1,7 @@
 #pragma once
 #include "PixelFoxEngineAPI.h"
 #include <type_traits>
+#include <Windows.h>
 
 namespace pixel_engine
 {
@@ -35,4 +36,24 @@ namespace pixel_engine
 		UINT Height;
 		UINT Width;
 	} PE_IMAGE_BUFFER_DESC;
+
+	typedef struct _PFE_VIEWPORT
+	{
+		UINT x;
+		UINT y;
+		UINT w;
+		UINT h;
+
+		bool operator==(const _PFE_VIEWPORT& other)
+		{
+			return	x == other.x && y == other.y &&
+					w == other.w && h == other.h;
+		}
+	} PFE_VIEWPORT;
+
+	typedef struct _PFE_AABB2D
+	{
+		float minX{ 0 }, minY{ 0 }, maxX{ 0 }, maxY{ 0 };
+	} PFE_AABB2D;
+
 } // namespace pixel_engine

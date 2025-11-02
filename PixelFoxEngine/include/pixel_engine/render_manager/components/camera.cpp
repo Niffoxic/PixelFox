@@ -140,6 +140,8 @@ uint32_t pixel_engine::Camera2D::GetViewportHeight() const noexcept
     return m_nViewHeight;
 }
 
+
+
 const FVector2D& pixel_engine::Camera2D::GetViewportOrigin() const noexcept
 {
     return m_vecViewOriginPx;

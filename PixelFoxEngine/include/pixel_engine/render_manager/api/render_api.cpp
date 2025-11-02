@@ -43,6 +43,7 @@ bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 
     if (not InitializeDirectX(desc))   return false;
     if (not InitializeRenderAPI(desc)) return false;
+    if (not InitializeCulling2D(desc)) return false;
 
     if (desc->Clock) m_pClock = desc->Clock;
 
@@ -108,13 +109,12 @@ void pixel_engine::PERenderAPI::CleanFrame()
     const float clear[4] = { 1.f, 1.0f, 1.0f, 1.0f };
     m_pDeviceContext->ClearRenderTargetView(m_pRTV.Get(), clear);
 
-    //~ TODO: Replace with PESwapchain
-    m_imageBuffer->ClearImageBuffer({ 255, 255, 255 });
+    if (m_pRaster2D) m_pRaster2D->Clear({ 255, 255, 255 });
 }
 
 void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
 {
-    TestImageUpdate(deltaTime);
+    TestRasterUpdate(deltaTime);
     m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
     m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0u);
     m_pDeviceContext->Draw(3, 0);
@@ -122,6 +122,7 @@ void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
 
 void pixel_engine::PERenderAPI::PresentFrame()
 {
+    m_pRaster2D->Present(m_pDeviceContext.Get(), m_pCpuImageBuffer.Get());
     m_pSwapchain->Present(1u, 0u);
 }
 
@@ -508,33 +509,46 @@ bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
 
 bool pixel_engine::PERenderAPI::InitializeRenderAPI(const INIT_RENDER_API_DESC* desc)
 {
-    if (not CreateImageBuffer(desc)) return false;
+    if (not InitializeRaster2D(desc)) return false;
     return true;
 }
 
-bool pixel_engine::PERenderAPI::CreateImageBuffer(const INIT_RENDER_API_DESC* desc)
+bool pixel_engine::PERenderAPI::InitializeRaster2D(const INIT_RENDER_API_DESC* desc)
 {
-    PE_IMAGE_BUFFER_DESC imageDesc{};
-    imageDesc.Height = desc->Height;
-    imageDesc.Width  = desc->Width;
-    m_imageBuffer    = std::make_unique<PEImageBuffer>(imageDesc);
-
-    if (m_imageBuffer->Empty())
+    PFE_RASTER_CONSTRUCT_DESC rasterDesc{};
+    rasterDesc.EnableBoundCheck = true;
+    rasterDesc.Viewport = 
     {
-        logger::error("Failed to create render api image buffer!");
-        return false;
-    }
+        0,
+        0,
+        static_cast<UINT>(desc->Width),
+        static_cast<UINT>(desc->Height)
+    };
+    m_pRaster2D = std::make_unique<PERaster2D>(&rasterDesc);
 
+    return true;
+}
+
+bool pixel_engine::PERenderAPI::InitializeCulling2D(const INIT_RENDER_API_DESC* desc)
+{
+    PFE_CULL2D_CONSTRUCT_DESC cullDesc{};
+    cullDesc.Viewport = 
+    {   0,
+        0,
+        static_cast<UINT>(desc->Width),
+        static_cast<UINT>(desc->Height)
+    };
+
+    m_pCulling2D = std::make_unique<PECulling2D>(&cullDesc);
     return true;
 }
 
 // ================== I M TESTING HERE ===========================
 
-void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
+void pixel_engine::PERenderAPI::TestRasterUpdate(float deltaTime)
 {
     constexpr int   TILE_PX = 32;
     constexpr float STEP = 1.0f / TILE_PX;
-    constexpr int   COUNT = 1300;
 
     struct image_data { float width_units, height_units; };
     image_data quad_units{ 1.0f, 1.0f };
@@ -544,41 +558,35 @@ void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
     const int VPW = static_cast<int>(m_Viewport.Width);
     const int VPH = static_cast<int>(m_Viewport.Height);
 
-    auto MakeRGB = [](uint8_t r, uint8_t g, uint8_t b) -> PFE_FORMAT_R8G8B8_UINT {
-        PFE_FORMAT_R8G8B8_UINT c{}; c.R.Value = r; c.G.Value = g; c.B.Value = b; return c;
-        };
-
     // time
     static float t = 0.0f, globalAngle = 0.0f;
     t += deltaTime;
     globalAngle += 1.0f * deltaTime;
 
     // per-instance params
-    static std::array<FVector2D, COUNT> basePos{};
-    static std::array<PFE_FORMAT_R8G8B8_UINT, COUNT> color{};
-    static std::array<float, COUNT> amplitude{};
-    static std::array<float, COUNT> speed{};
-    static std::array<float, COUNT> phase{};
-    static std::array<bool, COUNT> moveX{};
+    static FVector2D basePos{};
+    static PFE_FORMAT_R8G8B8_UINT color{};
+    static float amplitude{};
+    static float speed{};
+    static float phase{};
+    static bool moveX{};
     static bool initialized = false;
 
     if (!initialized)
     {
-        const int gridW = 45, gridH = 5;
+        const int gridW = 1, gridH = 1;
         const float spacing = 1.f;
         const float startX = -((gridW - 1) * spacing) * 0.5f;
         const float startY = -((gridH - 1) * spacing) * 0.5f;
 
-        for (int i = 0; i < COUNT; ++i)
-        {
-            int gx = i % gridW, gy = i / gridW;
-            basePos[i] = { startX + gx * spacing, startY + gy * spacing };
-            color[i] = MakeRGB((i * 37) % 255, (i * 73) % 255, (i * 97) % 255);
-            amplitude[i] = 1.5f + 0.05f * (i % 13);
-            speed[i] = 4.7f + 0.03f * (i % 17);
-            phase[i] = 0.5f * float(i);
-            moveX[i] = ((i & 1) == 0);
-        }
+        int gx = gridW, gy = gridW;
+        basePos = { startX + gx * spacing, startY + gy * spacing };
+        color = { 37, 73, 97 };
+        amplitude = 1.5f + 0.05f * (2 % 13);
+        speed = 4.7f + 0.03f * (2 % 17);
+        phase = 0.5f * 2.0f;
+        moveX = true;
+        
         initialized = true;
     }
 
@@ -591,81 +599,48 @@ void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
     const FVector2D CamUx{ S_x1.x - S_origin.x, S_x1.y - S_origin.y }; // px per X world
     const FVector2D CamUy{ S_y1.x - S_origin.x, S_y1.y - S_origin.y }; // px per Y world
 
-    for (int idx = 0; idx < COUNT; ++idx)
-    {
-        const float off = amplitude[idx] * std::sin(t * speed[idx] + phase[idx]);
-        FVector2D pos = basePos[idx];
-        if (moveX[idx]) pos.x += off; else pos.y += off;
+    const float off = amplitude * std::sin(t * speed + phase);
+    FVector2D pos = basePos;
+    if (moveX) pos.x += off; else pos.y += off;
 
-        const float theta = globalAngle + (idx * 0.25f);
-        const float cs = std::cos(theta), sn = std::sin(theta);
-        const FVector2D ux_world{ cs,  sn }; // local +u axis in world
-        const FVector2D vy_world{ -sn,  cs }; // local +v axis in world
+    const float theta = globalAngle + 0.25f;
+    const float cs = std::cos(theta), sn = std::sin(theta);
+    const FVector2D ux_world{ cs,  sn }; // local +u axis in world
+    const FVector2D vy_world{ -sn,  cs }; // local +v axis in world
 
-        // map object bases to screen via camera bases
-        const FVector2D Su{ ux_world.x * CamUx.x + ux_world.y * CamUy.x,
-                            ux_world.x * CamUx.y + ux_world.y * CamUy.y };
-        const FVector2D Sv{ vy_world.x * CamUx.x + vy_world.y * CamUy.x,
-                            vy_world.x * CamUx.y + vy_world.y * CamUy.y };
+    // map object bases to screen via camera bases
+    const FVector2D Su{ ux_world.x * CamUx.x + ux_world.y * CamUy.x,
+                        ux_world.x * CamUx.y + ux_world.y * CamUy.y };
+    const FVector2D Sv{ vy_world.x * CamUx.x + vy_world.y * CamUy.x,
+                        vy_world.x * CamUx.y + vy_world.y * CamUy.y };
 
-        // object center in screen space
-        const FVector2D base{
-            S_origin.x + pos.x * CamUx.x + pos.y * CamUy.x,
-            S_origin.y + pos.x * CamUx.y + pos.y * CamUy.y
-        };
+    // object center in screen space
+    const FVector2D base{
+        S_origin.x + pos.x * CamUx.x + pos.y * CamUy.x,
+        S_origin.y + pos.x * CamUx.y + pos.y * CamUy.y
+    };
 
-        // starting corner (u0,v0) and per-step deltas
-        const float u0 = -halfWU, v0 = -halfHU;
-        FVector2D rowStart{
-            base.x + u0 * Su.x + v0 * Sv.x,
-            base.y + u0 * Su.y + v0 * Sv.y
-        };
-        const FVector2D dU{ Su.x * STEP, Su.y * STEP };
-        const FVector2D dV{ Sv.x * STEP, Sv.y * STEP };
+    // starting corner (u0,v0) and per-step deltas
+    const float u0 = -halfWU, v0 = -halfHU;
+    FVector2D rowStart{
+        base.x + u0 * Su.x + v0 * Sv.x,
+        base.y + u0 * Su.y + v0 * Sv.y
+    };
+    const FVector2D dU{ Su.x * STEP, Su.y * STEP };
+    const FVector2D dV{ Sv.x * STEP, Sv.y * STEP };
 
-        // AABB of rotated quad
-        const FVector2D A = rowStart;
-        const FVector2D B{ rowStart.x + dU.x * cols, rowStart.y + dU.y * cols };
-        const FVector2D C{ rowStart.x + dV.x * rows, rowStart.y + dV.y * rows };
-        const FVector2D D{ B.x + dV.x * rows,       B.y + dV.y * rows };
+    // AABB of rotated quad
+    if (m_pCulling2D->ShouldCullQuad(rowStart, dU, dV, cols, rows))
+        return;
 
-        float minX = std::min(std::min(A.x, B.x), std::min(C.x, D.x));
-        float maxX = std::max(std::max(A.x, B.x), std::max(C.x, D.x));
-        float minY = std::min(std::min(A.y, B.y), std::min(C.y, D.y));
-        float maxY = std::max(std::max(A.y, B.y), std::max(C.y, D.y));
-
-        if (maxX < 0.0f || maxY < 0.0f || minX >= VPW || minY >= VPH)
-            continue;
-
-        // raster
-        const auto c = color[idx];
-        for (int j = 0; j < rows; ++j)
-        {
-            FVector2D p = rowStart;
-            for (int i = 0; i < cols; ++i)
-            {
-                const int ix = static_cast<int>(std::lround(p.x));
-                const int iy = static_cast<int>(std::lround(p.y));
-                if ((unsigned)ix < (unsigned)VPW && (unsigned)iy < (unsigned)VPH)
-                    m_imageBuffer->WriteAt(iy, ix, c);
-
-                p.x += dU.x; p.y += dU.y;
-            }
-            rowStart.x += dV.x; rowStart.y += dV.y;
-        }
-    }
-
-    {
-        auto Red = MakeRGB(255, 0, 0);
-        const int cx = VPW / 2, cy = VPH / 2;
-        if ((unsigned)cx < (unsigned)VPW && (unsigned)cy < (unsigned)VPH) {
-            m_imageBuffer->WriteAt(cy, cx, Red);
-            if (cx + 1 < VPW) m_imageBuffer->WriteAt(cy, cx + 1, Red);
-            if (cy + 1 < VPH) m_imageBuffer->WriteAt(cy + 1, cx, Red);
-        }
-    }
-
-    m_pDeviceContext->UpdateSubresource(
-        m_pCpuImageBuffer.Get(), 0, nullptr,
-        m_imageBuffer->Data(), (UINT)m_imageBuffer->RowPitch(), 0);
+    // raster
+    m_pRaster2D->DrawDiscreteQuad
+    (
+        rowStart,
+        dU,
+        dV,
+        cols,
+        rows,
+        color
+    );
 }
