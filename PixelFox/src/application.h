@@ -24,8 +24,20 @@ namespace pixel_game
 		void Release  ()				override;
 
 	private:
-		FVector2D m_basePos{ 0, 0 };
-		pixel_engine::QuadObject m_obj{};
-		bool m_moveX{ false };
+
+		//~ tests
+		static constexpr int   kTilePx = 32;
+		static constexpr float kUnitW = 1.0f;
+		static constexpr float kUnitH = 1.0f;
+		static constexpr float kAmpBase = 1.5f;
+		static constexpr float kSpeedBase = 4.7f;
+		static constexpr float kRotSpeed = 0.75f;
+
+		std::vector<std::unique_ptr<pixel_engine::QuadObject>> m_objects;
+		std::vector<fox_math::Vector2D<float>> m_basePos;
+		std::vector<float>   m_amp, m_speed, m_phase;
+		std::vector<bool>    m_moveX;
+
+		float m_time{ 0.0f };
 	};
 } // namespace pixel_game

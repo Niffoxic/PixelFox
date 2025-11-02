@@ -3,6 +3,7 @@
 
 #include "pixel_engine/core/interface/interface_sprite.h"
 
+
 namespace pixel_engine
 {
     class PFE_API QuadObject final : public PEISprite
@@ -18,7 +19,7 @@ namespace pixel_engine
         bool Initialize() override;
         bool Release() override;
 
-        void Update(float deltaTime, const Camera2D* camera) override;
+        void Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space) override;
 
         void SetTransform(_In_ const FTransform2D& t) override;
         _NODISCARD _Check_return_
@@ -60,6 +61,7 @@ namespace pixel_engine
 
     private:
         void RebuildIfDirty(_In_opt_ const Camera2D* camera) const;
+        void UpdateWorldPosition(const PFE_WORLD_SPACE_DESC& space) const;
 
     private:
         FTransform2D              m_base{};

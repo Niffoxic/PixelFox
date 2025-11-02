@@ -26,10 +26,10 @@ bool QuadObject::Release()
     return true;
 }
 
-void QuadObject::Update(float deltaTime, const Camera2D* camera)
+void QuadObject::Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space)
 {
-    m_bScreenDirty = true;
-    RebuildIfDirty(camera);
+    RebuildIfDirty(space.pCamera);
+    UpdateWorldPosition(space);
 }
 
 void QuadObject::SetTransform(const FTransform2D& t)
@@ -209,7 +209,7 @@ bool QuadObject::BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) cons
 
 void QuadObject::RebuildIfDirty(const Camera2D* camera) const
 {
-    if (not IsDirty())
+    if (IsDirty())
     {
         const FMatrix2DAffine baseM = m_base.ToMatrix();
         if (m_hasPre && m_hasPost)
@@ -224,38 +224,39 @@ void QuadObject::RebuildIfDirty(const Camera2D* camera) const
         MarkDirty(false);
         m_bScreenDirty = true;
     }
+}
 
-    if (camera != nullptr && (m_bScreenDirty || camera != m_pLastCamera))
-    {
-        const FVector2D S_origin = camera->WorldToScreen({ 0.0f, 0.0f }, m_nTilePx);
-        const FVector2D S_x1 = camera->WorldToScreen({ 1.0f, 0.0f }, m_nTilePx);
-        const FVector2D S_y1 = camera->WorldToScreen({ 0.0f, 1.0f }, m_nTilePx);
+void pixel_engine::QuadObject::UpdateWorldPosition(const PFE_WORLD_SPACE_DESC& space) const
+{
+    const FVector2D CamUx
+    { space.X1.x - space.Origin.x,
+      space.X1.y - space.Origin.y };
 
-        const FVector2D CamUx{ S_x1.x - S_origin.x, S_x1.y - S_origin.y }; // px per +X world
-        const FVector2D CamUy{ S_y1.x - S_origin.x, S_y1.y - S_origin.y }; // px per +Y world
+    const FVector2D CamUy
+    { space.Y1.x - space.Origin.x,
+        space.Y1.y - space.Origin.y };
 
-        const float a = m_cachedWorld.matrix[0][0];
-        const float b = m_cachedWorld.matrix[0][1];
-        const float tx = m_cachedWorld.matrix[0][2];
-        const float c = m_cachedWorld.matrix[1][0];
-        const float d = m_cachedWorld.matrix[1][1];
-        const float ty = m_cachedWorld.matrix[1][2];
+    const float a = m_cachedWorld.matrix[0][0];
+    const float b = m_cachedWorld.matrix[0][1];
+    const float tx = m_cachedWorld.matrix[0][2];
+    const float c = m_cachedWorld.matrix[1][0];
+    const float d = m_cachedWorld.matrix[1][1];
+    const float ty = m_cachedWorld.matrix[1][2];
 
-        const FVector2D u_world{ a, c };
-        const FVector2D v_world{ b, d };
-        const FVector2D center_world{ tx, ty };
+    const FVector2D u_world{ a, c };
+    const FVector2D v_world{ b, d };
+    const FVector2D center_world{ tx, ty };
 
-        m_SuScreen.x = u_world.x * CamUx.x + u_world.y * CamUy.x;
-        m_SuScreen.y = u_world.x * CamUx.y + u_world.y * CamUy.y;
+    m_SuScreen.x = u_world.x * CamUx.x + u_world.y * CamUy.x;
+    m_SuScreen.y = u_world.x * CamUx.y + u_world.y * CamUy.y;
 
-        m_SvScreen.x = v_world.x * CamUx.x + v_world.y * CamUy.x;
-        m_SvScreen.y = v_world.x * CamUx.y + v_world.y * CamUy.y;
+    m_SvScreen.x = v_world.x * CamUx.x + v_world.y * CamUy.x;
+    m_SvScreen.y = v_world.x * CamUx.y + v_world.y * CamUy.y;
 
-        m_baseScreen.x = S_origin.x + center_world.x * CamUx.x + center_world.y * CamUy.x;
-        m_baseScreen.y = S_origin.y + center_world.x * CamUx.y + center_world.y * CamUy.y;
+    m_baseScreen.x = space.Origin.x + center_world.x * CamUx.x + center_world.y * CamUy.x;
+    m_baseScreen.y = space.Origin.y + center_world.x * CamUx.y + center_world.y * CamUy.y;
 
-        // cache state
-        m_pLastCamera = const_cast<Camera2D*>(camera);
-        m_bScreenDirty = false;
-    }
+    // cache state
+    m_pLastCamera = const_cast<Camera2D*>(space.pCamera);
+    m_bScreenDirty = false;
 }

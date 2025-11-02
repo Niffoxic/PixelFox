@@ -11,6 +11,9 @@
 #include "core/unordered_map.h"
 #include "core/vector.h"
 
+#include <shared_mutex>
+#include <atomic>
+
 namespace pixel_engine
 {
 	class PERaster2D;
@@ -23,11 +26,13 @@ namespace pixel_engine
 		int		  TilePx;
 	}PFE_RENDER_QUEUE_CONSTRUCT_DESC;
 
-	class PFE_API PERenderQueue final: public ISingleton<PERenderQueue>
+	class PFE_API PERenderQueue final : public ISingleton<PERenderQueue>
 	{
 		friend class ISingleton<PERenderQueue>;
-	public:		
+	public:
 		explicit PERenderQueue(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc);
+
+		Camera2D* GetCamera() const;
 
 		void Update(float deltaTime);
 		void Render(PERaster2D* pRaster);
@@ -35,32 +40,29 @@ namespace pixel_engine
 		bool AddSprite(PEISprite* sprite);
 		bool RemoveSprite(PEISprite* sprite);
 		bool RemoveSprite(UniqueId id);
-		
+
 	private:
 		PERenderQueue() = default;
 
 	private:
-		//~ Initialize RenderQueue
 		void CreateCulling2D(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc);
 
-		//~ Sprite operations
 		void UpdateSprite(float deltaTime);
-		void RenderSprite	  (PERaster2D* pRaster);
-		void BuildSpriteBuffer();
+		void RenderSprite(PERaster2D* pRaster);
+		void BuildSpriteInOrder();
 
 	private:
-		//~ RenderQ mems
 		std::unique_ptr<PECulling2D> m_pCulling2D{ nullptr };
-		int   m_nTilePx;
-		float m_nTileStep;
+		int   m_nTilePx{};
+		float m_nTileStep{};
 
-		//~ sprite mems
 		fox::unordered_map<UniqueId, PEISprite*> m_mapSprites{};
 		fox::vector<PEISprite*>					 m_ppSortedSprites{};
-		bool m_bDirtySprite{ true };
+		std::atomic<bool> m_bDirtySprite{ true };
+		UINT	  m_nScreenWidth{};
+		UINT	  m_nScreenHeight{};
+		Camera2D* m_pCamera{};
 
-		UINT	  m_nScreenWidth;
-		UINT	  m_nScreenHeight;
-		Camera2D* m_pCamera;
+		mutable std::shared_mutex m_mutex;
 	};
 } // namespace pixel_engine

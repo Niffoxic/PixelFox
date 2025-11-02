@@ -22,6 +22,14 @@ namespace pixel_engine
 		int cols{ 0 }, rows{ 0 };
 	} PFE_SAMPLE_GRID_2D;
 
+	typedef struct _PFE_WORLD_SPACE_DESC
+	{
+		Camera2D* pCamera;
+		FVector2D Origin;
+		FVector2D X1;
+		FVector2D Y1;
+	} PFE_WORLD_SPACE_DESC;
+
 	/// <summary>
 	/// Object interface for tile based entities
 	/// </summary>
@@ -47,7 +55,7 @@ namespace pixel_engine
 		virtual bool Initialize() = 0; //~ called once after initalizing
 		virtual bool Release() = 0; // release any upholding resources
 
-		virtual void Update(float deltaTIme, const Camera2D* camera) = 0; // called every frame
+		virtual void Update(float deltaTIme, const PFE_WORLD_SPACE_DESC& space) = 0; // called every frame
 
 		virtual void SetTransform(_In_ const FTransform2D& t) = 0;
 		_NODISCARD _Check_return_

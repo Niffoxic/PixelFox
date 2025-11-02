@@ -58,6 +58,9 @@ DWORD pixel_engine::PERenderAPI::Execute()
     logger::info("[RenderThread] Start Event received: render loop begin.");
 
     const HANDLE waits[2] = { m_handleExitEvent, m_handlePresentEvent };
+    using clock = std::chrono::steady_clock;
+    auto lastReport = clock::now();
+    uint64_t framesSinceReport = 0;
 
     while (true)
     {
@@ -69,33 +72,49 @@ DWORD pixel_engine::PERenderAPI::Execute()
         }
 
         CleanFrame();
-        const float dt = m_pClock ? m_pClock->DeltaTime() : 0.0f;
-        WriteFrame(dt);
+        WriteFrame(0.0f);
 
-        const DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
-        if (flag == WAIT_OBJECT_0) // exit
+        PresentFrame();
+        SetEvent(m_handlePresentDoneEvent);
+
+        // FPS each second rolling average
+        ++framesSinceReport;
+        const auto now = clock::now();
+        const auto elapsed = std::chrono::duration<double>(now - lastReport).count();
+        if (elapsed >= 1.0)
         {
-            SetEvent(m_handlePresentDoneEvent);
-            return 0u;
+            const double fps = static_cast<double>(framesSinceReport) / elapsed;
+            const double ms = 1000.0 / (fps > 0.0 ? fps : 1.0);
+            logger::info("[RenderThread] avg FPS: {:.1f} ({:.3f} ms/frame)", fps, ms);
+
+            lastReport = now;
+            framesSinceReport = 0;
         }
-        else if (flag == WAIT_OBJECT_0 + 1)
-        {
-            PresentFrame();
-            SetEvent(m_handlePresentDoneEvent);
-        }
-        else if (flag == WAIT_FAILED)
-        {
-            const DWORD err = GetLastError();
-            logger::info("[RenderThread] WaitForMultipleObjects WAIT_FAILED (GetLastError=0x{:08X}) — aborting.", err);
-            SetEvent(m_handlePresentDoneEvent);
-            return 0u;
-        }
-        else
-        {
-            logger::info("[RenderThread] Unexpected WaitForMultipleObjects result (0x{:X}) — aborting.", flag);
-            SetEvent(m_handlePresentDoneEvent);
-            return 0u;
-        }
+
+        //const DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
+        //if (flag == WAIT_OBJECT_0) // exit
+        //{
+        //    SetEvent(m_handlePresentDoneEvent);
+        //    return 0u;
+        //}
+        //else if (flag == WAIT_OBJECT_0 + 1)
+        //{
+        //    PresentFrame();
+        //    SetEvent(m_handlePresentDoneEvent);
+        //}
+        //else if (flag == WAIT_FAILED)
+        //{
+        //    const DWORD err = GetLastError();
+        //    logger::info("[RenderThread] WaitForMultipleObjects WAIT_FAILED (GetLastError=0x{:08X}) — aborting.", err);
+        //    SetEvent(m_handlePresentDoneEvent);
+        //    return 0u;
+        //}
+        //else
+        //{
+        //    logger::info("[RenderThread] Unexpected WaitForMultipleObjects result (0x{:X}) — aborting.", flag);
+        //    SetEvent(m_handlePresentDoneEvent);
+        //    return 0u;
+        //}
     }
 }
 
@@ -110,7 +129,7 @@ void pixel_engine::PERenderAPI::CleanFrame()
     const float clear[4] = { 1.f, 1.0f, 1.0f, 1.0f };
     m_pDeviceContext->ClearRenderTargetView(m_pRTV.Get(), clear);
 
-    if (m_pRaster2D) m_pRaster2D->Clear({ 255, 255, 255 });
+    if (m_pRaster2D) m_pRaster2D->Clear({ 237, 237, 199 });
 }
 
 void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
@@ -126,7 +145,7 @@ void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
 void pixel_engine::PERenderAPI::PresentFrame()
 {
     m_pRaster2D->Present(m_pDeviceContext.Get(), m_pCpuImageBuffer.Get());
-    m_pSwapchain->Present(1u, 0u);
+    m_pSwapchain->Present(0u, 0u);
 }
 
 bool pixel_engine::PERenderAPI::InitializeDirectX(const INIT_RENDER_API_DESC* desc)
