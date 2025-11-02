@@ -175,6 +175,7 @@
     <ClInclude Include="include\pixel_engine\render_manager\api\raster\raster.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\camera.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\objects\quad\quad.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_defines.h" />
     <ClInclude Include="include\pixel_engine\utilities\clock\clock.h" />
     <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
@@ -201,6 +202,7 @@
     <ClCompile Include="include\pixel_engine\render_manager\api\raster\raster.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\camera.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\objects\quad\quad.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />

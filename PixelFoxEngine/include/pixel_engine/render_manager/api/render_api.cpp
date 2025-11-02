@@ -11,6 +11,9 @@
 #include <cmath>
 #include <array>
 
+//~ tests
+#include "pixel_engine/render_manager/objects/quad/quad.h"
+
 pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 {
     m_handleStartEvent = desc->StartEvent;
@@ -557,6 +560,9 @@ void pixel_engine::PERenderAPI::TestRasterUpdate(float deltaTime)
 
     const int VPW = static_cast<int>(m_Viewport.Width);
     const int VPH = static_cast<int>(m_Viewport.Height);
+
+    //~ object
+    static QuadObject object{};
 
     // time
     static float t = 0.0f, globalAngle = 0.0f;

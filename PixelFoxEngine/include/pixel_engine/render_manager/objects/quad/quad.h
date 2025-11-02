@@ -1,12 +1,12 @@
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
-#include "pixel_engine/core/interface/interface_object.h"
+#include "pixel_engine/core/interface/interface_sprite.h"
 
 
 namespace pixel_engine
 {
-    class PFE_API QuadObject final : public PEIObject
+    class PFE_API QuadObject final : public PEISprte
     {
     public:
         QuadObject() = default;

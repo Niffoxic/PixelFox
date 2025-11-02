@@ -123,6 +123,9 @@
     <ClInclude Include="include\pixel_engine\render_manager\api\culling\culling.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\objects\quad\quad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -171,6 +174,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\api\culling\culling.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\objects\quad\quad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
