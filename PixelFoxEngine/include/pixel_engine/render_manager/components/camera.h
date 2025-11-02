@@ -130,7 +130,7 @@ namespace pixel_engine
         //~ follow
         const FVector2D* m_pFollowTarget  { nullptr };
         float            m_nFollowSmooth  { 0.15f };
-        PFE_RECT         m_rectWorldBounds{ 0.f, 0.f, 0.f, 0.f };
+        PFE_RECT         m_rectWorldBounds{ 0, 0, 0, 0 };
         bool             m_bWorldClamp    { false };
 
         //~ shake

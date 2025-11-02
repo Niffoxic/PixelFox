@@ -171,9 +171,13 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_light.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_text.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\buffer\image.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\api\culling\culling.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\api\raster\raster.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\camera.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\objects\quad\quad.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_defines.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\render_queue\render_queue.h" />
     <ClInclude Include="include\pixel_engine\utilities\clock\clock.h" />
     <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
     <ClInclude Include="include\pixel_engine\utilities\id_allocator.h" />
@@ -195,8 +199,12 @@
     <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp" />
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\buffer\image.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\api\culling\culling.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\api\raster\raster.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\camera.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\objects\quad\quad.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\render_queue\render_queue.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />

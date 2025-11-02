@@ -67,9 +67,19 @@ void pixel_engine::PERenderManager::OnFrameBegin(float deltaTime)
 void pixel_engine::PERenderManager::OnFrameEnd()
 {
     m_pCamera->OnFrameEnd();
+
     if (m_pRenderAPI)
     {
-        m_pRenderAPI->WaitForPresent();
+        // TODO: Try something else of syncing
+       // const auto t0 = std::chrono::high_resolution_clock::now();
+
+        //m_pRenderAPI->WaitForPresent();
+
+        //const auto t1 = std::chrono::high_resolution_clock::now();
+        //const auto waitMs = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000.0;
+
+        //logger::info(pixel_engine::logger_config::LogCategory::Render,
+            //"WaitForPresent() blocked for {:.3f} ms", waitMs);
     }
 }
 

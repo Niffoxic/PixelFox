@@ -18,10 +18,10 @@ namespace pixel_engine
     class ISingleton
     {
     public:
-        ISingleton(const ISingleton&) = delete;
-        ISingleton(ISingleton&&) = delete;
+        ISingleton(const ISingleton&)            = delete;
+        ISingleton(ISingleton&&)                 = delete;
         ISingleton& operator=(const ISingleton&) = delete;
-        ISingleton& operator=(ISingleton&&) = delete;
+        ISingleton& operator=(ISingleton&&)      = delete;
 
         // if needed to Initialize
         template<class... Args>
