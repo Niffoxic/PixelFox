@@ -553,33 +553,40 @@ void pixel_engine::PERenderAPI::TestRasterUpdate(float deltaTime)
     constexpr int   TILE_PX = 32;
     constexpr float STEP = 1.0f / TILE_PX;
 
-    struct image_data { float width_units, height_units; };
-    image_data quad_units{ 1.0f, 1.0f };
-    const float halfWU = quad_units.width_units * 0.5f;
-    const float halfHU = quad_units.height_units * 0.5f;
-
     const int VPW = static_cast<int>(m_Viewport.Width);
     const int VPH = static_cast<int>(m_Viewport.Height);
 
-    //~ object
+    //~ object 
     static QuadObject object{};
+    static bool initialized = false;
 
-    // time
+    //~ time
     static float t = 0.0f, globalAngle = 0.0f;
     t += deltaTime;
     globalAngle += 1.0f * deltaTime;
 
-    // per-instance params
+    //~ modifiers
     static FVector2D basePos{};
     static PFE_FORMAT_R8G8B8_UINT color{};
     static float amplitude{};
     static float speed{};
     static float phase{};
-    static bool moveX{};
-    static bool initialized = false;
+    static bool  moveX{};
 
     if (!initialized)
     {
+        // object setup
+        object.Initialize();
+        object.SetUnitSize(1.0f, 1.0f);
+        object.SetTilePixels(32);
+        FTransform2D baseT{};
+        baseT.Position = { 0.f, 0.f };
+        baseT.Scale = { 1.f, 1.f };
+        baseT.Rotation = 0.f;
+        baseT.Pivot = { 0.f, 0.f };
+        object.SetTransform(baseT);
+
+        // controller params
         const int gridW = 1, gridH = 1;
         const float spacing = 1.f;
         const float startX = -((gridW - 1) * spacing) * 0.5f;
@@ -592,61 +599,39 @@ void pixel_engine::PERenderAPI::TestRasterUpdate(float deltaTime)
         speed = 4.7f + 0.03f * (2 % 17);
         phase = 0.5f * 2.0f;
         moveX = true;
-        
+
         initialized = true;
     }
 
-    const int cols = static_cast<int>(std::ceil(quad_units.width_units / STEP));
-    const int rows = static_cast<int>(std::ceil(quad_units.height_units / STEP));
-
-    const FVector2D S_origin = m_pCamera->WorldToScreen({ 0.0f, 0.0f }, TILE_PX);
-    const FVector2D S_x1 = m_pCamera->WorldToScreen({ 1.0f, 0.0f }, TILE_PX);
-    const FVector2D S_y1 = m_pCamera->WorldToScreen({ 0.0f, 1.0f }, TILE_PX);
-    const FVector2D CamUx{ S_x1.x - S_origin.x, S_x1.y - S_origin.y }; // px per X world
-    const FVector2D CamUy{ S_y1.x - S_origin.x, S_y1.y - S_origin.y }; // px per Y world
-
+    //~ update behaviour
     const float off = amplitude * std::sin(t * speed + phase);
     FVector2D pos = basePos;
     if (moveX) pos.x += off; else pos.y += off;
 
     const float theta = globalAngle + 0.25f;
-    const float cs = std::cos(theta), sn = std::sin(theta);
-    const FVector2D ux_world{ cs,  sn }; // local +u axis in world
-    const FVector2D vy_world{ -sn,  cs }; // local +v axis in world
 
-    // map object bases to screen via camera bases
-    const FVector2D Su{ ux_world.x * CamUx.x + ux_world.y * CamUy.x,
-                        ux_world.x * CamUx.y + ux_world.y * CamUy.y };
-    const FVector2D Sv{ vy_world.x * CamUx.x + vy_world.y * CamUy.x,
-                        vy_world.x * CamUx.y + vy_world.y * CamUy.y };
+    FTransform2D T = object.GetTransform();
+    T.Position = { pos.x, pos.y };
+    T.Rotation = theta;
+    object.SetTransform(T);
 
-    // object center in screen space
-    const FVector2D base{
-        S_origin.x + pos.x * CamUx.x + pos.y * CamUy.x,
-        S_origin.y + pos.x * CamUx.y + pos.y * CamUy.y
-    };
+    //~ update cache
+    object.Update(deltaTime, m_pCamera);
 
-    // starting corner (u0,v0) and per-step deltas
-    const float u0 = -halfWU, v0 = -halfHU;
-    FVector2D rowStart{
-        base.x + u0 * Su.x + v0 * Sv.x,
-        base.y + u0 * Su.y + v0 * Sv.y
-    };
-    const FVector2D dU{ Su.x * STEP, Su.y * STEP };
-    const FVector2D dV{ Sv.x * STEP, Sv.y * STEP };
-
-    // AABB of rotated quad
-    if (m_pCulling2D->ShouldCullQuad(rowStart, dU, dV, cols, rows))
+    //~ Render on texture
+    PFE_SAMPLE_GRID_2D grid{};
+    if (!object.BuildDiscreteGrid(STEP, grid))
         return;
 
-    // raster
-    m_pRaster2D->DrawDiscreteQuad
-    (
-        rowStart,
-        dU,
-        dV,
-        cols,
-        rows,
+    if (m_pCulling2D->ShouldCullQuad(grid.RowStart, grid.dU, grid.dV, grid.cols, grid.rows))
+        return;
+
+    m_pRaster2D->DrawDiscreteQuad(
+        grid.RowStart,
+        grid.dU,
+        grid.dV,
+        grid.cols,
+        grid.rows,
         color
     );
 }

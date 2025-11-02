@@ -3,7 +3,6 @@
 
 #include "pixel_engine/core/interface/interface_sprite.h"
 
-
 namespace pixel_engine
 {
     class PFE_API QuadObject final : public PEISprte
@@ -19,7 +18,7 @@ namespace pixel_engine
         bool Initialize() override;
         bool Release() override;
 
-        void Update(float deltaTime) override {}
+        void Update(float deltaTime, const Camera2D* camera) override;
 
         void SetTransform(_In_ const FTransform2D& t) override;
         _NODISCARD _Check_return_
@@ -56,6 +55,12 @@ namespace pixel_engine
         void SetLayer(uint32_t l) override;
         _NODISCARD _Check_return_ uint32_t GetLayer() const override;
 
+        _NODISCARD _Check_return_
+        bool BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const override;
+
+    private:
+        void RebuildIfDirty(_In_opt_ const Camera2D* camera) const;
+
     private:
         FTransform2D              m_base{};
 
@@ -64,9 +69,17 @@ namespace pixel_engine
         FMatrix2DAffine           m_pre{};
         FMatrix2DAffine           m_post{};
 
+        mutable FMatrix2DAffine   m_cachedWorld{};
         fox_math::Vector2D<float> m_unitSize{ 1.0f, 1.0f };
 
         bool                      m_visible{ true };
         uint32_t                  m_layer{ 0 };
+
+        //~ cache grid
+        mutable FVector2D m_SuScreen{};
+        mutable FVector2D m_SvScreen{};
+        mutable FVector2D m_baseScreen{};
+        mutable bool      m_bScreenDirty{ true };
+        mutable Camera2D*         m_pLastCamera{ nullptr };
     };
 } // namespace pixel_engine
