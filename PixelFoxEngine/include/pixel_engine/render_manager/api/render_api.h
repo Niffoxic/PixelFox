@@ -13,7 +13,6 @@
 #include "pixel_engine/render_manager/components/camera.h"
 
 #include "raster/raster.h"
-#include "culling/culling.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -78,20 +77,16 @@ namespace pixel_engine
 		bool CreateViewport				 (const INIT_RENDER_API_DESC* desc);
 
 		//~ RenderAPI Core creation
-		bool InitializeRenderAPI(const INIT_RENDER_API_DESC* desc);
-		bool InitializeRaster2D (const INIT_RENDER_API_DESC* desc);
-		bool InitializeCulling2D(const INIT_RENDER_API_DESC* desc);
-
-		//~ Rendering Tests
-		void TestRasterUpdate(float deltaTime);
+		bool InitializeRenderAPI  (const INIT_RENDER_API_DESC* desc);
+		bool InitializeRaster2D   (const INIT_RENDER_API_DESC* desc);
+		bool InitializeRenderQueue(const INIT_RENDER_API_DESC* desc);
 
 	private:
 		//~ Core
 		GameClock* m_pClock { nullptr };
 		Camera2D*  m_pCamera{ nullptr };
-
+		
 		std::unique_ptr<PERaster2D>  m_pRaster2D { nullptr };
-		std::unique_ptr<PECulling2D> m_pCulling2D{ nullptr };
 
 		//~ Thread Members
 		HANDLE m_handleStartEvent      { nullptr }; // render manager will own it

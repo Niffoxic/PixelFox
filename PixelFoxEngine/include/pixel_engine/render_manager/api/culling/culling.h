@@ -21,7 +21,7 @@ namespace pixel_engine
     class PFE_API PECulling2D
     {
     public:
-        explicit PECulling2D(const PFE_CULL2D_CONSTRUCT_DESC* desc);
+        explicit PECulling2D(const PFE_CULL2D_CONSTRUCT_DESC& desc);
 
         void Init(const PFE_VIEWPORT& viewport);
         void Release();

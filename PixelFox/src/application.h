@@ -2,6 +2,8 @@
 
 #include "pixel_engine/PixelEngine.h"
 
+#include "pixel_engine/render_manager/objects/quad/quad.h"
+
 namespace pixel_game
 {
 	class Application final : public pixel_engine::PixelEngine
@@ -20,5 +22,10 @@ namespace pixel_game
 		void BeginPlay()				override;
 		void Tick	  (float deltaTime) override;
 		void Release  ()				override;
+
+	private:
+		FVector2D m_basePos{ 0, 0 };
+		pixel_engine::QuadObject m_obj{};
+		bool m_moveX{ false };
 	};
 } // namespace pixel_game

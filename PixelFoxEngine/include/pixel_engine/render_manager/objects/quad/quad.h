@@ -5,7 +5,7 @@
 
 namespace pixel_engine
 {
-    class PFE_API QuadObject final : public PEISprte
+    class PFE_API QuadObject final : public PEISprite
     {
     public:
         QuadObject() = default;

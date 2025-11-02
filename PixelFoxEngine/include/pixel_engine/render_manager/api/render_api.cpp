@@ -11,8 +11,7 @@
 #include <cmath>
 #include <array>
 
-//~ tests
-#include "pixel_engine/render_manager/objects/quad/quad.h"
+#include "pixel_engine/render_manager/render_queue/render_queue.h"
 
 pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 {
@@ -46,7 +45,6 @@ bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 
     if (not InitializeDirectX(desc))   return false;
     if (not InitializeRenderAPI(desc)) return false;
-    if (not InitializeCulling2D(desc)) return false;
 
     if (desc->Clock) m_pClock = desc->Clock;
 
@@ -117,7 +115,9 @@ void pixel_engine::PERenderAPI::CleanFrame()
 
 void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
 {
-    TestRasterUpdate(deltaTime);
+    PERenderQueue::Instance().Update(deltaTime);
+    PERenderQueue::Instance().Render(m_pRaster2D.get());
+
     m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);
     m_pDeviceContext->PSSetShader(m_pPixelShader.Get(), nullptr, 0u);
     m_pDeviceContext->Draw(3, 0);
@@ -512,7 +512,8 @@ bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
 
 bool pixel_engine::PERenderAPI::InitializeRenderAPI(const INIT_RENDER_API_DESC* desc)
 {
-    if (not InitializeRaster2D(desc)) return false;
+    if (not InitializeRaster2D(desc))    return false;
+    if (not InitializeRenderQueue(desc)) return false;
     return true;
 }
 
@@ -532,106 +533,14 @@ bool pixel_engine::PERenderAPI::InitializeRaster2D(const INIT_RENDER_API_DESC* d
     return true;
 }
 
-bool pixel_engine::PERenderAPI::InitializeCulling2D(const INIT_RENDER_API_DESC* desc)
+bool pixel_engine::PERenderAPI::InitializeRenderQueue(const INIT_RENDER_API_DESC* desc)
 {
-    PFE_CULL2D_CONSTRUCT_DESC cullDesc{};
-    cullDesc.Viewport = 
-    {   0,
-        0,
-        static_cast<UINT>(desc->Width),
-        static_cast<UINT>(desc->Height)
-    };
+    PFE_RENDER_QUEUE_CONSTRUCT_DESC renderDesc{};
+    renderDesc.pCamera = m_pCamera;
+    renderDesc.ScreenHeight = desc->Height;
+    renderDesc.ScreenWidth = desc->Width;
+    renderDesc.TilePx = 32;
 
-    m_pCulling2D = std::make_unique<PECulling2D>(&cullDesc);
+    PERenderQueue::Init(renderDesc);
     return true;
-}
-
-// ================== I M TESTING HERE ===========================
-
-void pixel_engine::PERenderAPI::TestRasterUpdate(float deltaTime)
-{
-    constexpr int   TILE_PX = 32;
-    constexpr float STEP = 1.0f / TILE_PX;
-
-    const int VPW = static_cast<int>(m_Viewport.Width);
-    const int VPH = static_cast<int>(m_Viewport.Height);
-
-    //~ object 
-    static QuadObject object{};
-    static bool initialized = false;
-
-    //~ time
-    static float t = 0.0f, globalAngle = 0.0f;
-    t += deltaTime;
-    globalAngle += 1.0f * deltaTime;
-
-    //~ modifiers
-    static FVector2D basePos{};
-    static PFE_FORMAT_R8G8B8_UINT color{};
-    static float amplitude{};
-    static float speed{};
-    static float phase{};
-    static bool  moveX{};
-
-    if (!initialized)
-    {
-        // object setup
-        object.Initialize();
-        object.SetUnitSize(1.0f, 1.0f);
-        object.SetTilePixels(32);
-        FTransform2D baseT{};
-        baseT.Position = { 0.f, 0.f };
-        baseT.Scale = { 1.f, 1.f };
-        baseT.Rotation = 0.f;
-        baseT.Pivot = { 0.f, 0.f };
-        object.SetTransform(baseT);
-
-        // controller params
-        const int gridW = 1, gridH = 1;
-        const float spacing = 1.f;
-        const float startX = -((gridW - 1) * spacing) * 0.5f;
-        const float startY = -((gridH - 1) * spacing) * 0.5f;
-
-        int gx = gridW, gy = gridW;
-        basePos = { startX + gx * spacing, startY + gy * spacing };
-        color = { 37, 73, 97 };
-        amplitude = 1.5f + 0.05f * (2 % 13);
-        speed = 4.7f + 0.03f * (2 % 17);
-        phase = 0.5f * 2.0f;
-        moveX = true;
-
-        initialized = true;
-    }
-
-    //~ update behaviour
-    const float off = amplitude * std::sin(t * speed + phase);
-    FVector2D pos = basePos;
-    if (moveX) pos.x += off; else pos.y += off;
-
-    const float theta = globalAngle + 0.25f;
-
-    FTransform2D T = object.GetTransform();
-    T.Position = { pos.x, pos.y };
-    T.Rotation = theta;
-    object.SetTransform(T);
-
-    //~ update cache
-    object.Update(deltaTime, m_pCamera);
-
-    //~ Render on texture
-    PFE_SAMPLE_GRID_2D grid{};
-    if (!object.BuildDiscreteGrid(STEP, grid))
-        return;
-
-    if (m_pCulling2D->ShouldCullQuad(grid.RowStart, grid.dU, grid.dV, grid.cols, grid.rows))
-        return;
-
-    m_pRaster2D->DrawDiscreteQuad(
-        grid.RowStart,
-        grid.dU,
-        grid.dV,
-        grid.cols,
-        grid.rows,
-        color
-    );
 }

@@ -25,13 +25,13 @@ namespace pixel_engine
 	/// <summary>
 	/// Object interface for tile based entities
 	/// </summary>
-	class PFE_API PEISprte
+	class PFE_API PEISprite
 	{
 	public:
-		PEISprte() : m_idAllocated(IDAllocator<PEISprte>::AllocateID())
+		PEISprite() : m_idAllocated(IDAllocator<PEISprite>::AllocateID())
 		{}
 
-		virtual ~PEISprte() = default;
+		virtual ~PEISprite() = default;
 
 		//~ ID Accessors
 		_NODISCARD _Check_return_

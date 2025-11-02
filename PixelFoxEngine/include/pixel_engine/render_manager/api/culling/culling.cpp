@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "culling.h"
 
-pixel_engine::PECulling2D::PECulling2D(const PFE_CULL2D_CONSTRUCT_DESC* desc)
+#include "pixel_engine/exceptions/base_exception.h"
+
+pixel_engine::PECulling2D::PECulling2D(const PFE_CULL2D_CONSTRUCT_DESC& desc)
 {
-    m_viewport = desc->Viewport;
+    m_viewport = desc.Viewport;
 }
 
 void pixel_engine::PECulling2D::Init(const pixel_engine::PFE_VIEWPORT& viewport)

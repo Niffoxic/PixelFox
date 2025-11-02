@@ -28,6 +28,7 @@ bool QuadObject::Release()
 
 void QuadObject::Update(float deltaTime, const Camera2D* camera)
 {
+    m_bScreenDirty = true;
     RebuildIfDirty(camera);
 }
 
@@ -208,7 +209,7 @@ bool QuadObject::BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) cons
 
 void QuadObject::RebuildIfDirty(const Camera2D* camera) const
 {
-    if (IsDirty())
+    if (not IsDirty())
     {
         const FMatrix2DAffine baseM = m_base.ToMatrix();
         if (m_hasPre && m_hasPost)
