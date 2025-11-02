@@ -9,6 +9,7 @@
 #include "fox_math/transform.h"
 #include "fox_math/vector.h"
 #include <cmath>
+#include <array>
 
 pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 {
@@ -531,51 +532,136 @@ bool pixel_engine::PERenderAPI::CreateImageBuffer(const INIT_RENDER_API_DESC* de
 
 void pixel_engine::PERenderAPI::TestImageUpdate(float deltaTime)
 {
-    constexpr float TILE = 32.0f;
-    struct image_data { float width_units, height_units; };
+    constexpr int   TILE_PX = 32;
+    constexpr float STEP = 1.0f / TILE_PX;
+    constexpr int   COUNT = 1300;
 
-    image_data quad_units{ 5.0f, 5.0f };
+    struct image_data { float width_units, height_units; };
+    image_data quad_units{ 1.0f, 1.0f };
     const float halfWU = quad_units.width_units * 0.5f;
     const float halfHU = quad_units.height_units * 0.5f;
 
-    const int VPW = m_Viewport.Width;
-    const int VPH = m_Viewport.Height;
+    const int VPW = static_cast<int>(m_Viewport.Width);
+    const int VPH = static_cast<int>(m_Viewport.Height);
 
-    static FTransform2D obj{};
-    static float angle = 0.0f;
-    angle += 1.0f * deltaTime;
+    auto MakeRGB = [](uint8_t r, uint8_t g, uint8_t b) -> PFE_FORMAT_R8G8B8_UINT {
+        PFE_FORMAT_R8G8B8_UINT c{}; c.R.Value = r; c.G.Value = g; c.B.Value = b; return c;
+        };
 
-    obj.Position = { 0.0f, 0.0f };
-    obj.Rotation = angle;
-    obj.Scale = { 1.0f, 1.0f };
-    obj.Pivot = { 0.0f, 0.0f };
+    // time
+    static float t = 0.0f, globalAngle = 0.0f;
+    t += deltaTime;
+    globalAngle += 1.0f * deltaTime;
 
-    const FMatrix2DAffine M = obj.ToMatrix();
+    // per-instance params
+    static std::array<FVector2D, COUNT> basePos{};
+    static std::array<PFE_FORMAT_R8G8B8_UINT, COUNT> color{};
+    static std::array<float, COUNT> amplitude{};
+    static std::array<float, COUNT> speed{};
+    static std::array<float, COUNT> phase{};
+    static std::array<bool, COUNT> moveX{};
+    static bool initialized = false;
 
-    const float step = 1.0f / TILE;
-
-    for (float u = -halfWU; u < halfWU; u += step)
+    if (!initialized)
     {
-        for (float v = -halfHU; v < halfHU; v += step)
+        const int gridW = 45, gridH = 5;
+        const float spacing = 1.f;
+        const float startX = -((gridW - 1) * spacing) * 0.5f;
+        const float startY = -((gridH - 1) * spacing) * 0.5f;
+
+        for (int i = 0; i < COUNT; ++i)
         {
-            const FVector2D local{ u, v };
-            const FVector2D world = M.TransformPoint(local);
-            const FVector2D screen = m_pCamera->WorldToScreen(world, 32);
+            int gx = i % gridW, gy = i / gridW;
+            basePos[i] = { startX + gx * spacing, startY + gy * spacing };
+            color[i] = MakeRGB((i * 37) % 255, (i * 73) % 255, (i * 97) % 255);
+            amplitude[i] = 1.5f + 0.05f * (i % 13);
+            speed[i] = 4.7f + 0.03f * (i % 17);
+            phase[i] = 0.5f * float(i);
+            moveX[i] = ((i & 1) == 0);
+        }
+        initialized = true;
+    }
 
-            const int ix = (int)std::lround(screen.x);
-            const int iy = (int)std::lround(screen.y);
+    const int cols = static_cast<int>(std::ceil(quad_units.width_units / STEP));
+    const int rows = static_cast<int>(std::ceil(quad_units.height_units / STEP));
 
-            if ((unsigned)ix < (unsigned)VPW && (unsigned)iy < (unsigned)VPH)
-                m_imageBuffer->WriteAt(iy, ix, { 0, 0, 0 });
+    const FVector2D S_origin = m_pCamera->WorldToScreen({ 0.0f, 0.0f }, TILE_PX);
+    const FVector2D S_x1 = m_pCamera->WorldToScreen({ 1.0f, 0.0f }, TILE_PX);
+    const FVector2D S_y1 = m_pCamera->WorldToScreen({ 0.0f, 1.0f }, TILE_PX);
+    const FVector2D CamUx{ S_x1.x - S_origin.x, S_x1.y - S_origin.y }; // px per X world
+    const FVector2D CamUy{ S_y1.x - S_origin.x, S_y1.y - S_origin.y }; // px per Y world
+
+    for (int idx = 0; idx < COUNT; ++idx)
+    {
+        const float off = amplitude[idx] * std::sin(t * speed[idx] + phase[idx]);
+        FVector2D pos = basePos[idx];
+        if (moveX[idx]) pos.x += off; else pos.y += off;
+
+        const float theta = globalAngle + (idx * 0.25f);
+        const float cs = std::cos(theta), sn = std::sin(theta);
+        const FVector2D ux_world{ cs,  sn }; // local +u axis in world
+        const FVector2D vy_world{ -sn,  cs }; // local +v axis in world
+
+        // map object bases to screen via camera bases
+        const FVector2D Su{ ux_world.x * CamUx.x + ux_world.y * CamUy.x,
+                            ux_world.x * CamUx.y + ux_world.y * CamUy.y };
+        const FVector2D Sv{ vy_world.x * CamUx.x + vy_world.y * CamUy.x,
+                            vy_world.x * CamUx.y + vy_world.y * CamUy.y };
+
+        // object center in screen space
+        const FVector2D base{
+            S_origin.x + pos.x * CamUx.x + pos.y * CamUy.x,
+            S_origin.y + pos.x * CamUx.y + pos.y * CamUy.y
+        };
+
+        // starting corner (u0,v0) and per-step deltas
+        const float u0 = -halfWU, v0 = -halfHU;
+        FVector2D rowStart{
+            base.x + u0 * Su.x + v0 * Sv.x,
+            base.y + u0 * Su.y + v0 * Sv.y
+        };
+        const FVector2D dU{ Su.x * STEP, Su.y * STEP };
+        const FVector2D dV{ Sv.x * STEP, Sv.y * STEP };
+
+        // AABB of rotated quad
+        const FVector2D A = rowStart;
+        const FVector2D B{ rowStart.x + dU.x * cols, rowStart.y + dU.y * cols };
+        const FVector2D C{ rowStart.x + dV.x * rows, rowStart.y + dV.y * rows };
+        const FVector2D D{ B.x + dV.x * rows,       B.y + dV.y * rows };
+
+        float minX = std::min(std::min(A.x, B.x), std::min(C.x, D.x));
+        float maxX = std::max(std::max(A.x, B.x), std::max(C.x, D.x));
+        float minY = std::min(std::min(A.y, B.y), std::min(C.y, D.y));
+        float maxY = std::max(std::max(A.y, B.y), std::max(C.y, D.y));
+
+        if (maxX < 0.0f || maxY < 0.0f || minX >= VPW || minY >= VPH)
+            continue;
+
+        // raster
+        const auto c = color[idx];
+        for (int j = 0; j < rows; ++j)
+        {
+            FVector2D p = rowStart;
+            for (int i = 0; i < cols; ++i)
+            {
+                const int ix = static_cast<int>(std::lround(p.x));
+                const int iy = static_cast<int>(std::lround(p.y));
+                if ((unsigned)ix < (unsigned)VPW && (unsigned)iy < (unsigned)VPH)
+                    m_imageBuffer->WriteAt(iy, ix, c);
+
+                p.x += dU.x; p.y += dU.y;
+            }
+            rowStart.x += dV.x; rowStart.y += dV.y;
         }
     }
 
     {
+        auto Red = MakeRGB(255, 0, 0);
         const int cx = VPW / 2, cy = VPH / 2;
         if ((unsigned)cx < (unsigned)VPW && (unsigned)cy < (unsigned)VPH) {
-            m_imageBuffer->WriteAt(cy, cx, { 255,0,0 });
-            if (cx + 1 < VPW) m_imageBuffer->WriteAt(cy, cx + 1, { 255,0,0 });
-            if (cy + 1 < VPH) m_imageBuffer->WriteAt(cy + 1, cx, { 255,0,0 });
+            m_imageBuffer->WriteAt(cy, cx, Red);
+            if (cx + 1 < VPW) m_imageBuffer->WriteAt(cy, cx + 1, Red);
+            if (cy + 1 < VPH) m_imageBuffer->WriteAt(cy + 1, cx, Red);
         }
     }
 
