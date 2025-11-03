@@ -36,10 +36,11 @@ namespace pixel_engine
         void ClearPostAffine();
         _NODISCARD _Check_return_ bool HasPostAffine() const noexcept;
 
-        void SetPosition(float x, float y) override;
-        void SetRotation(float radians)    override;
-        void SetScale(float sx, float sy)  override;
-        void SetPivot(float px, float py)  override;
+        void SetPosition(float x, float y)        override;
+        void SetRotation(float radians)           override;
+        void SetScale   (float sx, float sy)      override;
+        void SetPivot   (float px, float py)      override;
+        void SetTexture (const std::string& path) override;
 
         _NODISCARD _Check_return_ fox_math::Vector2D<float> GetPosition() const override;
         _NODISCARD _Check_return_ float                     GetRotation() const override;
@@ -59,11 +60,17 @@ namespace pixel_engine
         _NODISCARD _Check_return_
         bool BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const override;
 
+        _NODISCARD _Check_return_
+        Texture* GetTexture() const override;
+
     private:
         void RebuildIfDirty(_In_opt_ const Camera2D* camera) const;
         void UpdateWorldPosition(const PFE_WORLD_SPACE_DESC& space) const;
 
     private:
+        std::string m_szTexturePath{};
+        Texture*    m_pTexture     { nullptr };
+
         FTransform2D              m_base{};
 
         bool                      m_hasPre{ false };

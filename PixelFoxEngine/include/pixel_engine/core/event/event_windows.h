@@ -23,5 +23,5 @@ typedef struct _WINDOW_RESIZE_EVENT
 
 typedef struct _WINDOW_DRAG_EVENT
 {
-	bool BeingDrag;
+	bool Paused;
 } PFE_API WINDOW_PAUSE_EVENT;

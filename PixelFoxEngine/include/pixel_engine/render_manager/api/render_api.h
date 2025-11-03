@@ -10,7 +10,7 @@
 #include <windows.h>
 
 #include "pixel_engine/utilities/clock/clock.h"
-#include "pixel_engine/render_manager/components/camera.h"
+#include "pixel_engine/render_manager/components/camera/camera.h"
 
 #include "raster/raster.h"
 

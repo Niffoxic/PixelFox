@@ -56,7 +56,7 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 	{
 		float dt = m_pClock->Tick();
 		if (m_bEnginePaused) dt = 0.0f;
-
+		
 		if (PEWindowsManager::ProcessMessage())
 		{
 			logger::warning("Closing Application!");
@@ -147,13 +147,13 @@ void pixel_engine::PixelEngine::SubscribeToEvents()
 	auto token = EventQueue::Subscribe<WINDOW_PAUSE_EVENT>(
 		[&](const WINDOW_PAUSE_EVENT& event) 
 		{
-			if (event.BeingDrag) m_bEnginePaused = true;
+			if (event.Paused) m_bEnginePaused = true;
 			else
 			{
 				m_bEnginePaused = false;
 				m_pClock->ResetTime();
 			}
 
-			logger::debug("Window Drag Event Recevied with {}", event.BeingDrag);
+			logger::debug("Window Drag Event Recevied with {}", event.Paused);
 		});
 }

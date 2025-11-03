@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "raster.h"
 
+#include <algorithm>
+#include <cmath>
+
 using namespace pixel_engine;
 
 PERaster2D::PERaster2D(const PFE_RASTER_CONSTRUCT_DESC* desc)
@@ -58,7 +61,6 @@ void PERaster2D::DrawDiscreteQuad(
 	int cols, int rows,
 	const PFE_FORMAT_R8G8B8_UINT& color)
 {
-	// TODO: Add ITexture
 	auto startFrom = rowStart;
 	for (int j = 0; j < rows; ++j)
 	{
@@ -73,6 +75,64 @@ void PERaster2D::DrawDiscreteQuad(
 			}
 			p.x += dU.x; p.y += dU.y;
 		}
+		startFrom.x += dV.x; startFrom.y += dV.y;
+	}
+}
+
+void pixel_engine::PERaster2D::DrawDiscreteQuad(
+	const FVector2D& rowStart,
+	const FVector2D& dU,
+	const FVector2D& dV,
+	int cols, int rows,
+	const Texture* texture)
+{
+	if (!texture || cols <= 0 || rows <= 0) return;
+
+	const uint32_t texW = texture->GetWidth();
+	const uint32_t texH = texture->GetHeight();
+	if (texW == 0 || texH == 0) return;
+
+	auto startFrom = rowStart;
+
+	// Precompute normalization
+	const float invCols = 1.0f / static_cast<float>(cols);
+	const float invRows = 1.0f / static_cast<float>(rows);
+
+	const bool flipV = (texture->GetOrigin() == Origin::BottomLeft);
+
+	for (int j = 0; j < rows; ++j)
+	{
+		// Normalized v
+		float v		  = (static_cast<float>(j) + 0.5f) * invRows;
+		v			  = std::min(v, 1.0f - std::numeric_limits<float>::epsilon());
+		int ty		  = static_cast<int>(v * static_cast<float>(texH));
+		ty			  = std::clamp(ty, 0, static_cast<int>(texH) - 1);
+		if (flipV) ty = static_cast<int>(texH) - 1 - ty;
+
+		FVector2D p = startFrom;
+
+		for (int i = 0; i < cols; ++i)
+		{
+			// Screen destination position
+			const int ix = static_cast<int>(std::lround(p.x));
+			const int iy = static_cast<int>(std::lround(p.y));
+
+			// Normalized u
+			float u = (static_cast<float>(i) + 0.5f) * invCols;
+			u = std::min(u, 1.0f - std::numeric_limits<float>::epsilon());
+			int tx = static_cast<int>(u * static_cast<float>(texW));
+			tx = std::clamp(tx, 0, static_cast<int>(texW) - 1);
+
+			if (IsBounded(ix, iy))
+			{
+				const auto texel = texture->GetPixel(static_cast<uint32_t>(tx),
+					static_cast<uint32_t>(ty));
+				m_pImageBuffer->WriteAt(iy, ix, texel);
+			}
+
+			p.x += dU.x; p.y += dU.y;
+		}
+
 		startFrom.x += dV.x; startFrom.y += dV.y;
 	}
 }

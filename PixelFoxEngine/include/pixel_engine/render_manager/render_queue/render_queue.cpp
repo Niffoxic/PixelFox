@@ -89,23 +89,26 @@ void PERenderQueue::UpdateSprite(float deltaTime)
 
 void PERenderQueue::RenderSprite(PERaster2D* pRaster)
 {
-    fox::vector<PEISprite*> snapshot;
-    {
-        std::shared_lock rlock(m_mutex);
-        snapshot = m_ppSortedSprites;
-    }
-
     PFE_SAMPLE_GRID_2D grid{};
-    for (auto* sprite : snapshot)
+    for (auto* sprite : m_ppSortedSprites)
     {
         if (!sprite || !sprite->IsVisible()) continue;
         if (!sprite->BuildDiscreteGrid(m_nTileStep, grid)) continue;
         if (m_pCulling2D->ShouldCullQuad(grid.RowStart, grid.dU, grid.dV, grid.cols, grid.rows)) continue;
 
-        pRaster->DrawDiscreteQuad(
-            grid.RowStart, grid.dU, grid.dV, grid.cols, grid.rows,
-            { 100, 100, 255 }
-        );
+
+        if (auto* texture = sprite->GetTexture())
+        {
+            pRaster->DrawDiscreteQuad(
+                grid.RowStart, grid.dU, grid.dV, grid.cols,
+                grid.rows, texture);
+        }
+        else
+        {
+            pRaster->DrawDiscreteQuad(
+                grid.RowStart, grid.dU, grid.dV, grid.cols, grid.rows,
+                { 100, 100, 255 });
+        }
     }
 }
 

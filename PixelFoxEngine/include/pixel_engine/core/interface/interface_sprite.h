@@ -9,7 +9,8 @@
 #include <string>
 #include <sal.h>
 
-#include "pixel_engine/render_manager/components/camera.h"
+#include "pixel_engine/render_manager/components/camera/camera.h"
+#include "pixel_engine/render_manager/components/texture/texture.h"
 
 namespace pixel_engine
 {
@@ -65,10 +66,11 @@ namespace pixel_engine
 		virtual FMatrix2DAffine GetAffineMatrix() const = 0;
 
 		//~ transform
-		virtual void SetPosition(float x, float y)	 = 0;
-		virtual void SetRotation(float radians)		 = 0;
-		virtual void SetScale   (float sx, float sy) = 0;
-		virtual void SetPivot   (float px, float py) = 0;
+		virtual void SetPosition(float x, float y)		  = 0;
+		virtual void SetRotation(float radians)			  = 0;
+		virtual void SetScale   (float sx, float sy)	  = 0;
+		virtual void SetPivot   (float px, float py)	  = 0;
+		virtual void SetTexture (const std::string& path) = 0;
 
 		_NODISCARD _Check_return_
 		virtual fox_math::Vector2D<float> GetPosition() const = 0;
@@ -100,6 +102,9 @@ namespace pixel_engine
 		virtual bool BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const = 0;
 
 		void SetTilePixels(int tilePx) { m_nTilePx = tilePx; }
+
+		_NODISCARD _Check_return_
+		virtual Texture* GetTexture() const = 0;
 
 	protected:
 		int m_nTilePx{ 32 };

@@ -1,13 +1,17 @@
 #include "pch.h"
 #include "quad.h"
 
+#include "pixel_engine/render_manager/components/texture/texture_resource.h"
+
 using namespace pixel_engine;
 
+_Use_decl_annotations_
 std::string QuadObject::GetObjectName() const
 {
     return "QuadObject";
 }
 
+_Use_decl_annotations_
 bool QuadObject::Initialize()
 {
     MarkDirty(true);
@@ -32,6 +36,7 @@ void QuadObject::Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space)
     UpdateWorldPosition(space);
 }
 
+_Use_decl_annotations_
 void QuadObject::SetTransform(const FTransform2D& t)
 {
     m_base = t;
@@ -39,17 +44,20 @@ void QuadObject::SetTransform(const FTransform2D& t)
     m_bScreenDirty = true;
 }
 
+_Use_decl_annotations_
 const FTransform2D& QuadObject::GetTransform() const
 {
     return m_base;
 }
 
+_Use_decl_annotations_
 FMatrix2DAffine QuadObject::GetAffineMatrix() const
 {
     RebuildIfDirty(nullptr);
     return m_cachedWorld;
 }
 
+_Use_decl_annotations_
 void QuadObject::SetPreAffine(const FMatrix2DAffine& m)
 {
     m_pre = m;
@@ -68,11 +76,13 @@ void QuadObject::ClearPreAffine()
     }
 }
 
+_Use_decl_annotations_
 bool QuadObject::HasPreAffine() const noexcept
 {
     return m_hasPre;
 }
 
+_Use_decl_annotations_
 void QuadObject::SetPostAffine(const FMatrix2DAffine& m)
 {
     m_post = m;
@@ -91,6 +101,7 @@ void QuadObject::ClearPostAffine()
     }
 }
 
+_Use_decl_annotations_
 bool QuadObject::HasPostAffine() const noexcept
 {
     return m_hasPost;
@@ -127,21 +138,31 @@ void QuadObject::SetPivot(float px, float py)
     m_bScreenDirty = true;
 }
 
+void pixel_engine::QuadObject::SetTexture(const std::string& path)
+{
+    m_pTexture      = TextureResource::Instance().LoadTexture(path);
+    m_szTexturePath = path;
+}
+
+_Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetPosition() const
 {
     return m_base.Position;
 }
 
+_Use_decl_annotations_
 float QuadObject::GetRotation() const
 {
     return m_base.Rotation;
 }
 
+_Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetScale() const
 {
     return m_base.Scale;
 }
 
+_Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetPivot() const
 {
     return m_base.Pivot;
@@ -153,6 +174,7 @@ void QuadObject::SetUnitSize(float widthUnits, float heightUnits)
     m_unitSize.y = heightUnits;
 }
 
+_Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetUnitSize() const
 {
     return m_unitSize;
@@ -163,6 +185,7 @@ void QuadObject::SetVisible(bool v)
     m_visible = v;
 }
 
+_Use_decl_annotations_
 bool QuadObject::IsVisible() const
 {
     return m_visible;
@@ -173,12 +196,14 @@ void QuadObject::SetLayer(uint32_t l)
     m_layer = l;
 }
 
+_Use_decl_annotations_
 uint32_t QuadObject::GetLayer() const
 {
     return m_layer;
 }
 
 //~ Build the discrete sampling grid from cached screen space center.
+_Use_decl_annotations_
 bool QuadObject::BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const
 {
     if (m_bScreenDirty || m_pLastCamera == nullptr)
@@ -207,6 +232,13 @@ bool QuadObject::BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) cons
     return true;
 }
 
+_Use_decl_annotations_
+Texture* pixel_engine::QuadObject::GetTexture() const
+{
+    return m_pTexture;
+}
+
+_Use_decl_annotations_
 void QuadObject::RebuildIfDirty(const Camera2D* camera) const
 {
     if (IsDirty())

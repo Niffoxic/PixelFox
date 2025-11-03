@@ -3,7 +3,7 @@
 #include "PixelFoxEngineAPI.h"
 
 #include "pixel_engine/core/interface/interface_singleton.h"
-#include "pixel_engine/render_manager/components/camera.h"
+#include "pixel_engine/render_manager/components/camera/camera.h"
 #include "pixel_engine/utilities/id_allocator.h"
 #include "pixel_engine/core/interface/interface_sprite.h"
 #include "pixel_engine/render_manager/api/culling/culling.h"

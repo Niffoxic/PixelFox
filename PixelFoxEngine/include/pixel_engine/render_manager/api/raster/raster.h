@@ -4,6 +4,8 @@
 #include <memory>
 
 #include "pixel_engine/render_manager/api/buffer/image.h"
+#include "pixel_engine/render_manager/components/texture/texture.h"
+
 #include "fox_math/transform.h"
 #include "fox_math/matrix.h"
 #include "fox_math/vector.h"
@@ -42,6 +44,7 @@ namespace pixel_engine
 		PFE_VIEWPORT GetViewport() const;
 
 		void PutPixel(int y, int x, const PFE_FORMAT_R8G8B8_UINT& color);
+		
 		void DrawDiscreteQuad(
 			const FVector2D& rowStart,
 			const FVector2D& dU,
@@ -49,6 +52,15 @@ namespace pixel_engine
 			int cols,
 			int rows,
 			const PFE_FORMAT_R8G8B8_UINT& color
+		);
+
+		void DrawDiscreteQuad(
+			const FVector2D& rowStart,
+			const FVector2D& dU,
+			const FVector2D& dV,
+			int cols,
+			int rows,
+			const Texture* texture
 		);
 
 		bool IsBounded(unsigned x, unsigned y) const;
