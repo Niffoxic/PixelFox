@@ -19,3 +19,9 @@ typedef struct _WINDOW_RESIZE_EVENT
 	UINT Width;
 	UINT Height;
 } PFE_API WINDOW_RESIZE_EVENT;
+
+
+typedef struct _WINDOW_DRAG_EVENT
+{
+	bool BeingDrag;
+} PFE_API WINDOW_PAUSE_EVENT;

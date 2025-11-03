@@ -3,14 +3,18 @@
 
 #include "pixel_engine/exceptions/base_exception.h"
 #include "pixel_engine/core/event/event_queue.h"
+#include "pixel_engine/core/event/event_windows.h"
 
 #include <sstream>
+
+// TODO: Add Pause feature on Clock
 
 pixel_engine::PixelEngine::PixelEngine(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
 	CreateManagers(desc);
 	CreateUtilities();
 	SetManagerDependency();
+	SubscribeToEvents();
 }
 
 pixel_engine::PixelEngine::~PixelEngine()
@@ -51,6 +55,8 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 	while (true)
 	{
 		float dt = m_pClock->Tick();
+		if (m_bEnginePaused) dt = 0.0f;
+
 		if (PEWindowsManager::ProcessMessage())
 		{
 			logger::warning("Closing Application!");
@@ -134,4 +140,20 @@ void pixel_engine::PixelEngine::SetManagerDependency()
 		m_pRenderManager.get(),
 		m_pWindowsManager.get()
 	);
+}
+
+void pixel_engine::PixelEngine::SubscribeToEvents()
+{
+	auto token = EventQueue::Subscribe<WINDOW_PAUSE_EVENT>(
+		[&](const WINDOW_PAUSE_EVENT& event) 
+		{
+			if (event.BeingDrag) m_bEnginePaused = true;
+			else
+			{
+				m_bEnginePaused = false;
+				m_pClock->ResetTime();
+			}
+
+			logger::debug("Window Drag Event Recevied with {}", event.BeingDrag);
+		});
 }

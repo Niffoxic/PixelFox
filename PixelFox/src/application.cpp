@@ -72,6 +72,8 @@ void pixel_game::Application::BeginPlay()
         m_moveX[i] = ((i & 1) == 0);
     }
 
+    m_objects[0]->SetScale(10, 10);
+    m_objects[0]->SetPosition(0, 0);
     pixel_engine::logger::info("Added Objects: {}", m_objects.size());
 }
 
@@ -87,7 +89,8 @@ void pixel_game::Application::Tick(float deltaTime)
     desc.X1 = cam->WorldToScreen({ 1.0f, 0.0f }, 32);
     desc.Y1 = cam->WorldToScreen({ 0.0f, 1.0f }, 32);
 
-    for (size_t i = 0; i < m_objects.size(); ++i)
+    m_objects[0]->Update(deltaTime, desc);
+    for (size_t i = 1; i < m_objects.size(); ++i)
     {
         auto& obj = *m_objects[i];
 

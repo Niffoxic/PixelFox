@@ -18,11 +18,11 @@ PERenderQueue::PERenderQueue(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc)
 
 Camera2D* PERenderQueue::GetCamera() const { return m_pCamera; }
 
-void PERenderQueue::Update(float deltaTime)
+void PERenderQueue::Update()
 {
     if (m_bDirtySprite.exchange(false, std::memory_order_acq_rel))
         BuildSpriteInOrder();
-    // UpdateSprite(deltaTime); CRITICAL- THREAD GOING BOOM BOOM
+    // UpdateSprite(deltaTime); CRITICAL- THREAD GOING BOOM BOOM (must be updated by application)
 }
 
 void PERenderQueue::Render(PERaster2D* pRaster)

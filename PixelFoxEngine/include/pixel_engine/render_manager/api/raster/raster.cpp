@@ -58,6 +58,7 @@ void PERaster2D::DrawDiscreteQuad(
 	int cols, int rows,
 	const PFE_FORMAT_R8G8B8_UINT& color)
 {
+	// TODO: Add ITexture
 	auto startFrom = rowStart;
 	for (int j = 0; j < rows; ++j)
 	{

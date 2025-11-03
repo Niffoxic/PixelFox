@@ -240,6 +240,26 @@ LRESULT pixel_engine::PEWindowsManager::MessageHandler(HWND hwnd, UINT message, 
         EventQueue::Post<WINDOW_RESIZE_EVENT>({ m_nWindowsWidth, m_nWindowsHeight });
         return S_OK;
     }
+    case WM_ENTERSIZEMOVE: // clicked mouse on title bar
+    {
+        EventQueue::Post<WINDOW_PAUSE_EVENT>({ true });
+        return S_OK;
+    }
+    case WM_EXITSIZEMOVE: // not clicking anymore
+    {
+        EventQueue::Post<WINDOW_PAUSE_EVENT>({ false });
+        return S_OK;
+    }
+    case WM_KILLFOCUS:
+    {
+        EventQueue::Post<WINDOW_PAUSE_EVENT>({ true });
+        return S_OK;
+    }
+    case WM_SETFOCUS:
+    {
+        EventQueue::Post<WINDOW_PAUSE_EVENT>({ false });
+        return S_OK;
+    }
     case WM_CLOSE:
     {
         PostQuitMessage(0);

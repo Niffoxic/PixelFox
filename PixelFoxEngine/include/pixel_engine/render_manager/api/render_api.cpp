@@ -72,7 +72,7 @@ DWORD pixel_engine::PERenderAPI::Execute()
         }
 
         CleanFrame();
-        WriteFrame(0.0f);
+        WriteFrame();
 
         PresentFrame();
         SetEvent(m_handlePresentDoneEvent);
@@ -132,9 +132,9 @@ void pixel_engine::PERenderAPI::CleanFrame()
     if (m_pRaster2D) m_pRaster2D->Clear({ 237, 237, 199 });
 }
 
-void pixel_engine::PERenderAPI::WriteFrame(float deltaTime)
+void pixel_engine::PERenderAPI::WriteFrame()
 {
-    PERenderQueue::Instance().Update(deltaTime);
+    PERenderQueue::Instance().Update();
     PERenderQueue::Instance().Render(m_pRaster2D.get());
 
     m_pDeviceContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0u);

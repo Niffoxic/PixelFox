@@ -64,7 +64,7 @@ namespace pixel_engine
 
 	private:
 		void CleanFrame();
-		void WriteFrame(float deltaTime);
+		void WriteFrame();
 		void PresentFrame();
 
 		//~ DirectX Creation

@@ -53,8 +53,11 @@ namespace pixel_engine
 
 		void CreateUtilities();
 		void SetManagerDependency();
+		
+		void SubscribeToEvents();
 
 	private:
+		bool m_bEnginePaused{ false };
 		DependencyResolver				  m_dependecyResolver{};
 		
 		std::unique_ptr<GameClock>		  m_pClock		   { nullptr };
