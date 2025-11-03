@@ -63,6 +63,15 @@ namespace pixel_engine
 			const Texture* texture
 		);
 
+		void DrawSafeQuad(
+			const FVector2D& rowStart,
+			const FVector2D& dU,
+			const FVector2D& dV,
+			int cols,
+			int rows,
+			const Texture* texture
+		);
+
 		bool IsBounded(unsigned x, unsigned y) const;
 
 		void Clear(const PFE_FORMAT_R8G8B8_UINT& color);

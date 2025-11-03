@@ -3,6 +3,9 @@
 
 #include "pixel_engine/render_manager/components/texture/texture_resource.h"
 
+//~ test
+#include "pixel_engine/render_manager/components/texture/sampler/bilinear_sampler.h"
+
 using namespace pixel_engine;
 
 _Use_decl_annotations_
@@ -140,7 +143,12 @@ void QuadObject::SetPivot(float px, float py)
 
 void pixel_engine::QuadObject::SetTexture(const std::string& path)
 {
-    m_pTexture      = TextureResource::Instance().LoadTexture(path);
+    m_pTexture   = TextureResource::Instance().LoadTexture(path);
+    auto sampled = BilinearSampler::Instance().GetSampledImage
+    (m_pTexture, m_nTilePx, m_base.Scale);
+
+    if (sampled) m_pSampledTexture = std::move(sampled);
+    
     m_szTexturePath = path;
 }
 
@@ -235,7 +243,7 @@ bool QuadObject::BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) cons
 _Use_decl_annotations_
 Texture* pixel_engine::QuadObject::GetTexture() const
 {
-    return m_pTexture;
+    return m_pSampledTexture.get();
 }
 
 _Use_decl_annotations_

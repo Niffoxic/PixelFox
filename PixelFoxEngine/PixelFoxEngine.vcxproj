@@ -176,6 +176,7 @@
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\camera\camera.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\sampler\bilinear_sampler.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\texture.h" />
     <ClInclude Include="include\pixel_engine\render_manager\objects\quad\quad.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_defines.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\camera\camera.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\sampler\bilinear_sampler.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\texture.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\objects\quad\quad.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\render_queue.cpp" />

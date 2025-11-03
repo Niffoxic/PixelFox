@@ -96,12 +96,15 @@ void PERenderQueue::RenderSprite(PERaster2D* pRaster)
         if (!sprite->BuildDiscreteGrid(m_nTileStep, grid)) continue;
         if (m_pCulling2D->ShouldCullQuad(grid.RowStart, grid.dU, grid.dV, grid.cols, grid.rows)) continue;
 
-
         if (auto* texture = sprite->GetTexture())
         {
-            pRaster->DrawDiscreteQuad(
-                grid.RowStart, grid.dU, grid.dV, grid.cols,
-                grid.rows, texture);
+            const int sx = static_cast<int>(std::floor(grid.RowStart.x + 0.5f));
+            const int sy = static_cast<int>(std::floor(grid.RowStart.y + 0.5f));
+
+            pRaster->DrawSafeQuad(
+                grid.RowStart, grid.dU,
+                grid.dV, grid.cols, grid.rows,
+                texture);
         }
         else
         {

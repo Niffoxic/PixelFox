@@ -27,11 +27,11 @@ void pixel_game::Application::BeginPlay()
     m_object->SetUnitSize(kUnitW, kUnitH);
     m_object->SetTilePixels(TilePx);
     m_object->SetLayer(1);
-    m_object->SetTexture("assets/sprites/A.png");
+    m_object->SetTexture("assets/sprites/cloud.png");
 
     FTransform2D T{};
     T.Position = { 0, 0 };
-    T.Scale    = { 1.0f, 1.0f };
+    T.Scale    = { 5.f, 5.f };
     T.Rotation = 0.0f;
     m_object->SetTransform(T);
 

@@ -3,8 +3,31 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 using namespace pixel_engine;
+
+static inline pixel_engine::PFE_FORMAT_R8G8B8_UINT
+FetchTexelNearestFast(const pixel_engine::Texture* tex, int sx, int sy)
+{
+    using pixel_engine::TextureFormat;
+    const uint32_t bpp = tex->BytesPerPixel();
+    const uint32_t pitch = tex->GetRowStride();
+    const auto fmt = tex->GetFormat();
+    const auto data = tex->Data();
+
+    const size_t off = static_cast<size_t>(sy) * pitch + static_cast<size_t>(sx) * bpp;
+    const uint8_t* p = data.data + off;
+
+    switch (fmt)
+    {
+    case TextureFormat::R8:    return { p[0], p[0], p[0] };
+    case TextureFormat::RG8:   return { p[0], p[1], 0u };
+    case TextureFormat::RGB8:  return { p[0], p[1], p[2] };
+    case TextureFormat::RGBA8: return { p[0], p[1], p[2] };
+    default:                   return { 0, 0, 0 };
+    }
+}
 
 PERaster2D::PERaster2D(const PFE_RASTER_CONSTRUCT_DESC* desc)
 {
@@ -80,61 +103,119 @@ void PERaster2D::DrawDiscreteQuad(
 }
 
 void pixel_engine::PERaster2D::DrawDiscreteQuad(
-	const FVector2D& rowStart,
-	const FVector2D& dU,
-	const FVector2D& dV,
-	int cols, int rows,
-	const Texture* texture)
+    const FVector2D& rowStart,
+    const FVector2D& dU,
+    const FVector2D& dV,
+    int cols, int rows,
+    const Texture* texture)
 {
-	if (!texture || cols <= 0 || rows <= 0) return;
+    if (!texture || cols <= 0 || rows <= 0) return;
 
-	const uint32_t texW = texture->GetWidth();
-	const uint32_t texH = texture->GetHeight();
-	if (texW == 0 || texH == 0) return;
+    const int texW = static_cast<int>(texture->GetWidth());
+    const int texH = static_cast<int>(texture->GetHeight());
+    if (texW <= 0 || texH <= 0) return;
 
-	auto startFrom = rowStart;
+    const double x0 = rowStart.x;
+    const double y0 = rowStart.y;
+    const double x1 = x0 + dU.x * cols;
+    const double y1 = y0 + dU.y * cols;
+    const double x2 = x0 + dV.x * rows;
+    const double y2 = y0 + dV.y * rows;
+    const double x3 = x0 + dU.x * cols + dV.x * rows;
+    const double y3 = y0 + dU.y * cols + dV.y * rows;
 
-	// Precompute normalization
-	const float invCols = 1.0f / static_cast<float>(cols);
-	const float invRows = 1.0f / static_cast<float>(rows);
+    int minX = static_cast<int>(std::floor(std::min({ x0, x1, x2, x3 })));
+    int maxX = static_cast<int>(std::ceil(std::max({ x0, x1, x2, x3 })));
+    int minY = static_cast<int>(std::floor(std::min({ y0, y1, y2, y3 })));
+    int maxY = static_cast<int>(std::ceil(std::max({ y0, y1, y2, y3 })));
 
-	const bool flipV = (texture->GetOrigin() == Origin::BottomLeft);
+    minX = std::max(minX, 0);
+    minY = std::max(minY, 0);
+    maxX = std::min(maxX, static_cast<int>(m_descViewport.w - 1));
+    maxY = std::min(maxY, static_cast<int>(m_descViewport.h - 1));
+    if (minX > maxX || minY > maxY) return;
 
-	for (int j = 0; j < rows; ++j)
-	{
-		// Normalized v
-		float v		  = (static_cast<float>(j) + 0.5f) * invRows;
-		v			  = std::min(v, 1.0f - std::numeric_limits<float>::epsilon());
-		int ty		  = static_cast<int>(v * static_cast<float>(texH));
-		ty			  = std::clamp(ty, 0, static_cast<int>(texH) - 1);
-		if (flipV) ty = static_cast<int>(texH) - 1 - ty;
+    const double a = dU.x, b = dV.x;
+    const double c = dU.y, d = dV.y;
+    const double det = a * d - b * c;
+    if (std::abs(det) < 1e-8) {
+        auto startFrom = rowStart;
+        for (int j = 0; j < rows; ++j) {
+            FVector2D p = startFrom;
+            for (int i = 0; i < cols; ++i) {
+                const int ix = static_cast<int>(std::lround(p.x));
+                const int iy = static_cast<int>(std::lround(p.y));
+                if (IsBounded(ix, iy)) {
+                    const int tx = std::clamp(i, 0, texW - 1);
+                    const int ty = std::clamp(j, 0, texH - 1);
+                    auto texel = texture->GetPixel(static_cast<uint32_t>(tx),
+                        static_cast<uint32_t>(ty));
+                    m_pImageBuffer->WriteAt(iy, ix, texel);
+                }
+                p.x += dU.x; p.y += dU.y;
+            }
+            startFrom.x += dV.x; startFrom.y += dV.y;
+        }
+        return;
+    }
 
-		FVector2D p = startFrom;
+    const double inv00 = d / det;
+    const double inv01 = -b / det;
+    const double inv10 = -c / det;
+    const double inv11 = a / det;
 
-		for (int i = 0; i < cols; ++i)
-		{
-			// Screen destination position
-			const int ix = static_cast<int>(std::lround(p.x));
-			const int iy = static_cast<int>(std::lround(p.y));
+    const double ox = -x0;
+    const double oy = -y0;
 
-			// Normalized u
-			float u = (static_cast<float>(i) + 0.5f) * invCols;
-			u = std::min(u, 1.0f - std::numeric_limits<float>::epsilon());
-			int tx = static_cast<int>(u * static_cast<float>(texW));
-			tx = std::clamp(tx, 0, static_cast<int>(texW) - 1);
+    for (int y = minY; y <= maxY; ++y)
+    {
+        const double py = (static_cast<double>(y) + 0.5);
+        const double ry = oy + py;
 
-			if (IsBounded(ix, iy))
-			{
-				const auto texel = texture->GetPixel(static_cast<uint32_t>(tx),
-					static_cast<uint32_t>(ty));
-				m_pImageBuffer->WriteAt(iy, ix, texel);
-			}
+        for (int x = minX; x <= maxX; ++x) {
+            const double px = (static_cast<double>(x) + 0.5);
+            const double rx = ox + px;
 
-			p.x += dU.x; p.y += dU.y;
-		}
+            const double u = inv00 * rx + inv01 * ry;
+            const double v = inv10 * rx + inv11 * ry;
 
-		startFrom.x += dV.x; startFrom.y += dV.y;
-	}
+            if (u >= -0.5 && u < static_cast<double>(cols) - 0.5 &&
+                v >= -0.5 && v < static_cast<double>(rows) - 0.5)
+            {
+                int tx = static_cast<int>(std::floor(u + 0.5));
+                int ty = static_cast<int>(std::floor(v + 0.5));
+                tx = std::clamp(tx, 0, texW - 1);
+                ty = std::clamp(ty, 0, texH - 1);
+
+                auto texel = texture->GetPixel(static_cast<uint32_t>(tx),
+                    static_cast<uint32_t>(ty));
+                m_pImageBuffer->WriteAt(y, x, texel);
+            }
+        }
+    }
+}
+
+void pixel_engine::PERaster2D::DrawSafeQuad(const FVector2D& rowStart,
+    const FVector2D& dU, const FVector2D& dV,
+    int cols, int rows,
+    const Texture* texture)
+{
+    auto startFrom = rowStart;
+    for (int j = 0; j < texture->GetHeight(); ++j)
+    {
+        FVector2D p = startFrom;
+        for (int i = 0; i < texture->GetWidth(); ++i)
+        {
+            const int ix = static_cast<int>(std::lround(rowStart.x));
+            const int iy = static_cast<int>(std::lround(rowStart.y));
+            if (IsBounded(ix, iy))
+            {
+                m_pImageBuffer->WriteAt(iy + j, ix, texture->GetPixel(i, j));
+            }
+            p.x += dU.x; p.y += dU.y;
+        }
+        startFrom.x += dV.x; startFrom.y += dV.y;
+    }
 }
 
 bool pixel_engine::PERaster2D::IsBounded(unsigned x, unsigned y) const

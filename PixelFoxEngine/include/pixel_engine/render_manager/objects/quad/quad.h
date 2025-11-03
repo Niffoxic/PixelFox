@@ -70,6 +70,9 @@ namespace pixel_engine
     private:
         std::string m_szTexturePath{};
         Texture*    m_pTexture     { nullptr };
+        
+        //~ Test only
+        std::unique_ptr<Texture> m_pSampledTexture{ nullptr };
 
         FTransform2D              m_base{};
 

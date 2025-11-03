@@ -195,12 +195,11 @@ FVector2D pixel_engine::Camera2D::WorldToScreen(const FVector2D& pWorld, const u
 {
     FVector2D vec = WorldToView(pWorld);
     vec = m_matScreen.TransformPoint(vec);
-    auto shake = GetShakeNoise();
 
     return 
     {
-        vec.x * static_cast<float>(tile) + m_vecViewOriginPx.x + shake.first,
-        vec.y * static_cast<float>(tile) + m_vecViewOriginPx.y + shake.second
+        vec.x * static_cast<float>(tile) + m_vecViewOriginPx.x,
+        vec.y * static_cast<float>(tile) + m_vecViewOriginPx.y
     };
 }
 
