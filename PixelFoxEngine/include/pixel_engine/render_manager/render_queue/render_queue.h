@@ -34,7 +34,7 @@ namespace pixel_engine
 
 		Camera2D* GetCamera() const;
 
-		void Update(float deltaTime);
+		void Update();
 		void Render(PERaster2D* pRaster);
 
 		bool AddSprite(PEISprite* sprite);
