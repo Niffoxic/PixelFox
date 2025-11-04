@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
@@ -99,7 +110,7 @@ namespace pixel_engine
 		bool        ShowTimestamps		  = true;
 		bool        ShowThreadId		  = true;
 		bool        ShowFileAndLine		  = true;
-		bool        ShowFunction		  = false;
+		bool        ShowFunction		  = true;
 		bool        UseUtcTimestamps	  = false;
 		bool        UseRelativeTimestamps = false;
 
@@ -120,27 +131,27 @@ namespace pixel_engine
 		logger() = delete;
 
 		//~ Life Cycle
-		static void init(_In_ const LOGGER_CREATE_DESC& desc);
+		static void init (_In_ const LOGGER_CREATE_DESC& desc);
 		static void close();
 
 		//~ Theme for the terminal
-		static void set_level(_In_ logger_config::LogLevel level)			  noexcept;
-		static void set_theme(_In_ const logger_config::LoggerTheme& theme) noexcept;
+		static void set_level	   (_In_ logger_config::LogLevel level)			  noexcept;
+		static void set_theme	   (_In_ const logger_config::LoggerTheme& theme) noexcept;
 		static void set_time_format(_In_ std::string_view fmt);
 
 		static void set_show_timestamps(_In_ bool v) noexcept;
-		static void set_show_thread_id(_In_ bool v) noexcept;
-		static void set_show_file_line(_In_ bool v) noexcept;
-		static void set_show_function(_In_ bool v) noexcept;
-		static void set_use_utc(_In_ bool v) noexcept;
+		static void set_show_thread_id (_In_ bool v) noexcept;
+		static void set_show_file_line (_In_ bool v) noexcept;
+		static void set_show_function  (_In_ bool v) noexcept;
+		static void set_use_utc		   (_In_ bool v) noexcept;
 
 		static void set_use_relative_timestamps(_In_ bool v)			  noexcept;
-		static void set_indent_spaces(_In_ std::uint16_t n)	  noexcept;
-		static void set_frame_index(_In_ std::uint64_t frame) noexcept;
+		static void set_indent_spaces		   (_In_ std::uint16_t n)	  noexcept;
+		static void set_frame_index			   (_In_ std::uint64_t frame) noexcept;
 
 		//~ scopes for indent pretty like (main then something inside it)
 		static void push_scope(_In_ std::string_view scopeName);
-		static void pop_scope();
+		static void pop_scope ();
 
 		//~ progress bars 
 		static void progress_begin(

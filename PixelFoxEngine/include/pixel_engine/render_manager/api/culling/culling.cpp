@@ -1,18 +1,32 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "culling.h"
 
 #include "pixel_engine/exceptions/base_exception.h"
 
+_Use_decl_annotations_
 pixel_engine::PECulling2D::PECulling2D(const PFE_CULL2D_CONSTRUCT_DESC& desc)
 {
     m_viewport = desc.Viewport;
 }
 
+_Use_decl_annotations_
 void pixel_engine::PECulling2D::Init(const pixel_engine::PFE_VIEWPORT& viewport)
 {
     m_viewport = viewport;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PECulling2D::ShouldCullQuad(const PFE_SAMPLE_GRID_2D& grid) const noexcept
 {
     if (grid.cols <= 0 || grid.rows <= 0) return true;
@@ -28,21 +42,22 @@ bool pixel_engine::PECulling2D::ShouldCullQuad(const PFE_SAMPLE_GRID_2D& grid) c
     return false;
 }
 
+_Use_decl_annotations_
 pixel_engine::PFE_AABB2D pixel_engine::PECulling2D::ComputeQuadAABB(const PFE_SAMPLE_GRID_2D& grid) const noexcept
 {
     const FVector2D A = grid.RowStart; // left-top
 
     // right-top
-    const FVector2D B{ grid.RowStart.x + grid.dU.x * static_cast<float>(grid.cols),
-                       grid.RowStart.y + grid.dU.y * static_cast<float>(grid.cols) };
+    const FVector2D B{ grid.RowStart.x + grid.deltaAxisU.x * static_cast<float>(grid.cols),
+                       grid.RowStart.y + grid.deltaAxisU.y * static_cast<float>(grid.cols) };
 
     // left-bottom
-    const FVector2D C{ grid.RowStart.x + grid.dV.x * static_cast<float>(grid.rows),
-                       grid.RowStart.y + grid.dV.y * static_cast<float>(grid.rows) };
+    const FVector2D C{ grid.RowStart.x + grid.deltaAxisV.x * static_cast<float>(grid.rows),
+                       grid.RowStart.y + grid.deltaAxisV.y * static_cast<float>(grid.rows) };
 
     // right-bottom
-    const FVector2D D{ B.x + grid.dV.x * static_cast<float>(grid.rows),
-                       B.y + grid.dV.y * static_cast<float>(grid.rows) };
+    const FVector2D D{ B.x + grid.deltaAxisV.x * static_cast<float>(grid.rows),
+                       B.y + grid.deltaAxisV.y * static_cast<float>(grid.rows) };
 
     constexpr float pad = 0.5f;
 
@@ -55,16 +70,19 @@ pixel_engine::PFE_AABB2D pixel_engine::PECulling2D::ComputeQuadAABB(const PFE_SA
     return out;
 }
 
+_Use_decl_annotations_
 void pixel_engine::PECulling2D::SetViewport(const pixel_engine::PFE_VIEWPORT& viewport) noexcept
 {
     m_viewport = viewport;
 }
 
+_Use_decl_annotations_
 UINT pixel_engine::PECulling2D::GetViewportWidth()  const noexcept
 {
     return m_viewport.w;
 }
 
+_Use_decl_annotations_
 UINT pixel_engine::PECulling2D::GetViewportHeight() const noexcept
 {
     return m_viewport.h;

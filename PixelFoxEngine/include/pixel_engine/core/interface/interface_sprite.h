@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
@@ -14,12 +25,21 @@
 
 namespace pixel_engine
 {
+	enum class PFE_API ELayer
+	{
+		Background	= 0,
+		Obstacles	= 1,
+		Npc_Deco	= 2,
+		Npc_AI		= 3,
+		Player		= 10
+	};
+
 	typedef struct _PFE_WORLD_SPACE_DESC
 	{
-		Camera2D* pCamera;
-		FVector2D Origin;
-		FVector2D X1;
-		FVector2D Y1;
+		_Inout_ Camera2D* pCamera;
+		_In_ FVector2D Origin;
+		_In_ FVector2D X1;
+		_In_ FVector2D Y1;
 	} PFE_WORLD_SPACE_DESC;
 
 	/// <summary>
@@ -45,42 +65,45 @@ namespace pixel_engine
 
 		_NODISCARD _Check_return_
 		virtual bool Initialize() = 0; //~ called once after initalizing
-		virtual bool Release() = 0; // release any upholding resources
+		virtual bool Release()    = 0; // release any upholding resources
 
-		virtual void Update(float deltaTIme, const PFE_WORLD_SPACE_DESC& space) = 0; // called every frame
+		virtual void Update(
+			_In_ float deltaTIme,
+			_In_ const PFE_WORLD_SPACE_DESC& space) = 0; // called every frame
 
 		virtual void SetTransform(_In_ const FTransform2D& t) = 0;
+		
 		_NODISCARD _Check_return_
 		virtual const FTransform2D& GetTransform() const = 0;
 
 		_NODISCARD _Check_return_
-		virtual FMatrix2DAffine GetAffineMatrix() const = 0;
+		virtual FMatrix2DAffine GetAffineMatrix () const = 0;
 
 		//~ transform
-		virtual void SetPosition(float x, float y)		  = 0;
-		virtual void SetRotation(float radians)			  = 0;
-		virtual void SetScale   (float sx, float sy)	  = 0;
-		virtual void SetPivot   (float px, float py)	  = 0;
-		virtual void SetTexture (const std::string& path) = 0;
+		virtual void SetPosition(_In_ float x, _In_ float y)   = 0;
+		virtual void SetRotation(_In_ float radians)		   = 0;
+		virtual void SetScale   (_In_ float sx, _In_ float sy) = 0;
+		virtual void SetPivot   (_In_ float px, _In_ float py) = 0;
+		virtual void SetTexture (_In_ const std::string& path) = 0;
 
 		_NODISCARD _Check_return_
-		virtual fox_math::Vector2D<float> GetPosition() const = 0;
+		virtual FVector2D GetPosition() const	 = 0;
 		_NODISCARD _Check_return_
-		virtual float                     GetRotation() const = 0;
+		virtual float    GetRotation () const	 = 0;
 		_NODISCARD _Check_return_
-		virtual fox_math::Vector2D<float> GetScale()    const = 0;
+		virtual FVector2D GetScale	 () const	 = 0;
 		_NODISCARD _Check_return_
-		virtual fox_math::Vector2D<float> GetPivot()    const = 0;
+		virtual FVector2D GetPivot   () const	 = 0;
 
-		virtual void SetVisible(bool v) = 0;
+		virtual void SetVisible(_In_ bool v)	 = 0;
 		_NODISCARD _Check_return_
-		virtual bool IsVisible() const = 0;
+		virtual bool IsVisible () const			 = 0;
 
-		virtual void SetLayer(uint32_t l) = 0;
+		virtual void SetLayer(_In_ ELayer layer) = 0;
 		_NODISCARD _Check_return_
-		virtual uint32_t GetLayer() const = 0;
+		virtual ELayer GetLayer() const			 = 0;
 
-		void MarkDirty(bool flag) const noexcept { m_bDirty = flag; }
+		void MarkDirty(_In_ bool flag) const noexcept { m_bDirty = flag; }
 		
 		_NODISCARD _Check_return_ 
 		bool IsDirty() const noexcept { return m_bDirty; }
@@ -90,13 +113,28 @@ namespace pixel_engine
 
 		//~ relative to the camera
 		_NODISCARD _Check_return_
-		virtual FVector2D GetUAxisRelativeToCamera() const noexcept = 0;
+		virtual FVector2D GetUAxisRelativeToCamera   () const noexcept = 0;
 		_NODISCARD _Check_return_
-		virtual FVector2D GetVAxisRelativeToCamera() const noexcept = 0;
+		virtual FVector2D GetVAxisRelativeToCamera   () const noexcept = 0;
 		_NODISCARD _Check_return_
 		virtual FVector2D GetPositionRelativeToCamera() const noexcept = 0;
 	
+		_NODISCARD _Check_return_ __forceinline
+		bool NeedSampling() const { return m_bResampleNeeded; }
+
+		void AssignSampledTexture(_Inout_ Texture* texture)
+		{
+			m_pSampledTexture = texture;
+			m_bResampleNeeded = false;
+		}
+
+		_NODISCARD _Check_return_
+		Texture* GetSampledTexture() const { return m_pSampledTexture; }
+
 	private:
+		bool	 m_bResampleNeeded{ true };
+		Texture* m_pSampledTexture{ nullptr };
+
 		mutable bool m_bDirty{ true };
 		AllocatedID  m_idAllocated;
 	};

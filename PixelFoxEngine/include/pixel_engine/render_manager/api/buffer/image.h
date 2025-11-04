@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
@@ -13,7 +24,7 @@ namespace pixel_engine
 	class PFE_API PEImageBuffer
 	{
 	public:
-		using image_data = unsigned char*;
+		using image_data       = unsigned char*;
 		using const_image_data = const unsigned char*;
 
 	public:
@@ -79,10 +90,10 @@ namespace pixel_engine
 		unsigned char* PixelAt(_In_ size_t atRow, _In_ size_t atColumn) noexcept;
 
 		//~ Data accessors
-		_NODISCARD _Ret_notnull_
+		_NODISCARD _Check_return_ _Maybenull_
 		__forceinline image_data	   Data()		noexcept { return m_imageData.data(); }
 
-		_NODISCARD _Ret_notnull_
+		_NODISCARD _Check_return_ _Maybenull_
 		__forceinline const_image_data Data() const noexcept { return m_imageData.data(); }
 
 		_NODISCARD _Check_return_ 
@@ -104,3 +115,4 @@ namespace pixel_engine
 		fox::vector<unsigned char> m_imageData;
 	};
 }
+

@@ -90,12 +90,6 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\core\interface\interface_particle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\pixel_engine\core\interface\interface_post.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\pixel_engine\core\interface\interface_text.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,16 +132,16 @@
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\sampler\bilinear_sampler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\pixel_engine\window_manager\windows_tuning.h">
+    <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\bilinear\bilinear_sampler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\render_manager\api\raster\task\raster_scheduler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\render_manager\api\raster\task\raster_task.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -215,13 +209,19 @@
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\sampler\bilinear_sampler.cpp">
+    <ClCompile Include="include\pixel_engine\render_manager\render_queue\sampler\bilinear\bilinear_sampler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\api\raster\task\raster_task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\api\raster\task\raster_scheduler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\core\event\event_queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

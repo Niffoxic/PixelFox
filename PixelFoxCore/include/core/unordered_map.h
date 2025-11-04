@@ -1,4 +1,6 @@
-#pragma once
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
 
 /*
  *  -----------------------------------------------------------------------------
@@ -7,6 +9,8 @@
  *  License   : MIT
  *  -----------------------------------------------------------------------------
  */
+
+#pragma once
 
 #include "PixelFoxCoreAPI.h"
 
@@ -428,6 +432,7 @@ namespace fox
             
             if (T* v = find(key))
             {
+                assert(v && "key is a nullptr!");
                 return *v;
             }
             
@@ -438,7 +443,6 @@ namespace fox
         {
             T* v = find(key);
             assert(v && "key not found");
-            
             return *v;
         }
 

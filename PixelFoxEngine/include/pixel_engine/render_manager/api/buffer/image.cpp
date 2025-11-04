@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "image.h"
 
@@ -46,7 +57,7 @@ bool pixel_engine::PEImageBuffer::WriteAt_G(size_t atRow, size_t atColumn, const
 
 	if (auto address = PixelAt(atRow, atColumn))
 	{
-		address[1] = g.Value; // G
+		address[1] = g.Value;
 		return true;
 	}
 
@@ -64,7 +75,7 @@ bool pixel_engine::PEImageBuffer::WriteAt_B(size_t atRow, size_t atColumn, const
 	}
 	if (auto address = PixelAt(atRow, atColumn))
 	{
-		address[2] = b.Value; // B
+		address[2] = b.Value;
 		return true;
 	}
 
@@ -82,8 +93,8 @@ bool pixel_engine::PEImageBuffer::WriteAt_RG(size_t atRow, size_t atColumn, cons
     }
     if (auto address = PixelAt(atRow, atColumn))
     {
-        address[0] = rg.R.Value;   // R
-        address[1] = rg.G.Value;  // G
+        address[0] = rg.R.Value;
+        address[1] = rg.G.Value;
         return true;
     }
 
@@ -102,8 +113,8 @@ bool pixel_engine::PEImageBuffer::WriteAt_RB(size_t atRow, size_t atColumn, cons
 
     if (auto address = PixelAt(atRow, atColumn))
     {
-        address[0] = rb.R.Value;   // R
-        address[2] = rb.G.Value;  // B
+        address[0] = rb.R.Value;
+        address[2] = rb.G.Value;
         return true;
     }
 
@@ -122,8 +133,8 @@ bool pixel_engine::PEImageBuffer::WriteAt_GB(size_t atRow, size_t atColumn, cons
 
     if (auto address = PixelAt(atRow, atColumn))
     {
-        address[1] = gb.R.Value;   // G
-        address[2] = gb.G.Value;  // B
+        address[1] = gb.R.Value;
+        address[2] = gb.G.Value;
         return true;
     }
 
@@ -142,9 +153,9 @@ bool pixel_engine::PEImageBuffer::WriteAt(size_t atRow, size_t atColumn, const P
 
     if (auto address = PixelAt(atRow, atColumn))
     {
-        address[0] = rgb.R.Value;   // R
-        address[1] = rgb.G.Value;  // G
-        address[2] = rgb.B.Value;   // B
+        address[0] = rgb.R.Value;
+        address[1] = rgb.G.Value;
+        address[2] = rgb.B.Value;
         return true;
     }
 
@@ -162,10 +173,12 @@ void pixel_engine::PEImageBuffer::ClearImageBuffer(const PFE_FORMAT_R8G8B8_UINT&
         unsigned char* rowPtr = m_imageData.data() + row * m_rowPitch;
         for (size_t col = 0; col < m_width; ++col)
         {
-            unsigned char* px = rowPtr + col * 3u;
-            px[0] = color.R.Value;   // R
-            px[1] = color.G.Value;  // G
-            px[2] = color.B.Value;   // B
+            if (unsigned char* px = rowPtr + col * 3u)
+            {
+                px[0] = color.R.Value;
+                px[1] = color.G.Value;
+                px[2] = color.B.Value;
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ void pixel_game::Application::BeginPlay()
 
     m_object = std::make_unique<pixel_engine::QuadObject>();
     m_object->Initialize();
-    m_object->SetLayer(0);
+    m_object->SetLayer(pixel_engine::ELayer::Background);
     FTransform2D T{};
     T.Position = { 0, 0 };
     T.Scale    = { 50, 50 };
@@ -39,7 +39,7 @@ void pixel_game::Application::BeginPlay()
     {
         auto obj = std::make_unique<pixel_engine::QuadObject>();
         obj->Initialize();
-        obj->SetLayer(0);
+        obj->SetLayer(pixel_engine::ELayer::Obstacles);
 
         int y = (i / 40) - 20;
         int x = (i % 40) - 20;
@@ -49,7 +49,7 @@ void pixel_game::Application::BeginPlay()
         res.Scale = { 1.f, 1.f };
         res.Rotation = 0.0f;
         obj->SetTransform(res);
-        obj->SetLayer(1);
+        obj->SetLayer(pixel_engine::ELayer::Obstacles);
         obj->SetTexture("assets/sprites/A.png");
 
         pixel_engine::PERenderQueue::Instance().AddSprite(obj.get());

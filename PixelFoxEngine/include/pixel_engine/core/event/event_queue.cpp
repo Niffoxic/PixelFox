@@ -9,21 +9,15 @@
  *  -----------------------------------------------------------------------------
  */
 
-#pragma once
+#include "pch.h"
 
-#include <string>
-#include <sal.h>
-#include "pixel_engine/utilities/id_allocator.h"
+#include "event_queue.h"
 
-#include "interface_object.h"
+using namespace pixel_engine;
+
 
 namespace pixel_engine
 {
-	class PFE_API IFrameObject: public PEIObject
-	{
-	public:
-		//~ Interface rules
-		virtual void OnFrameBegin(_In_ float deltaTime) = 0;
-		virtual void OnFrameEnd()						= 0;
-	};
-}
+    fox::unordered_map<std::type_index, EventQueue::TypeOps> EventQueue::s_mapRegistry{};
+
+} // namespace pixel_engine

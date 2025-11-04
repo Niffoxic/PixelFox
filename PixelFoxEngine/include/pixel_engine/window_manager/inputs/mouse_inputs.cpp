@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "mouse_inputs.h"
 
@@ -13,6 +24,7 @@ pixel_engine::PEMouseInputs::PEMouseInputs()
 	m_pointPosition = { 0, 0 };
 }
 
+_Use_decl_annotations_
 void pixel_engine::PEMouseInputs::AttachWindowHandle(HWND hWnd)
 {
 	if (hWnd)
@@ -133,6 +145,7 @@ bool pixel_engine::PEMouseInputs::ProcessMessage(UINT message, WPARAM wParam, LP
     return false;
 }
 
+_Use_decl_annotations_
 void pixel_engine::PEMouseInputs::OnFrameBegin(float deltaTime) noexcept
 {
 }

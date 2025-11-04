@@ -1,3 +1,7 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+
 /*
  *  -----------------------------------------------------------------------------
  *  Project   : PixelFox (WMG Warwick - Module 1)
@@ -219,20 +223,10 @@ namespace fox
             }
             else
             {
-                if (m_allocator == other.m_allocator)
-                {
-                    using std::swap;
-                    swap(m_data, other.m_data);
-                    swap(m_nSize, other.m_nSize);
-                    swap(m_nCapacity, other.m_nCapacity);
-                }
-                else
-                {
-                    using std::swap;
-                    swap(m_data, other.m_data);
-                    swap(m_nSize, other.m_nSize);
-                    swap(m_nCapacity, other.m_nCapacity);
-                }
+                using std::swap;
+                swap(m_data, other.m_data);
+                swap(m_nSize, other.m_nSize);
+                swap(m_nCapacity, other.m_nCapacity);
             }
         }
 
@@ -278,7 +272,7 @@ namespace fox
         }
 
         //~ modifiers
-        void resize(_In_ const size_type& n)
+        void resize(_In_ const size_type n)
         {
             destroy(m_nSize);
             deallocate(m_nCapacity);
@@ -287,7 +281,7 @@ namespace fox
             construct(n);
         }
 
-        void resize(_In_ const size_type& n, _In_ const value_type& val)
+        void resize(_In_ const size_type n, _In_ const value_type val)
         {
             reserve(n);
             for (size_t i = 0; i < n; i++)
@@ -297,7 +291,7 @@ namespace fox
             m_nSize = n;
         }
 
-        void reserve(_In_ const size_type& n)
+        void reserve(_In_ const size_type n)
         {
             if (n <= m_nCapacity) return;
             destroy(m_nSize);
@@ -309,7 +303,7 @@ namespace fox
         //~ assign count
         template<typename... Args,
             typename = std::enable_if_t<std::is_constructible_v<T, Args&&...>>>
-        void assign(_In_ const size_type& count, _In_ Args&&... args)
+        void assign(_In_ const size_type count, _In_ Args&&... args)
         {
             destroy(m_nSize);
             if (count > m_nCapacity) {
@@ -342,14 +336,16 @@ namespace fox
             ++m_nSize;
         }
 
-        _NODISCARD _Check_return_ const_reference at(_In_ const size_type& index)
+        _NODISCARD _Check_return_ 
+        const_reference at(_In_ const size_type index)
         {
             if (index >= m_nSize)
                 throw std::out_of_range("fox::vector::at() index out of range");
             return m_data[index];
         }
 
-        _NODISCARD _Check_return_ reference at(_In_ const size_type& index) const
+        _NODISCARD _Check_return_
+        reference at(_In_ const size_type index) const
         {
             if (index >= m_nSize)
                 throw std::out_of_range("fox::vector::at() index out of range");
@@ -509,12 +505,10 @@ namespace fox
 
             if (m_nSize == m_nCapacity) reallocate();
 
-            Iterator pos = begin() + index;
-
             if (index == m_nSize)
             {
                 push_back(value);
-                return pos;
+                return begin() + index;
             }
 
             alloc_traits::construct(m_allocator, m_data + m_nSize, std::move(m_data[m_nSize - 1]));
@@ -535,12 +529,10 @@ namespace fox
 
             if (m_nSize == m_nCapacity) reallocate();
 
-            Iterator pos = begin() + index;
-
             if (index == m_nSize)
             {
                 push_back(std::move(value));
-                return pos;
+                return begin() + index;
             }
 
             alloc_traits::construct(m_allocator, m_data + m_nSize, std::move(m_data[m_nSize - 1]));
@@ -637,7 +629,11 @@ namespace fox
                 for (; first != last; ++first, ++idx)
                 {
                     Iterator ins = insert(begin() + idx, *first);
-                    if (!grabbed) { first_inserted = ins; grabbed = true; }
+                    if (!grabbed)
+                    { 
+                        first_inserted = ins;
+                        grabbed = true; 
+                    }
                 }
 
                 return first_inserted;
@@ -766,13 +762,13 @@ namespace fox
 
     private:
         //~ helpers
-        void allocate(_In_ const size_type& n)
+        void allocate(_In_ const size_type n)
         {
             m_data = alloc_traits::allocate(m_allocator, n);
             m_nCapacity = n;
         }
 
-        void deallocate(_In_ const size_type& n) noexcept
+        void deallocate(_In_ const size_type n) noexcept
         {
             if (m_data)
             {
@@ -781,13 +777,13 @@ namespace fox
             }
         }
 
-        void destroy(_In_ const size_type& n) noexcept
+        void destroy(_In_ const size_type n) noexcept
         {
             for (size_type i = 0; i < n; ++i)
                 alloc_traits::destroy(m_allocator, m_data + i);
         }
 
-        void construct(_In_ const size_type& n)
+        void construct(_In_ const size_type n)
         {
             for (size_type i = 0; i < n; ++i)
                 alloc_traits::construct(m_allocator, m_data + i);
@@ -795,7 +791,7 @@ namespace fox
         }
 
         template<typename... Args>
-        void construct(_In_ const size_type& n, _In_ Args&&... args)
+        void construct(_In_ const size_type n, _In_ Args&&... args)
         {
             for (size_type i = 0; i < n; ++i)
                 alloc_traits::construct(m_allocator, m_data + i, std::forward<Args>(args)...);
@@ -813,7 +809,7 @@ namespace fox
         }
 
         //~ growth helper
-        void reallocate(_In_ const size_type& newCap = 0)
+        void reallocate(_In_ const size_type newCap = 0)
         {
             const size_type desired = newCap ? newCap : ((m_nCapacity + 1) << 1);
             pointer tmp = alloc_traits::allocate(m_allocator, desired);

@@ -1,3 +1,15 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "PixelEngine.h"
 
@@ -5,13 +17,13 @@
 #include "pixel_engine/core/event/event_queue.h"
 #include "pixel_engine/core/event/event_windows.h"
 
-#include <sstream>
-
-// TODO: Add Pause feature on Clock
-
+_Use_decl_annotations_
 pixel_engine::PixelEngine::PixelEngine(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
-	CreateManagers(desc);
+	if (not CreateManagers(desc))
+	{
+		logger::error("Failure in building manager!");
+	}
 	CreateUtilities();
 	SetManagerDependency();
 	SubscribeToEvents();
@@ -103,32 +115,24 @@ HRESULT pixel_engine::PixelEngine::Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc
 	return S_OK;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PixelEngine::CreateManagers(PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
 {
 	m_pClock		  = std::make_unique<GameClock>();
 	m_pWindowsManager = std::make_unique<PEWindowsManager>(desc->WindowsDesc);
-	m_pRenderManager  = std::make_unique<PERenderManager>
-		(m_pWindowsManager.get(), m_pClock.get());
+	m_pRenderManager  = std::make_unique<PERenderManager>(m_pWindowsManager.get(),
+						m_pClock.get());
 
 	return true;
 }
 
 void pixel_engine::PixelEngine::CreateUtilities()
 {
+#if defined(_DEBUG) || defined(DEBUG)
 	LOGGER_CREATE_DESC cfg{};
-	cfg.TerminalName			= "PixelFox Logger";
-	cfg.EnableTerminal			= true;
-	cfg.EnableAnsiTrueColor		= true;
-	cfg.DuplicateToDebugger		= true;
-	cfg.ShowTimestamps			= true;
-	cfg.ShowThreadId			= true;
-	cfg.ShowFileAndLine			= true;
-	cfg.ShowFunction			= true;
-	cfg.UseUtcTimestamps		= false;
-	cfg.UseRelativeTimestamps	= false;
-	cfg.MinimumLevel			= logger_config::LogLevel::Trace;
-
+	cfg.TerminalName = "PixelFox Logger";
 	logger::init(cfg);
+#endif
 }
 
 void pixel_engine::PixelEngine::SetManagerDependency()
@@ -136,7 +140,8 @@ void pixel_engine::PixelEngine::SetManagerDependency()
 	m_dependecyResolver.Register(m_pWindowsManager.get());
 	m_dependecyResolver.Register(m_pRenderManager.get());
 
-	m_dependecyResolver.AddDependency(
+	m_dependecyResolver.AddDependency
+	(
 		m_pRenderManager.get(),
 		m_pWindowsManager.get()
 	);
@@ -145,15 +150,15 @@ void pixel_engine::PixelEngine::SetManagerDependency()
 void pixel_engine::PixelEngine::SubscribeToEvents()
 {
 	auto token = EventQueue::Subscribe<WINDOW_PAUSE_EVENT>(
-		[&](const WINDOW_PAUSE_EVENT& event) 
+	[&](const WINDOW_PAUSE_EVENT& event) 
+	{
+		if (event.Paused) m_bEnginePaused = true;
+		else
 		{
-			if (event.Paused) m_bEnginePaused = true;
-			else
-			{
-				m_bEnginePaused = false;
-				m_pClock->ResetTime();
-			}
+			m_bEnginePaused = false;
+			m_pClock->ResetTime();
+		}
 
-			logger::debug("Window Drag Event Recevied with {}", event.Paused);
-		});
+		logger::debug("Window Drag Event Recevied with {}", event.Paused);
+	});
 }

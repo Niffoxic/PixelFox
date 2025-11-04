@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
@@ -17,7 +28,7 @@ namespace pixel_engine
     class PFE_API Camera2D final : public IFrameObject
     {
     public:
-         Camera2D() noexcept;
+         Camera2D() noexcept = default;
         ~Camera2D() override = default;
 
         Camera2D(_In_ const Camera2D&) = delete;
@@ -31,8 +42,8 @@ namespace pixel_engine
         _NODISCARD bool        Initialize   ()       override;
         _NODISCARD bool        Release      ()       override;
         
-        void OnFrameBegin(float deltaTime) override;
-        void OnFrameEnd  ()                override;
+        void OnFrameBegin(_In_ float deltaTime) override;
+        void OnFrameEnd  ()                     override;
 
         //~ Properties setters
         void SetPosition (_In_ const FVector2D& position)     noexcept;

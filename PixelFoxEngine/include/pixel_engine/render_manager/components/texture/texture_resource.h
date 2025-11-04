@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
@@ -20,6 +31,8 @@ namespace pixel_engine
 		friend class ISingleton<TextureResource>;
 	public:
 		TextureResource() = default;
+
+		_NODISCARD _Check_return_ _Success_(return != nullptr)
 		Texture* LoadTexture(_In_ const std::string& path);
 
 	private:

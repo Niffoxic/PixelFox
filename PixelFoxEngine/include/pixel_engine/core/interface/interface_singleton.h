@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
@@ -18,14 +29,15 @@ namespace pixel_engine
     class ISingleton
     {
     public:
-        ISingleton(const ISingleton&)            = delete;
-        ISingleton(ISingleton&&)                 = delete;
-        ISingleton& operator=(const ISingleton&) = delete;
-        ISingleton& operator=(ISingleton&&)      = delete;
+        ISingleton(_In_ const ISingleton&) = delete;
+        ISingleton(_Inout_ ISingleton&&)   = delete;
+        
+        ISingleton& operator=(_In_ const ISingleton&) = delete;
+        ISingleton& operator=(_Inout_ ISingleton&&)   = delete;
 
         // if needed to Initialize
         template<class... Args>
-        _Ret_notnull_ static T& Init(Args&&... args)
+        _Ret_notnull_ static T& Init(_Inout_ Args&&... args)
         {
             if (auto* p = s_ptr.load(std::memory_order_acquire))
                 return *p;

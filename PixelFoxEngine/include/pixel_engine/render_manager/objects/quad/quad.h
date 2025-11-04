@@ -1,15 +1,25 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
 #include "pixel_engine/core/interface/interface_sprite.h"
-
 
 namespace pixel_engine
 {
     class PFE_API QuadObject final : public PEISprite
     {
     public:
-        QuadObject() = default;
+         QuadObject()          = default;
         ~QuadObject() override = default;
 
         _NODISCARD _Check_return_
@@ -17,57 +27,63 @@ namespace pixel_engine
 
         _NODISCARD _Check_return_
         bool Initialize() override;
-        bool Release() override;
+        bool Release   () override;
 
-        void Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space) override;
-
+        void Update(
+            _In_ float deltaTime,
+            _In_ const PFE_WORLD_SPACE_DESC& space)   override;
+        
         void SetTransform(_In_ const FTransform2D& t) override;
+        
         _NODISCARD _Check_return_
         const FTransform2D& GetTransform() const override;
 
         _NODISCARD _Check_return_
-        FMatrix2DAffine GetAffineMatrix() const override;
+        FMatrix2DAffine GetAffineMatrix () const override;
 
-        void SetPosition(float x, float y)        override;
-        void SetRotation(float radians)           override;
-        void SetScale   (float sx, float sy)      override;
-        void SetPivot   (float px, float py)      override;
-        void SetTexture (const std::string& path) override;
+        void SetPosition(_In_ float x, _In_ float y)   override;
+        void SetRotation(_In_ float radians)           override;
+        void SetScale   (_In_ float sx, _In_ float sy) override;
+        void SetPivot   (_In_ float px, _In_ float py) override;
+        void SetTexture (_In_ const std::string& path) override;
 
-        _NODISCARD _Check_return_ fox_math::Vector2D<float> GetPosition() const override;
-        _NODISCARD _Check_return_ float                     GetRotation() const override;
-        _NODISCARD _Check_return_ fox_math::Vector2D<float> GetScale()    const override;
-        _NODISCARD _Check_return_ fox_math::Vector2D<float> GetPivot()    const override;
+        _NODISCARD _Check_return_ FVector2D GetPosition() const override;
+        _NODISCARD _Check_return_ float     GetRotation() const override;
+        _NODISCARD _Check_return_ FVector2D GetScale   () const override;
+        _NODISCARD _Check_return_ FVector2D GetPivot   () const override;
 
-        void SetVisible(bool v)   override;
-        _NODISCARD _Check_return_ bool     IsVisible() const override;
+        void SetVisible(_In_ bool v) override;
+        
+        _NODISCARD _Check_return_
+        bool IsVisible()       const override;
 
-        void SetLayer(uint32_t l) override;
-        _NODISCARD _Check_return_ uint32_t GetLayer() const override;
+        void SetLayer(_In_ ELayer l) override;
+        
+        _NODISCARD _Check_return_ 
+        ELayer GetLayer    () const override;
 
         _NODISCARD _Check_return_
         Texture* GetTexture() const override;
 
         //~ relative to the camera
         _NODISCARD _Check_return_
-        FVector2D GetUAxisRelativeToCamera() const noexcept override;
+        FVector2D GetUAxisRelativeToCamera   () const noexcept override;
+        
         _NODISCARD _Check_return_
-        FVector2D GetVAxisRelativeToCamera() const noexcept override;
+        FVector2D GetVAxisRelativeToCamera   () const noexcept override;
+        
         _NODISCARD _Check_return_
         FVector2D GetPositionRelativeToCamera() const noexcept override;
+    
     private:
-        void UpdateObjectToCameraSpace(const PFE_WORLD_SPACE_DESC& space);
+        void UpdateObjectToCameraSpace(_In_ const PFE_WORLD_SPACE_DESC& space);
 
     private:
-        std::string m_szTexturePath{};
-        Texture*    m_pTexture     { nullptr };
-        
-        //~ Test only
-        std::unique_ptr<Texture> m_pSampledTexture{ nullptr };
-
-        FTransform2D              m_transform{};
-        bool                      m_visible{ true };
-        uint32_t                  m_layer{ 0 };
+        std::string  m_szTexturePath{};
+        Texture*     m_pTexture     { nullptr };
+        FTransform2D m_transform    {};
+        bool         m_visible      { true };
+        ELayer       m_layer        { ELayer::Obstacles };
 
         //~ relative to the camera
         FVector2D m_ObjectCameraAxisU       {};

@@ -1,11 +1,18 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "quad.h"
 
 #include "pixel_engine/render_manager/components/texture/texture_resource.h"
-
-//~ test
-#include "pixel_engine/render_manager/components/texture/sampler/bilinear_sampler.h"
-
 using namespace pixel_engine;
 
 _Use_decl_annotations_
@@ -27,6 +34,7 @@ bool QuadObject::Release()
     return true;
 }
 
+_Use_decl_annotations_
 void QuadObject::Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space)
 {
     UpdateObjectToCameraSpace(space);
@@ -51,6 +59,7 @@ FMatrix2DAffine QuadObject::GetAffineMatrix() const
     return m_transform.ToMatrix();
 }
 
+_Use_decl_annotations_
 void QuadObject::SetPosition(float x, float y)
 {
     m_transform.Position.x = x;
@@ -58,12 +67,14 @@ void QuadObject::SetPosition(float x, float y)
     MarkDirty(true);
 }
 
+_Use_decl_annotations_
 void QuadObject::SetRotation(float radians)
 {
     m_transform.Rotation = radians;
     MarkDirty(true);
 }
 
+_Use_decl_annotations_
 void QuadObject::SetScale(float sx, float sy)
 {
     m_transform.Scale.x = sx;
@@ -71,6 +82,7 @@ void QuadObject::SetScale(float sx, float sy)
     MarkDirty(true);
 }
 
+_Use_decl_annotations_
 void QuadObject::SetPivot(float px, float py)
 {
     m_transform.Pivot.x = px;
@@ -78,31 +90,16 @@ void QuadObject::SetPivot(float px, float py)
     MarkDirty(true);
 }
 
+_Use_decl_annotations_
 void pixel_engine::QuadObject::SetTexture(const std::string& path)
 {
-    //~ only testing sampler here so fixed 32 px
-    m_pTexture   = TextureResource::Instance().LoadTexture(path);
+    m_pTexture = TextureResource::Instance().LoadTexture(path);
 
     if (not m_pTexture)
     {
         logger::error("Failed to load texture");
         return;
     }
-
-    auto sampled = BilinearSampler::Instance().GetSampledImage
-    (m_pTexture, 32, m_transform.Scale);
-
-    if (sampled) m_pSampledTexture = std::move(sampled);
-    else
-    {
-        logger::error("Failed to sample texture");
-        return;
-    }
-
-    logger::success("The Sampler Made the size with: (width:{}, height:{})",
-        m_pSampledTexture->GetWidth(),
-        m_pSampledTexture->GetHeight());
-    
     m_szTexturePath = path;
 }
 
@@ -130,6 +127,7 @@ fox_math::Vector2D<float> QuadObject::GetPivot() const
     return m_transform.Pivot;
 }
 
+_Use_decl_annotations_
 void QuadObject::SetVisible(bool v)
 {
     m_visible = v;
@@ -141,13 +139,14 @@ bool QuadObject::IsVisible() const
     return m_visible;
 }
 
-void QuadObject::SetLayer(uint32_t l)
+_Use_decl_annotations_
+void QuadObject::SetLayer(ELayer l)
 {
     m_layer = l;
 }
 
 _Use_decl_annotations_
-uint32_t QuadObject::GetLayer() const
+ELayer QuadObject::GetLayer() const
 {
     return m_layer;
 }
@@ -155,7 +154,7 @@ uint32_t QuadObject::GetLayer() const
 _Use_decl_annotations_
 Texture* pixel_engine::QuadObject::GetTexture() const
 {
-    return m_pSampledTexture.get();
+    return m_pTexture;
 }
 
 _Use_decl_annotations_
@@ -176,6 +175,7 @@ FVector2D pixel_engine::QuadObject::GetPositionRelativeToCamera() const noexcept
     return m_ObjectCameraViewPosition;
 }
 
+_Use_decl_annotations_
 void pixel_engine::QuadObject::UpdateObjectToCameraSpace(const PFE_WORLD_SPACE_DESC& cameraView)
 {
     FVector2D CamUx

@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "logger.h"
 
@@ -10,7 +21,7 @@
 #include <windows.h>
 
 using namespace std::literals;
-namespace pe = pixel_engine;
+namespace pe  = pixel_engine;
 namespace lec = pixel_engine::logger_config;
 
 namespace
@@ -108,6 +119,7 @@ void pe::logger::close()
 
 void pe::logger::enable_terminal()
 {
+#if defined(DEBUG) || defined(_DEBUG)
 	if (!s_cfg.EnableTerminal)
 	{
 		return;
@@ -134,6 +146,7 @@ void pe::logger::enable_terminal()
 	{
 		SetConsoleTitleA(s_cfg.TerminalName.c_str());
 	}
+#endif
 }
 
 _Use_decl_annotations_
@@ -286,6 +299,7 @@ void pe::logger::progress_end(std::uint32_t id, bool ok)
 _Use_decl_annotations_
 bool pe::logger::logv(lec::LogLevel level, lec::LogCategory category, std::string&& message, bool isSuccess, const std::source_location* loc)
 {
+#if defined(_DEBUG) || defined(DEBUG)
 	if (static_cast<int>(level) < static_cast<int>(s_cfg.MinimumLevel))
 	{
 		return false;
@@ -426,6 +440,7 @@ bool pe::logger::logv(lec::LogLevel level, lec::LogCategory category, std::strin
 		OutputDebugStringA(line.c_str());
 	}
 
+#endif
 	return true;
 }
 

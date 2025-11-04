@@ -126,6 +126,7 @@ bool DependencyResolver::Shutdown()
     return flag;
 }
 
+_Use_decl_annotations_
 fox::list<IFrameObject*> DependencyResolver::GraphSort()
 {
     fox::unordered_map<IFrameObject*, bool> visited;

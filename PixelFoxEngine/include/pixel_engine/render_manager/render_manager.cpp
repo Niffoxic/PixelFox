@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "render_manager.h"
 
@@ -70,7 +81,7 @@ void pixel_engine::PERenderManager::OnFrameEnd()
 
     if (m_pRenderAPI)
     {
-        // TODO: Try something else of syncing
+        // TODO: Try something else for syncing
        // const auto t0 = std::chrono::high_resolution_clock::now();
 
         //m_pRenderAPI->WaitForPresent();
@@ -91,7 +102,10 @@ bool pixel_engine::PERenderManager::InitializeCamera2D()
     m_pCamera->SetRotation(0.f);
     m_pCamera->SetScale({ 1.f, 1.f });
 
-    m_pCamera->Initialize();
+    if (not m_pCamera->Initialize())
+    {
+        logger::error("Failed to Initialize camera");
+    }
 
     return true;
 }
@@ -99,19 +113,18 @@ bool pixel_engine::PERenderManager::InitializeCamera2D()
 bool pixel_engine::PERenderManager::InitializeRenderAPI()
 {
     m_handleStartEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    m_handleEndEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    m_handleEndEvent   = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
     CONSTRUCT_RENDER_API_DESC desc{};
     desc.StartEvent = m_handleStartEvent;
-    desc.ExitEvent = m_handleEndEvent;
-    m_pRenderAPI = std::make_unique<PERenderAPI>(&desc);
+    desc.ExitEvent  = m_handleEndEvent;
+    m_pRenderAPI    = std::make_unique<PERenderAPI>(&desc);
 
     INIT_RENDER_API_DESC renderDesc{};
     renderDesc.FullScreen    = m_pWindowsManager->IsFullScreen() ? TRUE : FALSE;
     renderDesc.Height        = m_pWindowsManager->GetWindowsHeight();
     renderDesc.Width         = m_pWindowsManager->GetWindowsWidth();
     renderDesc.WindowsHandle = m_pWindowsManager->GetWindowsHandle();
-    renderDesc.Clock         = m_pClock;
     renderDesc.Camera        = m_pCamera.get();
 
     if (not m_pRenderAPI->Init(&renderDesc)) return false;

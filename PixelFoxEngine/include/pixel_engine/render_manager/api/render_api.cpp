@@ -1,4 +1,15 @@
-﻿#include "pch.h"
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
+#include "pch.h"
 #include "render_api.h"
 
 #include "pixel_engine/utilities/logger/logger.h" 
@@ -13,6 +24,7 @@
 
 #include "pixel_engine/render_manager/render_queue/render_queue.h"
 
+_Use_decl_annotations_
 pixel_engine::PERenderAPI::PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc)
 {
     m_handleStartEvent = desc->StartEvent;
@@ -39,14 +51,13 @@ pixel_engine::PERenderAPI::~PERenderAPI()
     if (m_handlePresentDoneEvent) CloseHandle(m_handlePresentDoneEvent);
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 {
     m_pCamera = desc->Camera;
 
     if (not InitializeDirectX(desc))   return false;
     if (not InitializeRenderAPI(desc)) return false;
-
-    if (desc->Clock) m_pClock = desc->Clock;
 
     return true;
 }
@@ -148,6 +159,7 @@ void pixel_engine::PERenderAPI::PresentFrame()
     m_pSwapchain->Present(0u, 0u);
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::InitializeDirectX(const INIT_RENDER_API_DESC* desc)
 {
     if (not CreateDeviceAndDeviceContext(desc)) return false;
@@ -160,6 +172,7 @@ bool pixel_engine::PERenderAPI::InitializeDirectX(const INIT_RENDER_API_DESC* de
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc)
 {
     UINT createFlags = 0;
@@ -203,6 +216,7 @@ bool pixel_engine::PERenderAPI::CreateDeviceAndDeviceContext(const INIT_RENDER_A
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::CreateSwapChain(const INIT_RENDER_API_DESC* desc)
 {
     Microsoft::WRL::ComPtr<IDXGIDevice> m_pDxgiDevice;
@@ -275,6 +289,7 @@ bool pixel_engine::PERenderAPI::CreateSwapChain(const INIT_RENDER_API_DESC* desc
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::CreateRTV(const INIT_RENDER_API_DESC* desc)
 {
     Microsoft::WRL::ComPtr<ID3D11Texture2D> back_texture{ nullptr };
@@ -314,6 +329,7 @@ bool pixel_engine::PERenderAPI::CreateRTV(const INIT_RENDER_API_DESC* desc)
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::CreateVertexShader(const INIT_RENDER_API_DESC* desc)
 {
     //~ Fullscreen quad
@@ -363,6 +379,7 @@ bool pixel_engine::PERenderAPI::CreateVertexShader(const INIT_RENDER_API_DESC* d
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::CreatePixelShader(const INIT_RENDER_API_DESC* desc)
 {
     const char* psSrc = R"(
@@ -510,6 +527,7 @@ bool pixel_engine::PERenderAPI::CreatePixelShader(const INIT_RENDER_API_DESC* de
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
 {
     m_Viewport.Width = static_cast<FLOAT>(desc->Width);
@@ -529,6 +547,7 @@ bool pixel_engine::PERenderAPI::CreateViewport(const INIT_RENDER_API_DESC* desc)
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::InitializeRenderAPI(const INIT_RENDER_API_DESC* desc)
 {
     if (not InitializeRaster2D(desc))    return false;
@@ -536,6 +555,7 @@ bool pixel_engine::PERenderAPI::InitializeRenderAPI(const INIT_RENDER_API_DESC* 
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::InitializeRaster2D(const INIT_RENDER_API_DESC* desc)
 {
     PFE_RASTER_CONSTRUCT_DESC rasterDesc{};
@@ -556,6 +576,7 @@ bool pixel_engine::PERenderAPI::InitializeRaster2D(const INIT_RENDER_API_DESC* d
     return true;
 }
 
+_Use_decl_annotations_
 bool pixel_engine::PERenderAPI::InitializeRenderQueue(const INIT_RENDER_API_DESC* desc)
 {
     PFE_RENDER_QUEUE_CONSTRUCT_DESC renderDesc{};

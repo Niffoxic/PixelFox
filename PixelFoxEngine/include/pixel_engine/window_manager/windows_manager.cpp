@@ -1,6 +1,14 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "windows_manager.h"
 
@@ -241,20 +249,12 @@ LRESULT pixel_engine::PEWindowsManager::MessageHandler(HWND hwnd, UINT message, 
         return S_OK;
     }
     case WM_ENTERSIZEMOVE: // clicked mouse on title bar
-    {
-        EventQueue::Post<WINDOW_PAUSE_EVENT>({ true });
-        return S_OK;
-    }
-    case WM_EXITSIZEMOVE: // not clicking anymore
-    {
-        EventQueue::Post<WINDOW_PAUSE_EVENT>({ false });
-        return S_OK;
-    }
     case WM_KILLFOCUS:
     {
         EventQueue::Post<WINDOW_PAUSE_EVENT>({ true });
         return S_OK;
     }
+    case WM_EXITSIZEMOVE: // not clicking anymore
     case WM_SETFOCUS:
     {
         EventQueue::Post<WINDOW_PAUSE_EVENT>({ false });

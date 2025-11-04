@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
@@ -14,16 +25,20 @@ namespace pixel_engine
 {
 	typedef struct _BYTE_VIEW
 	{
-		uint8_t* data{ nullptr };
-		size_t   size{ 0 };
-		_NODISCARD bool empty() const noexcept { return size == 0; }
+		_Inout_ uint8_t* data{ nullptr };
+		_In_	size_t   size{ 0 };
+		
+		_NODISCARD _Check_return_
+		bool empty() const noexcept { return size == 0; }
 	} BYTE_VIEW;
 
 	typedef struct _CONST_BYTE_VIEW
 	{
-		const uint8_t* data{ nullptr };
-		size_t         size{ 0 };
-		_NODISCARD bool empty() const noexcept { return size == 0; }
+		_In_ const uint8_t* data{ nullptr };
+		_In_ size_t         size{ 0 };
+
+		_NODISCARD _Check_return_
+		bool empty() const noexcept { return size == 0; }
 	} CONST_BYTE_VIEW;
 
 	enum class TextureFormat : uint8_t
@@ -45,13 +60,13 @@ namespace pixel_engine
 
 	struct ImageView
 	{
-		uint32_t	   width;
-		uint32_t	   height;
-		uint32_t	   rowStride;
-		TextureFormat  format;
-		ColorSpace	   colorSpace;
-		Origin		   origin;
-		const uint8_t* ppBytes;
+		_In_ uint32_t	    width;
+		_In_ uint32_t	    height;
+		_In_ uint32_t	    rowStride;
+		_In_ TextureFormat  format;
+		_In_ ColorSpace	    colorSpace;
+		_In_ Origin		    origin;
+		_In_ const uint8_t* ppBytes;
 
 		_NODISCARD _Check_return_
 		uint32_t BytesPerPixel() const noexcept
@@ -67,7 +82,7 @@ namespace pixel_engine
 		}
 
 		_NODISCARD _Check_return_
-		CONST_BYTE_VIEW Row(uint32_t y) const
+		CONST_BYTE_VIEW Row(_In_ uint32_t y) const
 		{
 			assert(ppBytes != nullptr);
 			assert(y < height);

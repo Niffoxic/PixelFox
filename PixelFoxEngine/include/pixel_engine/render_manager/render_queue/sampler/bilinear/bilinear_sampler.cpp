@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "bilinear_sampler.h"
 
@@ -9,10 +20,9 @@
 _Use_decl_annotations_
 std::unique_ptr<pixel_engine::Texture> 
 pixel_engine::BilinearSampler::GetSampledImage(
-    const Texture * rawImage,
-    int tileSize,
-    const FVector2D & scale,
-    EdgeMode edge) const
+    const Texture*   rawImage,
+          int        tileSize,
+    const FVector2D& scale) const
 {
     if (!rawImage || tileSize <= 0) return nullptr;
 
@@ -24,17 +34,15 @@ pixel_engine::BilinearSampler::GetSampledImage(
     return SampleToSize(
         rawImage,
         static_cast<uint32_t>(sx),
-        static_cast<uint32_t>(sy),
-        edge);;
+        static_cast<uint32_t>(sy));
 }
 
 _Use_decl_annotations_
 std::unique_ptr<pixel_engine::Texture>
 pixel_engine::BilinearSampler::SampleToSize(
     const Texture* rawImage,
-    uint32_t outWidth,
-    uint32_t outHeight,
-    EdgeMode edge) const
+          uint32_t outWidth,
+          uint32_t outHeight) const
 {
     if (!rawImage || outWidth == 0 || outHeight == 0) return nullptr;
 
@@ -43,24 +51,22 @@ pixel_engine::BilinearSampler::SampleToSize(
         rawImage->GetWidth(),
         rawImage->GetHeight(),
         outWidth,
-        outHeight,
-        edge);
+        outHeight);
 }
 
 _Use_decl_annotations_
 std::unique_ptr<pixel_engine::Texture> 
 pixel_engine::BilinearSampler::SampleRegionToSize(
     const Texture* rawImage,
-    uint32_t srcX,
-    uint32_t srcY,
-    uint32_t srcW,
-    uint32_t srcH,
-    uint32_t outWidth,
-    uint32_t outHeight,
-    EdgeMode edge) const
+          uint32_t srcX,
+          uint32_t srcY,
+          uint32_t srcW,
+          uint32_t srcH,
+          uint32_t outWidth,
+          uint32_t outHeight) const
 {
-    if (!rawImage || outWidth == 0 ||
-        outHeight == 0 || srcW == 0 ||
+    if (!rawImage      || outWidth == 0 ||
+        outHeight == 0 || srcW     == 0 ||
         srcH == 0)
         return nullptr;
 
@@ -77,13 +83,13 @@ pixel_engine::BilinearSampler::SampleRegionToSize(
     fox::vector<uint8_t> dstBytes;
     dstBytes.resize(static_cast<size_t>(dstStride) * outHeight, 0u);
 
-    // Normalized sampling map output pixel centers to source pixel space
+    // Normalized sampling map output pixel
     const float scaleX = (srcW > 1) ? (static_cast<float>(srcW) / static_cast<float>(outWidth)) : 0.0f;
     const float scaleY = (srcH > 1) ? (static_cast<float>(srcH) / static_cast<float>(outHeight)) : 0.0f;
 
     for (uint32_t y = 0; y < outHeight; ++y)
     {
-        // Source y in region (center-of-pixel mapping)
+        // Source y in region (center of pixel mapping)
         float syf = (static_cast<float>(y) + 0.5f) * scaleY - 0.5f;
         // Neighbor coords
         int y0 = static_cast<int>(std::floor(syf));
@@ -91,8 +97,8 @@ pixel_engine::BilinearSampler::SampleRegionToSize(
         float fy = syf - static_cast<float>(y0);
 
         // Addressing relative to the region
-        const int relY0 = AddressIndex(y0, static_cast<int>(srcH), edge);
-        const int relY1 = AddressIndex(y1, static_cast<int>(srcH), edge);
+        const int relY0 = ClampIndex(y0, static_cast<int>(srcH));
+        const int relY1 = ClampIndex(y1, static_cast<int>(srcH));
 
         // Convert to absolute logical y
         const int absY0 = static_cast<int>(srcY) + relY0;
@@ -109,8 +115,8 @@ pixel_engine::BilinearSampler::SampleRegionToSize(
             int x1 = x0 + 1;
             float fx = sxf - static_cast<float>(x0);
 
-            const int relX0 = AddressIndex(x0, static_cast<int>(srcW), edge);
-            const int relX1 = AddressIndex(x1, static_cast<int>(srcW), edge);
+            const int relX0 = ClampIndex(x0, static_cast<int>(srcW));
+            const int relX1 = ClampIndex(x1, static_cast<int>(srcW));
 
             const int absX0 = static_cast<int>(srcX) + relX0;
             const int absX1 = static_cast<int>(srcX) + relX1;
@@ -183,6 +189,7 @@ pixel_engine::BilinearSampler::SampleRegionToSize(
     );
 }
 
+_Use_decl_annotations_
 int pixel_engine::BilinearSampler::ClampIndex(int i, int n) const noexcept
 {
     if (i < 0)  return 0;
@@ -190,42 +197,23 @@ int pixel_engine::BilinearSampler::ClampIndex(int i, int n) const noexcept
     return i;
 }
 
-int pixel_engine::BilinearSampler::WrapIndex(int i, int n) const noexcept
-{
-    if (n <= 0) return 0;
-    int m = i % n;
-    return (m < 0) ? (m + n) : m;
-}
-
-int pixel_engine::BilinearSampler::MirrorIndex(int i, int n) const noexcept
-{
-    if (n <= 1) return 0;
-    const int period = 2 * n - 2;
-    int m = i % period;
-    if (m < 0) m += period;
-    return (m < n) ? m : (period - m);
-}
-
-int pixel_engine::BilinearSampler::AddressIndex(int i,
-    int n, EdgeMode mode) const noexcept
-{
-    switch (mode)
-    {
-    case EdgeMode::Wrap:   return WrapIndex(i, n);
-    case EdgeMode::Mirror: return MirrorIndex(i, n);
-    default:               return ClampIndex(i, n);
-    }
-}
-
+_Use_decl_annotations_
 int pixel_engine::BilinearSampler::MapYToMemory(
-    int yLogical, uint32_t texHeight, Origin origin) const noexcept
+    int      yLogical,
+    uint32_t texHeight,
+    Origin   origin) const noexcept
 {
     if (origin == Origin::TopLeft) return yLogical;
     return static_cast<int>(texHeight) - 1 - yLogical;
 }
 
-uint8_t pixel_engine::BilinearSampler::FetchChan(const uint8_t* base,
-    uint32_t rowStride, uint32_t bpp, int x, int y) const noexcept
+_Use_decl_annotations_
+uint8_t pixel_engine::BilinearSampler::FetchChan(
+    const uint8_t* base,
+    uint32_t       rowStride,
+    uint32_t       bpp,
+    int            x,
+    int            y) const noexcept
 {
     const size_t off =  static_cast<size_t>(y)          *
                         static_cast<size_t>(rowStride)  +
@@ -234,10 +222,18 @@ uint8_t pixel_engine::BilinearSampler::FetchChan(const uint8_t* base,
     return base[off];
 }
 
-void pixel_engine::BilinearSampler::FetchPixel(const uint8_t* base,
-    uint32_t rowStride, uint32_t bpp, int x, int y,
-    TextureFormat fmt, uint8_t& r, uint8_t& g, uint8_t& b,
-    uint8_t& a) const noexcept
+_Use_decl_annotations_
+void pixel_engine::BilinearSampler::FetchPixel(
+    const uint8_t* base,
+          uint32_t rowStride,
+          uint32_t bpp,
+          int      x,
+          int      y,
+    TextureFormat  fmt,
+          uint8_t& r,
+          uint8_t& g,
+          uint8_t& b,
+          uint8_t& a) const noexcept
 {
     const size_t off =  static_cast<size_t>(y)          *
                         static_cast<size_t>(rowStride)  +
@@ -276,9 +272,16 @@ void pixel_engine::BilinearSampler::FetchPixel(const uint8_t* base,
     }
 }
 
-void pixel_engine::BilinearSampler::StorePixel(uint8_t* base,
-    uint32_t rowStride, uint32_t bpp, int x, int y,
-    TextureFormat fmt, uint8_t r, uint8_t g, uint8_t b,
+_Use_decl_annotations_
+void pixel_engine::BilinearSampler::StorePixel(
+    uint8_t* base,
+    uint32_t rowStride,
+    uint32_t bpp,
+    int x, int y,
+    TextureFormat fmt,
+    uint8_t r,
+    uint8_t g,
+    uint8_t b,
     uint8_t a) const noexcept
 {
     const size_t off =  static_cast<size_t>(y)          *
@@ -312,8 +315,11 @@ void pixel_engine::BilinearSampler::StorePixel(uint8_t* base,
     }
 }
 
-uint8_t pixel_engine::BilinearSampler::Lerp8(uint8_t a,
-    uint8_t b, float t) const noexcept
+_Use_decl_annotations_
+uint8_t pixel_engine::BilinearSampler::Lerp8(
+    uint8_t a,
+    uint8_t b,
+    float   t) const noexcept
 {
     const float af = static_cast<float>(a);
     const float bf = static_cast<float>(b);

@@ -1,27 +1,37 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "render_queue.h"
+
 #include "pixel_engine/render_manager/api/raster/raster.h"
+#include "sampler/sample_allocator.h"
+
 #include <algorithm>
-
-#include "pixel_engine/utilities/logger/logger.h"
-
-#include <chrono>
-using Clock = std::chrono::high_resolution_clock;
-using namespace std::chrono_literals;
 
 using namespace pixel_engine;
 
+_Use_decl_annotations_
 PERenderQueue::PERenderQueue(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc)
-    : m_nScreenHeight(desc.ScreenHeight),
-    m_nScreenWidth(desc.ScreenWidth),
-    m_pCamera(desc.pCamera),
-    m_nTilePx(desc.TilePx)
+    :   m_nScreenHeight(desc.ScreenHeight),
+        m_nScreenWidth (desc.ScreenWidth),
+        m_pCamera      (desc.pCamera),
+        m_nTilePx      (desc.TilePx)
 {
     m_nTileStep = 1.f / static_cast<float>(m_nTilePx);
     CreateCulling2D(desc);
     m_bDirtySprite.store(true, std::memory_order_release);
 }
 
+_Use_decl_annotations_
 Camera2D* PERenderQueue::GetCamera() const { return m_pCamera; }
 
 void PERenderQueue::Update()
@@ -33,6 +43,7 @@ void PERenderQueue::Update()
     }
 }
 
+_Use_decl_annotations_
 void PERenderQueue::Render(PERaster2D* pRaster)
 {
     if (m_bDirtySprite.exchange(false, std::memory_order_acq_rel))
@@ -58,11 +69,13 @@ bool PERenderQueue::AddSprite(PEISprite* sprite)
     return true;
 }
 
+_Use_decl_annotations_
 bool PERenderQueue::RemoveSprite(PEISprite* sprite)
 {
     return sprite ? RemoveSprite(sprite->GetInstanceID()) : false;
 }
 
+_Use_decl_annotations_
 bool PERenderQueue::RemoveSprite(UniqueId id)
 {
     std::unique_lock lock(m_mutex);
@@ -71,6 +84,7 @@ bool PERenderQueue::RemoveSprite(UniqueId id)
     return erased != 0;
 }
 
+_Use_decl_annotations_
 void PERenderQueue::CreateCulling2D(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc)
 {
     PFE_CULL2D_CONSTRUCT_DESC cullDesc{};
@@ -83,20 +97,22 @@ void PERenderQueue::CreateCulling2D(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc)
     m_pCulling2D = std::make_unique<PECulling2D>(cullDesc);
 }
 
+_Use_decl_annotations_
 void PERenderQueue::BuildDiscreteGrid(
-    PEISprite* sprite,
-    int tilePx,
+    PEISprite*          sprite,
+    Texture*            sampledTexture,
+    int                 tilePx,
     PFE_SAMPLE_GRID_2D& out)
 {
     const FVector2D center = sprite->GetPositionRelativeToCamera();
-    const FVector2D axisU  = sprite->GetUAxisRelativeToCamera();
-    const FVector2D axisV  = sprite->GetVAxisRelativeToCamera();
+    const FVector2D axisU  = sprite->GetUAxisRelativeToCamera   ();
+    const FVector2D axisV  = sprite->GetVAxisRelativeToCamera   ();
 
     int cols = 0, rows = 0;
-    if (auto* tex = sprite->GetTexture())
+    if (sampledTexture)
     {
-        cols = static_cast<int>(tex->GetWidth());
-        rows = static_cast<int>(tex->GetHeight());
+        cols = static_cast<int>(sampledTexture->GetWidth());
+        rows = static_cast<int>(sampledTexture->GetHeight());
     }
     else
     {
@@ -105,8 +121,8 @@ void PERenderQueue::BuildDiscreteGrid(
         rows = std::max(1, static_cast<int>(std::lround(s.y * tilePx)));
     }
 
-    out.dU = axisU / static_cast<float>(cols);
-    out.dV = axisV / static_cast<float>(rows);
+    out.deltaAxisU = axisU / static_cast<float>(cols);
+    out.deltaAxisV = axisV / static_cast<float>(rows);
 
     out.RowStart = center - axisU * 0.5f - axisV * 0.5f;
 
@@ -114,14 +130,32 @@ void PERenderQueue::BuildDiscreteGrid(
     out.rows = rows;
 }
 
+_Use_decl_annotations_
 void PERenderQueue::RenderSprite(PERaster2D* pRaster)
 {
     PFE_SAMPLE_GRID_2D grid{};
     for (auto* sprite : m_ppSortedSprites)
     {
+        //~ precheck
         if (!sprite || !sprite->IsVisible()) continue;
+        if (!sprite->GetTexture()) continue;
 
-        BuildDiscreteGrid(sprite, m_nTilePx, grid);
+        Texture* sampled = nullptr; 
+        if (sprite->NeedSampling())
+        {
+            PFE_CREATE_SAMPLE_TEXTURE desc{};
+            
+            desc.texture  = sprite->GetTexture();
+            desc.scaledBy = sprite->GetScale();
+            desc.tileSize = m_nTilePx;
+            auto* sampled = Sampler::Instance().BuildTexture(desc);
+            
+            sprite->AssignSampledTexture(sampled);
+        }
+        sampled = sprite->GetSampledTexture();
+        if (!sampled) continue;
+
+        BuildDiscreteGrid(sprite, sampled, m_nTilePx, grid);
 
         // pixel coordinate space
         grid.RowStart += FVector2D(m_nScreenWidth / 2, m_nScreenHeight / 2);
@@ -131,24 +165,25 @@ void PERenderQueue::RenderSprite(PERaster2D* pRaster)
         PFE_CLIPPED_GRID cg;
         if (!ClipGridToViewport(grid, m_nScreenWidth, m_nScreenHeight, cg)) continue;
 
-        if (auto* texture = sprite->GetTexture())
+        PFE_RASTER_DRAW_CMD cmd
         {
-            if (sprite->GetLayer() == 0)
-            {
-                pRaster->DrawQuadClippedMT(grid.RowStart,
-                    grid.dU, grid.dV, cg.i0, cg.i1,
-                    cg.j0, cg.j1, grid.cols, grid.rows, texture);
-            }
-            else
-            {
-                pRaster->DrawDiscreteQuad(
-                    grid.RowStart,
-                    grid.dU, grid.dV,
-                    grid.cols, grid.rows,
-                    texture
-                );
-            }
-        }
+            .startBase       = grid.RowStart,
+            .deltaAxisU      = grid.deltaAxisU,
+            .deltaAxisV      = grid.deltaAxisV,
+            .columnStartFrom = cg.columnStartFrom,
+            .columneEndAt    = cg.columneEndAt,
+            .rowStartFrom    = cg.j0,
+            .rowEndAt        = cg.j1,
+            .totalColumns    = grid.cols,
+            .totalRows       = grid.rows,
+            .sampledTexture  = sampled,
+            .color           = {100, 100, 100},
+        };
+
+        //~ if background then draw with multi threads
+        if (sprite->GetLayer() == ELayer::Background)
+            pRaster->DrawQuadBackground(cmd);
+        else pRaster->DrawQuadTile(cmd);
     }
 }
 
@@ -158,29 +193,37 @@ void PERenderQueue::BuildSpriteInOrder()
     local.reserve(m_mapSprites.size());
 
     for (const auto& kv : m_mapSprites)
-        if (kv.second)
-            local.push_back(kv.second);
+        if (kv.second) local.push_back(kv.second);
 
     std::stable_sort(local.begin(), local.end(),
     [](const PEISprite* a, const PEISprite* b)
     {
-        const uint32_t la = a->GetLayer(), lb = b->GetLayer();
+        const uint32_t la = static_cast<int>(a->GetLayer());
+        const uint32_t lb = static_cast<int>(b->GetLayer());
+
         if (la != lb) return la < lb;
+        
         return a->GetInstanceID() < b->GetInstanceID();
     });
 
     m_ppSortedSprites.swap(local);
 }
 
-float pixel_engine::PERenderQueue::Det2(float ax, float ay, float bx, float by) const noexcept
+_Use_decl_annotations_
+float pixel_engine::PERenderQueue::Det2(
+    float ax, float ay,
+    float bx, float by) const noexcept
 {
     return ax * by - ay * bx;
 }
 
-bool pixel_engine::PERenderQueue::InvertColumns(const FVector2D& dU, const FVector2D& dV,
-    float& m00, float& m01, float& m10, float& m11) const noexcept
+_Use_decl_annotations_
+bool pixel_engine::PERenderQueue::InvertColumns(
+    const FVector2D& deltaAxisU, const FVector2D& deltaAxisV,
+    float& m00, float& m01,
+    float& m10, float& m11) const noexcept
 {
-    const float det = Det2(dU.x, dU.y, dV.x, dV.y);
+    const float det = Det2(deltaAxisU.x, deltaAxisU.y, deltaAxisV.x, deltaAxisV.y);
     
     if (std::abs(det) < 1e-8f) 
         return false;
@@ -188,18 +231,24 @@ bool pixel_engine::PERenderQueue::InvertColumns(const FVector2D& dU, const FVect
     const float inv = 1.0f / det;
 
     // inverse 
-    m00 = dV.y * inv;  m01 = -dV.x * inv;
-    m10 = -dU.y * inv;  m11 = dU.x * inv;
+    m00 = deltaAxisV.y  * inv;
+    m01 = -deltaAxisV.x * inv;
+    m10 = -deltaAxisU.y * inv;
+    m11 = deltaAxisU.x  * inv;
     return true;
 }
 
-bool pixel_engine::PERenderQueue::ClipGridToViewport(const PFE_SAMPLE_GRID_2D& g, int vpW, int vpH, PFE_CLIPPED_GRID& out) const
+_Use_decl_annotations_
+bool pixel_engine::PERenderQueue::ClipGridToViewport(
+    const PFE_SAMPLE_GRID_2D& g,
+    int vpW, int vpH,
+    PFE_CLIPPED_GRID& out) const
 {
     // Quad corners in screen space
     const FVector2D A = g.RowStart;
-    const FVector2D B = { g.RowStart.x + g.dU.x * g.cols, g.RowStart.y + g.dU.y * g.cols };
-    const FVector2D C = { g.RowStart.x + g.dV.x * g.rows, g.RowStart.y + g.dV.y * g.rows };
-    const FVector2D D = { B.x + g.dV.x * g.rows,        B.y + g.dV.y * g.rows };
+    const FVector2D B = { g.RowStart.x + g.deltaAxisU.x * g.cols, g.RowStart.y + g.deltaAxisU.y * g.cols };
+    const FVector2D C = { g.RowStart.x + g.deltaAxisV.x * g.rows, g.RowStart.y + g.deltaAxisV.y * g.rows };
+    const FVector2D D = { B.x + g.deltaAxisV.x * g.rows,        B.y + g.deltaAxisV.y * g.rows };
 
     // Quad AABB
     const float minX = std::min(std::min(A.x, B.x), std::min(C.x, D.x));
@@ -216,9 +265,9 @@ bool pixel_engine::PERenderQueue::ClipGridToViewport(const PFE_SAMPLE_GRID_2D& g
     if (clipMinX >= clipMaxX || clipMinY >= clipMaxY)
         return false; // fully off screen
 
-    // Invert the 2x2 matrix to map P
+    // Invert the 2x2 matrix to map
     float m00, m01, m10, m11;
-    if (!InvertColumns(g.dU, g.dV, m00, m01, m10, m11)) return false;
+    if (!InvertColumns(g.deltaAxisU, g.deltaAxisV, m00, m01, m10, m11)) return false;
 
     auto toIJ = [&](float px, float py) -> std::pair<float, float>
     {
@@ -243,21 +292,21 @@ bool pixel_engine::PERenderQueue::ClipGridToViewport(const PFE_SAMPLE_GRID_2D& g
     float jMax = std::max(std::max(j00, j10), std::max(j01, j11));
 
     // Intersect with the valid grid index box
-    int i0 = std::max(0, static_cast<int>(std::floor(iMin)));
-    int i1 = std::min(g.cols, static_cast<int>(std::ceil(iMax)));
+    int columnStartFrom = std::max(0, static_cast<int>(std::floor(iMin)));
+    int columneEndAt = std::min(g.cols, static_cast<int>(std::ceil(iMax)));
     int j0 = std::max(0, static_cast<int>(std::floor(jMin)));
     int j1 = std::min(g.rows, static_cast<int>(std::ceil(jMax)));
-    if (i0 >= i1 || j0 >= j1) return false; // nothing visible
+    if (columnStartFrom >= columneEndAt || j0 >= j1) return false; // nothing visible
 
     // Build the clipped grid
-    out.i0 = i0;
-    out.i1 = i1;
+    out.columnStartFrom = columnStartFrom;
+    out.columneEndAt = columneEndAt;
     out.j0 = j0;
     out.j1 = j1;
-    out.dU = g.dU;
-    out.dV = g.dV;
+    out.deltaAxisU = g.deltaAxisU;
+    out.deltaAxisV = g.deltaAxisV;
 
-    out.start = { g.RowStart.x + g.dU.x * static_cast<float>(i0) + g.dV.x * static_cast<float>(j0),
-                  g.RowStart.y + g.dU.y * static_cast<float>(i0) + g.dV.y * static_cast<float>(j0) };
+    out.start = { g.RowStart.x + g.deltaAxisU.x * static_cast<float>(columnStartFrom) + g.deltaAxisV.x * static_cast<float>(j0),
+                  g.RowStart.y + g.deltaAxisU.y * static_cast<float>(columnStartFrom) + g.deltaAxisV.y * static_cast<float>(j0) };
     return true;
 }

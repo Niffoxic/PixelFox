@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
@@ -22,25 +33,24 @@ namespace pixel_engine
 {
 	typedef struct _CONSTRUCT_RENDER_API_DESC
 	{
-		HANDLE StartEvent;
-		HANDLE ExitEvent;
+		_In_ HANDLE StartEvent;
+		_In_ HANDLE ExitEvent;
 
 	} CONSTRUCT_RENDER_API_DESC;
 
 	typedef struct _INIT_RENDER_API_DESC
 	{
-		int	 Width;
-		int	 Height;
-		HWND WindowsHandle;
-		BOOL FullScreen;
-		GameClock* Clock;
-		Camera2D* Camera;
+		_In_ int	   Width;
+		_In_ int	   Height;
+		_In_ HWND	   WindowsHandle;
+		_In_ BOOL      FullScreen;
+		_In_ Camera2D* Camera;
 	} PFE_API INIT_RENDER_API_DESC;
 
 	class PFE_API PERenderAPI
 	{
 	public:
-		 PERenderAPI(const CONSTRUCT_RENDER_API_DESC* desc);
+		 PERenderAPI(_In_ const CONSTRUCT_RENDER_API_DESC* desc);
 		~PERenderAPI();
 
 		//~ no move or copy
@@ -50,9 +60,9 @@ namespace pixel_engine
 		PERenderAPI& operator=(_In_ const PERenderAPI&) = delete;
 		PERenderAPI& operator=(_Inout_ PERenderAPI&&)   = delete;
 
-		bool Init(const INIT_RENDER_API_DESC* desc);
+		bool Init(_In_ const INIT_RENDER_API_DESC* desc);
 		
-		static DWORD WINAPI RenderThread(LPVOID ctx) 
+		static DWORD WINAPI RenderThread(_In_ LPVOID ctx)
 		{
 			return static_cast<PERenderAPI*>(ctx)->Execute();
 		}
@@ -68,22 +78,31 @@ namespace pixel_engine
 		void PresentFrame();
 
 		//~ DirectX Creation
-		bool InitializeDirectX			 (const INIT_RENDER_API_DESC* desc);
-		bool CreateDeviceAndDeviceContext(const INIT_RENDER_API_DESC* desc);
-		bool CreateSwapChain			 (const INIT_RENDER_API_DESC* desc);
-		bool CreateRTV					 (const INIT_RENDER_API_DESC* desc);
-		bool CreateVertexShader			 (const INIT_RENDER_API_DESC* desc);
-		bool CreatePixelShader			 (const INIT_RENDER_API_DESC* desc);
-		bool CreateViewport				 (const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool InitializeDirectX			 (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool CreateDeviceAndDeviceContext(_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool CreateSwapChain			 (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool CreateRTV					 (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool CreateVertexShader			 (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool CreatePixelShader			 (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool CreateViewport				 (_In_ const INIT_RENDER_API_DESC* desc);
 
 		//~ RenderAPI Core creation
-		bool InitializeRenderAPI  (const INIT_RENDER_API_DESC* desc);
-		bool InitializeRaster2D   (const INIT_RENDER_API_DESC* desc);
-		bool InitializeRenderQueue(const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool InitializeRenderAPI  (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool InitializeRaster2D   (_In_ const INIT_RENDER_API_DESC* desc);
+		_NODISCARD _Check_return_
+		bool InitializeRenderQueue(_In_ const INIT_RENDER_API_DESC* desc);
 
 	private:
 		//~ Core
-		GameClock* m_pClock { nullptr };
 		Camera2D*  m_pCamera{ nullptr };
 		
 		std::unique_ptr<PERaster2D>  m_pRaster2D { nullptr };
@@ -96,8 +115,8 @@ namespace pixel_engine
 		HANDLE m_handlePresentDoneEvent{ nullptr };
 
 		//~ Render Members
-		D3D11_VIEWPORT		  m_Viewport	  {};
-		size_t				  m_PaddedDataSize{ 0u };
+		D3D11_VIEWPORT m_Viewport	   {};
+		size_t		   m_PaddedDataSize{ 0u };
 
 		Microsoft::WRL::ComPtr<ID3D11Device>			 m_pDevice		  { nullptr };
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext>		 m_pDeviceContext { nullptr };

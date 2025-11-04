@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "texture_resource.h"
     
@@ -6,7 +17,9 @@
 
 #include <fstream>
 
-pixel_engine::Texture* pixel_engine::TextureResource::LoadTexture(_In_ const std::string& path)
+_Use_decl_annotations_
+pixel_engine::Texture* pixel_engine::TextureResource::LoadTexture(
+    _In_ const std::string& path)
 {
     //~ Check if file exists
     std::ifstream file(path, std::ios::binary);

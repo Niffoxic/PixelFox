@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "raster_task.h"
 
@@ -6,94 +17,112 @@
 #include <cmath>
 #include <utility>
 
-namespace pixel_engine
+using namespace pixel_engine;
+
+_Use_decl_annotations_
+PERasterizeTask::PERasterizeTask(const RASTERIZE_TASK_DESC& desc) noexcept
+	: m_descTask(desc)
+{}
+
+_Use_decl_annotations_
+PERasterizeTask::PERasterizeTask(PERasterizeTask&& other) noexcept
+	: m_descTask(other.m_descTask)
 {
+	other.m_descTask.target		     = nullptr;
+	other.m_descTask.sampledTexture  = nullptr;
+	other.m_descTask.columnStartFrom = 0;
+	other.m_descTask.columneEndAt	 = 0;
+	other.m_descTask.rowStartFrom	 = 0;
+	other.m_descTask.rowEndAt		 = 0;
+	other.m_descTask.totalColumns	 = 0;
+	other.m_descTask.totalRows		 = 0;
+	other.m_descTask.TexWidth		 = 0;
+	other.m_descTask.TexHeight		 = 0;
+}
 
-	PERasterizeTask::PERasterizeTask(const RasterizeTaskDesc& desc) noexcept
-		: m_Desc(desc)
+_Use_decl_annotations_
+PERasterizeTask& PERasterizeTask::operator=(PERasterizeTask&& other) noexcept
+{
+	if (this != &other)
 	{
+		m_descTask						 = other.m_descTask;
+		other.m_descTask.target			 = nullptr;
+		other.m_descTask.sampledTexture  = nullptr;
+		other.m_descTask.columnStartFrom = 0;
+		other.m_descTask.columneEndAt	 = 0;
+		other.m_descTask.rowStartFrom	 = 0;
+		other.m_descTask.rowEndAt		 = 0;
+		other.m_descTask.totalColumns	 = 0;
+		other.m_descTask.totalRows		 = 0;
+		other.m_descTask.TexWidth		 = 0;
+		other.m_descTask.TexHeight		 = 0;
 	}
+	return *this;
+}
 
-	PERasterizeTask::PERasterizeTask(PERasterizeTask&& other) noexcept
-		: m_Desc(other.m_Desc)
-	{
-		other.m_Desc.Target = nullptr;
-		other.m_Desc.Texture = nullptr;
-		other.m_Desc.i0 = other.m_Desc.i1 = 0;
-		other.m_Desc.jA = other.m_Desc.jB = 0;
-		other.m_Desc.ColsTotal = other.m_Desc.RowsTotal = 0;
-		other.m_Desc.TexW = other.m_Desc.TexH = 0;
-	}
+void PERasterizeTask::Execute() noexcept
+{
+	const auto& d = m_descTask;
 
-	PERasterizeTask& PERasterizeTask::operator=(PERasterizeTask&& other) noexcept
+	for (int y = d.rowStartFrom; y < d.rowEndAt; ++y)
 	{
-		if (this != &other)
+		const float rowX = d.startBase.x + static_cast<float>(y) * d.deltaAxisV.x;
+		const float rowY = d.startBase.y + static_cast<float>(y) * d.deltaAxisV.y;
+
+		const int jAbs = d.rowOffset + y;
+		if (static_cast<unsigned>(jAbs) >=
+			static_cast<unsigned>(d.totalRows))
+			continue;
+
+		for (int x = d.columnStartFrom; x < d.columneEndAt; ++x)
 		{
-			m_Desc = other.m_Desc;
+			const float px = rowX + static_cast<float>(x - d.columnStartFrom) * d.deltaAxisU.x;
+			const float py = rowY + static_cast<float>(x - d.columnStartFrom) * d.deltaAxisU.y;
 
-			other.m_Desc.Target = nullptr;
-			other.m_Desc.Texture = nullptr;
-			other.m_Desc.i0 = other.m_Desc.i1 = 0;
-			other.m_Desc.jA = other.m_Desc.jB = 0;
-			other.m_Desc.ColsTotal = other.m_Desc.RowsTotal = 0;
-			other.m_Desc.TexW = other.m_Desc.TexH = 0;
-		}
-		return *this;
-	}
+			const int ix = static_cast<int>(std::floor(px + 0.5f));
+			const int iy = static_cast<int>(std::floor(py + 0.5f));
 
-	void PERasterizeTask::Execute() noexcept
-	{
-		const auto& d = m_Desc;
-
-		for (int jRel = d.jA; jRel < d.jB; ++jRel)
-		{
-			const float rowX = d.StartBase.x + static_cast<float>(jRel) * d.dV.x;
-			const float rowY = d.StartBase.y + static_cast<float>(jRel) * d.dV.y;
-
-			const int jAbs = d.j0Abs + jRel;
-			if (static_cast<unsigned>(jAbs) >= static_cast<unsigned>(d.RowsTotal))
+			const int iAbs = x;
+			if (static_cast<unsigned>(iAbs) >= static_cast<unsigned>(d.totalColumns))
 				continue;
 
-			for (int i = d.i0; i < d.i1; ++i)
-			{
-				const float px = rowX + static_cast<float>(i - d.i0) * d.dU.x;
-				const float py = rowY + static_cast<float>(i - d.i0) * d.dU.y;
+			if (static_cast<unsigned>(ix) >= static_cast<unsigned>(d.totalColumns) ||
+				static_cast<unsigned>(iy) >= static_cast<unsigned>(d.totalRows))
+				continue;
 
-				const int ix = static_cast<int>(std::floor(px + 0.5f));
-				const int iy = static_cast<int>(std::floor(py + 0.5f));
-
-				const int iAbs = i;
-				if (static_cast<unsigned>(iAbs) >= static_cast<unsigned>(d.ColsTotal))
-					continue;
-
-				if (static_cast<unsigned>(ix) >= static_cast<unsigned>(d.ColsTotal) ||
-					static_cast<unsigned>(iy) >= static_cast<unsigned>(d.RowsTotal))
-					continue;
-
-				d.Target->WriteAt(iy, ix, d.Texture->GetPixel(iAbs, jAbs));
-			}
+			d.target->WriteAt(iy, ix, d.sampledTexture->GetPixel(iAbs, jAbs));
 		}
 	}
+}
 
-	bool PERasterizeTask::IsValid() const noexcept
-	{
-		const auto& d = m_Desc;
+_Use_decl_annotations_
+bool PERasterizeTask::IsValid() const noexcept
+{
+	const auto& d = m_descTask;
 
-		const bool ptrsOk = (d.Target != nullptr) && (d.Texture != nullptr);
-		const bool colsOk = (d.ColsTotal > 0) && (d.i0 < d.i1) &&
-			(d.i0 >= 0) && (d.i1 <= d.ColsTotal);
-		const bool rowsOk = (d.RowsTotal > 0) && (d.jA < d.jB) &&
-			(d.jA >= 0);
-		const bool texOk = (d.TexW > 0) && (d.TexH > 0);
+	const bool validPtr = (d.target != nullptr)		    &&
+						  (d.sampledTexture != nullptr);
+	
+	const bool validCol = (d.totalColumns > 0)				   &&
+						  (d.columnStartFrom < d.columneEndAt) &&
+						  (d.columnStartFrom >= 0)			   &&
+						  (d.columneEndAt <= d.totalColumns);
+	
+	const bool validRow = (d.totalRows > 0)			    &&
+						  (d.rowStartFrom < d.rowEndAt) &&
+						  (d.rowStartFrom >= 0);
 
-		return ptrsOk && colsOk && rowsOk && texOk;
-	}
+	const bool validTex = (d.TexWidth > 0)  &&
+					      (d.TexHeight > 0);
 
-	std::size_t PERasterizeTask::EstimatedCost() const noexcept
-	{
-		const int cols = std::max(0, m_Desc.i1 - m_Desc.i0);
-		const int rows = std::max(0, m_Desc.jB - m_Desc.jA);
-		return static_cast<std::size_t>(cols) * static_cast<std::size_t>(rows);
-	}
+	return validPtr && validCol && validRow && validTex;
+}
 
-} // namespace pixel_engine
+_Use_decl_annotations_
+std::size_t PERasterizeTask::EstimatedCost() const noexcept
+{
+	const int cols = std::max(0, m_descTask.columneEndAt - m_descTask.columnStartFrom);
+	const int rows = std::max(0, m_descTask.rowEndAt     - m_descTask.rowStartFrom);
+	
+	return static_cast<std::size_t>(cols) * static_cast<std::size_t>(rows);
+}

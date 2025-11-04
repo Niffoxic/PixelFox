@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
@@ -9,52 +20,54 @@
 
 namespace pixel_engine
 {
-	struct RasterizeTaskDesc
+	typedef struct _RASTERIZE_TASK_DESC
 	{
-		PEImageBuffer* Target = nullptr;
-		const Texture* Texture = nullptr;
+		_Inout_ PEImageBuffer* target		  = nullptr;
+		_Inout_	const Texture* sampledTexture = nullptr;
 
-		FVector2D StartBase;  // Base position of the first pixel (start + i0*dU + j0*dV)
-		FVector2D dU{};         // Step vector along X-axis (horizontal)
-		FVector2D dV{};         // Step vector along Y-axis (vertical)
+		_In_ FVector2D startBase {};
+		_In_ FVector2D deltaAxisU{};
+		_In_ FVector2D deltaAxisV{};
 
-		int i0 = 0;             // Inclusive column start
-		int i1 = 0;             // Exclusive column end
-		int jA = 0;             // Relative start row of this task
-		int jB = 0;             // Relative end row of this task
-		int j0Abs = 0;          // Absolute base row offset for the full quad
+		_In_ int columnStartFrom = 0;
+		_In_ int columneEndAt	 = 0;
+		_In_ int rowStartFrom	 = 0;
+		_In_ int rowEndAt		 = 0;
+		_In_ int rowOffset		 = 0;
+		_In_ int totalColumns	 = 0;
+		_In_ int totalRows		 = 0;
+		_In_ int TexWidth		 = 0;
+		_In_ int TexHeight		 = 0;
 
-		int ColsTotal = 0;      // Target width in pixels
-		int RowsTotal = 0;      // Target height in pixels
-
-		int TexW = 0;           // Texture width  (cached)
-		int TexH = 0;           // Texture height (cached)
-	};
+	} RASTERIZE_TASK_DESC;
 
 	class PFE_API PERasterizeTask
 	{
 	public:
 		PERasterizeTask() noexcept = default;
-		explicit PERasterizeTask(const RasterizeTaskDesc& desc) noexcept;
+		explicit PERasterizeTask(_In_ const RASTERIZE_TASK_DESC& desc) noexcept;
 
 		// Non-copyable, movable
-		PERasterizeTask(const PERasterizeTask&)			   = default;
-		PERasterizeTask& operator=(const PERasterizeTask&) = default;
-		
-		PERasterizeTask(PERasterizeTask&&) noexcept;
-		PERasterizeTask& operator=(PERasterizeTask&&) noexcept;
+		PERasterizeTask(_In_ const PERasterizeTask&) = default;
+		PERasterizeTask(_Inout_ PERasterizeTask&&) noexcept;
+
+		PERasterizeTask& operator=(_In_ const PERasterizeTask&) = default;
+		PERasterizeTask& operator=(_Inout_ PERasterizeTask&&) noexcept;
 
 		// Execute this task (draw pixels into target).
 		void Execute() noexcept;
 
 		// Utility
-		bool IsValid() const noexcept;
-		std::size_t EstimatedCost() const noexcept; // Optional heuristic (rows * cols)
+		_NODISCARD _Check_return_
+		bool IsValid			 () const noexcept;
+		_NODISCARD _Check_return_
+		std::size_t EstimatedCost() const noexcept;
 
 		// Accessors
-		const RasterizeTaskDesc& GetDesc() const noexcept { return m_Desc; }
+		_NODISCARD _Check_return_
+		const RASTERIZE_TASK_DESC& GetDesc() const noexcept { return m_descTask; }
 
 	private:
-		RasterizeTaskDesc m_Desc{};
+		RASTERIZE_TASK_DESC m_descTask{};
 	};
 } // namespace pixel_engine
