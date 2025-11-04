@@ -87,17 +87,6 @@ bool pixel_engine::PERenderManager::InitializeCamera2D()
 {
     m_pCamera = std::make_unique<Camera2D>();
 
-    m_pCamera->SetViewportSize(
-        (uint32_t)m_pWindowsManager->GetWindowsWidth(),
-        (uint32_t)m_pWindowsManager->GetWindowsHeight());
-
-    m_pCamera->SetViewportOrigin(
-        { m_pWindowsManager->GetWindowsWidth() * 0.5f,
-        m_pWindowsManager->GetWindowsHeight() * 0.5f });
-    m_pCamera->SetScreenYDown(true);
-
-    m_pCamera->SetZoom(1.f);
-
     m_pCamera->SetPosition({ 0.f, 0.f });
     m_pCamera->SetRotation(0.f);
     m_pCamera->SetScale({ 1.f, 1.f });
@@ -225,18 +214,27 @@ void pixel_engine::PERenderManager::HandleCameraInput(float deltaTime)
     const FVector2D right{ cc,  sc };
 
     FVector2D pan{ 0.f,0.f };
-    if (kb.IsKeyPressed('W')) { pan.x += forward.x * moveSpeed * deltaTime; pan.y += forward.y * moveSpeed * deltaTime; }
-    if (kb.IsKeyPressed('S')) { pan.x -= forward.x * moveSpeed * deltaTime; pan.y -= forward.y * moveSpeed * deltaTime; }
-    if (kb.IsKeyPressed('A')) { pan.x -= right.x * moveSpeed * deltaTime; pan.y -= right.y * moveSpeed * deltaTime; }
-    if (kb.IsKeyPressed('D')) { pan.x += right.x * moveSpeed * deltaTime; pan.y += right.y * moveSpeed * deltaTime; }
-    if (pan.x || pan.y) m_pCamera->Pan(pan);
+    if (kb.IsKeyPressed('W')) { pan.x -= forward.x * moveSpeed * deltaTime; pan.y -= forward.y * moveSpeed * deltaTime; }
+    if (kb.IsKeyPressed('S')) { pan.x += forward.x * moveSpeed * deltaTime; pan.y += forward.y * moveSpeed * deltaTime; }
+    if (kb.IsKeyPressed('D')) { pan.x -= right.x * moveSpeed * deltaTime; pan.y -= right.y * moveSpeed * deltaTime; }
+    if (kb.IsKeyPressed('A')) { pan.x += right.x * moveSpeed * deltaTime; pan.y += right.y * moveSpeed * deltaTime; }
+    if (pan.x || pan.y)
+    {
+        m_pCamera->AddPosition(pan);
+    }
 
     if (kb.IsKeyPressed('Q')) m_pCamera->SetRotation(
         m_pCamera->GetRotation() - rotSpeed * deltaTime);
     if (kb.IsKeyPressed('E')) m_pCamera->SetRotation(m_pCamera->GetRotation() + rotSpeed * deltaTime);
 
-    float z = m_pCamera->GetZoom(); bool zc = false;
-    if (kb.IsKeyPressed(VK_UP)) { z *= std::exp(zoomRate * deltaTime); zc = true; }
+    float z = m_pCamera->GetScale().x;
+    bool zc = false;
+    
+    if (kb.IsKeyPressed(VK_UP))  { z *= std::exp(zoomRate * deltaTime); zc = true; }
     if (kb.IsKeyPressed(VK_DOWN)) { z *= std::exp(-zoomRate * deltaTime); zc = true; }
-    if (zc) m_pCamera->SetZoom(std::clamp(z, minZoom, maxZoom));
+    if (zc)
+    {
+        float val = std::clamp(z, minZoom, maxZoom);
+        m_pCamera->SetScale({val, val});
+    }
 }

@@ -466,35 +466,35 @@ namespace fox
             using pointer = T*;
 
             ReverseIterator() noexcept = default;
-            explicit ReverseIterator(_In_opt_ pointer base) noexcept : m_base(base) {}
+            explicit ReverseIterator(_In_opt_ pointer base) noexcept : m_transform(base) {}
 
-            _NODISCARD pointer base() const noexcept { return m_base; }
+            _NODISCARD pointer base() const noexcept { return m_transform; }
 
-            _NODISCARD reference operator*() const noexcept { return *(m_base - 1); }
+            _NODISCARD reference operator*() const noexcept { return *(m_transform - 1); }
             _NODISCARD pointer   operator->() const noexcept { return std::addressof(operator*()); }
 
-            ReverseIterator& operator++()    noexcept { --m_base; return *this; }
-            ReverseIterator  operator++(int) noexcept { ReverseIterator t(*this); --m_base; return t; }
-            ReverseIterator& operator--()    noexcept { ++m_base; return *this; }
-            ReverseIterator  operator--(int) noexcept { ReverseIterator t(*this); ++m_base; return t; }
+            ReverseIterator& operator++()    noexcept { --m_transform; return *this; }
+            ReverseIterator  operator++(int) noexcept { ReverseIterator t(*this); --m_transform; return t; }
+            ReverseIterator& operator--()    noexcept { ++m_transform; return *this; }
+            ReverseIterator  operator--(int) noexcept { ReverseIterator t(*this); ++m_transform; return t; }
 
-            ReverseIterator& operator+=(_In_ difference_type n) noexcept { m_base -= n; return *this; }
-            ReverseIterator& operator-=(_In_ difference_type n) noexcept { m_base += n; return *this; }
-            _NODISCARD ReverseIterator  operator+(_In_ difference_type n) const noexcept { return ReverseIterator(m_base - n); }
-            _NODISCARD ReverseIterator  operator-(_In_ difference_type n) const noexcept { return ReverseIterator(m_base + n); }
-            _NODISCARD difference_type  operator-(_In_ const ReverseIterator& rhs) const noexcept { return rhs.m_base - m_base; }
+            ReverseIterator& operator+=(_In_ difference_type n) noexcept { m_transform -= n; return *this; }
+            ReverseIterator& operator-=(_In_ difference_type n) noexcept { m_transform += n; return *this; }
+            _NODISCARD ReverseIterator  operator+(_In_ difference_type n) const noexcept { return ReverseIterator(m_transform - n); }
+            _NODISCARD ReverseIterator  operator-(_In_ difference_type n) const noexcept { return ReverseIterator(m_transform + n); }
+            _NODISCARD difference_type  operator-(_In_ const ReverseIterator& rhs) const noexcept { return rhs.m_transform - m_transform; }
             _NODISCARD reference operator[](_In_ difference_type n) const noexcept { return *(*this + n); }
 
             //~ comparisons
-            _NODISCARD bool operator==(_In_ const ReverseIterator& rhs) const noexcept { return m_base == rhs.m_base; }
-            _NODISCARD bool operator!=(_In_ const ReverseIterator& rhs) const noexcept { return m_base != rhs.m_base; }
-            _NODISCARD bool operator< (_In_ const ReverseIterator& rhs) const noexcept { return m_base > rhs.m_base; }
-            _NODISCARD bool operator> (_In_ const ReverseIterator& rhs) const noexcept { return m_base < rhs.m_base; }
-            _NODISCARD bool operator<=(_In_ const ReverseIterator& rhs) const noexcept { return m_base >= rhs.m_base; }
-            _NODISCARD bool operator>=(_In_ const ReverseIterator& rhs) const noexcept { return m_base <= rhs.m_base; }
+            _NODISCARD bool operator==(_In_ const ReverseIterator& rhs) const noexcept { return m_transform == rhs.m_transform; }
+            _NODISCARD bool operator!=(_In_ const ReverseIterator& rhs) const noexcept { return m_transform != rhs.m_transform; }
+            _NODISCARD bool operator< (_In_ const ReverseIterator& rhs) const noexcept { return m_transform > rhs.m_transform; }
+            _NODISCARD bool operator> (_In_ const ReverseIterator& rhs) const noexcept { return m_transform < rhs.m_transform; }
+            _NODISCARD bool operator<=(_In_ const ReverseIterator& rhs) const noexcept { return m_transform >= rhs.m_transform; }
+            _NODISCARD bool operator>=(_In_ const ReverseIterator& rhs) const noexcept { return m_transform <= rhs.m_transform; }
 
         private:
-            pointer m_base{ nullptr };
+            pointer m_transform{ nullptr };
         };
 
         _NODISCARD ReverseIterator rbegin() noexcept { return ReverseIterator(m_data + m_nSize); }

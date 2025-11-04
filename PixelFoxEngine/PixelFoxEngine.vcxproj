@@ -173,6 +173,8 @@
     <ClInclude Include="include\pixel_engine\render_manager\api\buffer\image.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\culling\culling.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\raster\raster.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\api\raster\task\raster_scheduler.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\api\raster\task\raster_task.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\camera\camera.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.h" />
@@ -190,6 +192,7 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_inputs.h" />
     <ClInclude Include="include\pixel_engine\exceptions\base_exception.h" />
     <ClInclude Include="include\pixel_engine\utilities\logger\logger.h" />
+    <ClInclude Include="include\pixel_engine\window_manager\windows_tuning.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="include\pixel_engine\PixelEngine.h" />
     <ClInclude Include="include\pixel_engine\window_manager\windows_manager.h" />
@@ -205,6 +208,8 @@
     <ClCompile Include="include\pixel_engine\render_manager\api\buffer\image.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\culling\culling.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\raster\raster.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\api\raster\task\raster_scheduler.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\api\raster\task\raster_task.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\camera\camera.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.cpp" />

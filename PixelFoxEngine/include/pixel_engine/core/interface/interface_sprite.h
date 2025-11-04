@@ -14,15 +14,6 @@
 
 namespace pixel_engine
 {
-
-	typedef struct _PFE_SAMPLE_GRID_2D
-	{
-		FVector2D RowStart;
-		FVector2D dU;
-		FVector2D dV;
-		int cols{ 0 }, rows{ 0 };
-	} PFE_SAMPLE_GRID_2D;
-
 	typedef struct _PFE_WORLD_SPACE_DESC
 	{
 		Camera2D* pCamera;
@@ -81,10 +72,6 @@ namespace pixel_engine
 		_NODISCARD _Check_return_
 		virtual fox_math::Vector2D<float> GetPivot()    const = 0;
 
-		virtual void SetUnitSize(float widthUnits, float heightUnits) = 0;
-		_NODISCARD _Check_return_
-		virtual fox_math::Vector2D<float> GetUnitSize() const = 0;
-
 		virtual void SetVisible(bool v) = 0;
 		_NODISCARD _Check_return_
 		virtual bool IsVisible() const = 0;
@@ -99,15 +86,16 @@ namespace pixel_engine
 		bool IsDirty() const noexcept { return m_bDirty; }
 
 		_NODISCARD _Check_return_
-		virtual bool BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const = 0;
-
-		void SetTilePixels(int tilePx) { m_nTilePx = tilePx; }
-
-		_NODISCARD _Check_return_
 		virtual Texture* GetTexture() const = 0;
 
-	protected:
-		int m_nTilePx{ 32 };
+		//~ relative to the camera
+		_NODISCARD _Check_return_
+		virtual FVector2D GetUAxisRelativeToCamera() const noexcept = 0;
+		_NODISCARD _Check_return_
+		virtual FVector2D GetVAxisRelativeToCamera() const noexcept = 0;
+		_NODISCARD _Check_return_
+		virtual FVector2D GetPositionRelativeToCamera() const noexcept = 0;
+	
 	private:
 		mutable bool m_bDirty{ true };
 		AllocatedID  m_idAllocated;

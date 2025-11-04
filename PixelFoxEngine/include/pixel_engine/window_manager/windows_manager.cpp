@@ -24,8 +24,8 @@ pixel_engine::PEWindowsManager::PEWindowsManager(const WINDOW_CREATE_DESC* desc)
     else
     {
         logger::warning("No Description provided for Windows Manager creating default");
-        m_nWindowsHeight = 500u;
-        m_nWindowsWidth  = 500u;
+        m_nWindowsHeight = 720u;
+        m_nWindowsWidth  = 1280u;
         m_szWindowTitle  = "Pixel Engine";
         m_nIconID        = 0u;
         m_bFullScreen    = false;

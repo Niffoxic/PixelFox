@@ -34,6 +34,7 @@ namespace pixel_game
 		static constexpr float kRotSpeed = 0.75f;
 
 		std::unique_ptr<pixel_engine::QuadObject> m_object;
+		fox::vector<std::unique_ptr<pixel_engine::QuadObject>> m_objects;
 
 		float m_time{ 0.0f };
 	};

@@ -7,6 +7,7 @@
 #include "pixel_engine/utilities/id_allocator.h"
 #include "pixel_engine/core/interface/interface_sprite.h"
 #include "pixel_engine/render_manager/api/culling/culling.h"
+#include "pixel_engine/core/types.h"
 
 #include "core/unordered_map.h"
 #include "core/vector.h"
@@ -17,6 +18,14 @@
 namespace pixel_engine
 {
 	class PERaster2D;
+
+	typedef struct _PFE_CLIPPED_GRID
+	{
+		FVector2D start;
+		FVector2D dU, dV;
+		int i0, i1;
+		int j0, j1;
+	} PFE_CLIPPED_GRID;
 
 	typedef struct _PFE_RENDER_QUEUE_CONSTRUCT_DESC
 	{
@@ -44,12 +53,21 @@ namespace pixel_engine
 	private:
 		PERenderQueue() = default;
 
-	private:
 		void CreateCulling2D(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc);
+		void BuildDiscreteGrid(PEISprite* sprite,
+			int tilePx,
+			PFE_SAMPLE_GRID_2D& out);
 
-		void UpdateSprite(float deltaTime);
 		void RenderSprite(PERaster2D* pRaster);
 		void BuildSpriteInOrder();
+
+		//~ Helpers
+		float Det2(float ax, float ay, float bx, float by) const noexcept;
+		bool InvertColumns(const FVector2D& dU, const FVector2D& dV,
+			float& m00, float& m01, float& m10, float& m11) const noexcept;
+		bool ClipGridToViewport(const PFE_SAMPLE_GRID_2D& g,
+			int vpW, int vpH,
+			PFE_CLIPPED_GRID& out) const;
 
 	private:
 		std::unique_ptr<PECulling2D> m_pCulling2D{ nullptr };

@@ -549,6 +549,10 @@ bool pixel_engine::PERenderAPI::InitializeRaster2D(const INIT_RENDER_API_DESC* d
     };
     m_pRaster2D = std::make_unique<PERaster2D>(&rasterDesc);
 
+    PFE_RASTER_INIT_DESC rasterInit{};
+    rasterInit.WorkerCount = 8u;
+    m_pRaster2D->Init(&rasterInit);
+
     return true;
 }
 

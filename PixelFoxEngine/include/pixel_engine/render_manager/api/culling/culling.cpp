@@ -13,15 +13,11 @@ void pixel_engine::PECulling2D::Init(const pixel_engine::PFE_VIEWPORT& viewport)
     m_viewport = viewport;
 }
 
-bool pixel_engine::PECulling2D::ShouldCullQuad(
-    const FVector2D& rowStart,
-    const FVector2D& dU, 
-    const FVector2D& dV,
-    int cols, int rows) const noexcept
+bool pixel_engine::PECulling2D::ShouldCullQuad(const PFE_SAMPLE_GRID_2D& grid) const noexcept
 {
-    if (cols <= 0 || rows <= 0) return true;
+    if (grid.cols <= 0 || grid.rows <= 0) return true;
 
-    const PFE_AABB2D aabb = ComputeQuadAABB(rowStart, dU, dV, cols, rows);
+    const PFE_AABB2D aabb = ComputeQuadAABB(grid);
 
     const float vpw = static_cast<float>(m_viewport.w);
     const float vph = static_cast<float>(m_viewport.h);
@@ -32,20 +28,21 @@ bool pixel_engine::PECulling2D::ShouldCullQuad(
     return false;
 }
 
-pixel_engine::PFE_AABB2D pixel_engine::PECulling2D::ComputeQuadAABB(
-    const FVector2D& rowStart, 
-    const FVector2D& dU,
-    const FVector2D& dV,
-    int cols, int rows) const noexcept
+pixel_engine::PFE_AABB2D pixel_engine::PECulling2D::ComputeQuadAABB(const PFE_SAMPLE_GRID_2D& grid) const noexcept
 {
-    const FVector2D A = rowStart;
+    const FVector2D A = grid.RowStart; // left-top
 
-    const FVector2D B{ rowStart.x + dU.x * static_cast<float>(cols),
-                       rowStart.y + dU.y * static_cast<float>(cols) };
-    const FVector2D C{ rowStart.x + dV.x * static_cast<float>(rows),
-                       rowStart.y + dV.y * static_cast<float>(rows) };
-    const FVector2D D{ B.x + dV.x * static_cast<float>(rows),
-                       B.y + dV.y * static_cast<float>(rows) };
+    // right-top
+    const FVector2D B{ grid.RowStart.x + grid.dU.x * static_cast<float>(grid.cols),
+                       grid.RowStart.y + grid.dU.y * static_cast<float>(grid.cols) };
+
+    // left-bottom
+    const FVector2D C{ grid.RowStart.x + grid.dV.x * static_cast<float>(grid.rows),
+                       grid.RowStart.y + grid.dV.y * static_cast<float>(grid.rows) };
+
+    // right-bottom
+    const FVector2D D{ B.x + grid.dV.x * static_cast<float>(grid.rows),
+                       B.y + grid.dV.y * static_cast<float>(grid.rows) };
 
     constexpr float pad = 0.5f;
 

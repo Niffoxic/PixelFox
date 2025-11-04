@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <Windows.h>
 
+#include "fox_math/vector.h"
+
 namespace pixel_engine
 {
 	typedef struct _PFE_RECT
@@ -55,5 +57,13 @@ namespace pixel_engine
 	{
 		float minX{ 0 }, minY{ 0 }, maxX{ 0 }, maxY{ 0 };
 	} PFE_AABB2D;
+
+	typedef struct _PFE_SAMPLE_GRID_2D
+	{
+		FVector2D RowStart;
+		FVector2D dU;
+		FVector2D dV;
+		int cols{ 0 }, rows{ 0 };
+	} PFE_SAMPLE_GRID_2D;
 
 } // namespace pixel_engine

@@ -5,84 +5,89 @@
 
 #include "pixel_engine/render_manager/api/buffer/image.h"
 #include "pixel_engine/render_manager/components/texture/texture.h"
+#include "pixel_engine/core/types.h"
 
 #include "fox_math/transform.h"
 #include "fox_math/matrix.h"
 #include "fox_math/vector.h"
-#include "pixel_engine/core/types.h"
+
+#include "task/raster_scheduler.h"
 
 #include <d3d11.h>
 
-// TODO: Create Image Raster
+
 namespace pixel_engine
 {
-	typedef struct _PFE_RASTER_CONSTURCT_DESC
-	{
-		PFE_VIEWPORT Viewport;
-		bool		 EnableBoundCheck{ true };
+    struct PFE_RASTER_CONSTRUCT_DESC
+    {
+        PFE_VIEWPORT Viewport{};
+        bool         EnableBoundCheck{ true };
+    };
 
-	} PFE_RASTER_CONSTRUCT_DESC;
+    struct PFE_RASTER_INIT_DESC
+    {
+        unsigned WorkerCount{ 4u };
+    };
 
-	typedef struct _PFE_RASTER_INIT_DESC
-	{
-	} PFE_RASTER_INIT_DESC;
+    class PFE_API PERaster2D
+    {
+    public:
+        explicit PERaster2D(const PFE_RASTER_CONSTRUCT_DESC* desc);
+        ~PERaster2D();
 
-	/// <summary>
-	/// Writes to the backbuffer
-	/// </summary>
-	class PFE_API PERaster2D
-	{
-	public:
-		PERaster2D(const PFE_RASTER_CONSTRUCT_DESC* desc);
-		
-		bool Init(const PFE_RASTER_INIT_DESC* desc);
-		void Release();
+        PERaster2D(const PERaster2D&) = delete;
+        PERaster2D& operator=(const PERaster2D&) = delete;
 
-		PEImageBuffer* GetRenderTarget() const;
+        bool Init(const PFE_RASTER_INIT_DESC* desc);
+        void Release();
 
-		void SetViewport(const PFE_VIEWPORT& rect);
-		PFE_VIEWPORT GetViewport() const;
+        PEImageBuffer* GetRenderTarget() const noexcept { return m_pImageBuffer.get(); }
 
-		void PutPixel(int y, int x, const PFE_FORMAT_R8G8B8_UINT& color);
-		
-		void DrawDiscreteQuad(
-			const FVector2D& rowStart,
-			const FVector2D& dU,
-			const FVector2D& dV,
-			int cols,
-			int rows,
-			const PFE_FORMAT_R8G8B8_UINT& color
-		);
+        void         SetViewport(const PFE_VIEWPORT& rect);
+        PFE_VIEWPORT GetViewport() const noexcept { return m_descViewport; }
 
-		void DrawDiscreteQuad(
-			const FVector2D& rowStart,
-			const FVector2D& dU,
-			const FVector2D& dV,
-			int cols,
-			int rows,
-			const Texture* texture
-		);
+        void Clear(const PFE_FORMAT_R8G8B8_UINT& color);
+        void PutPixel(int y, int x, const PFE_FORMAT_R8G8B8_UINT& color);
 
-		void DrawSafeQuad(
-			const FVector2D& rowStart,
-			const FVector2D& dU,
-			const FVector2D& dV,
-			int cols,
-			int rows,
-			const Texture* texture
-		);
+        void DrawDiscreteQuad(
+            const FVector2D& rowStart,
+            const FVector2D& dU,
+            const FVector2D& dV,
+            int cols,
+            int rows,
+            const PFE_FORMAT_R8G8B8_UINT& color
+        );
 
-		bool IsBounded(unsigned x, unsigned y) const;
+        void DrawDiscreteQuad(
+            const FVector2D& rowStart,
+            const FVector2D& dU,
+            const FVector2D& dV,
+            int cols,
+            int rows,
+            const pixel_engine::Texture* tex
+        );
 
-		void Clear(const PFE_FORMAT_R8G8B8_UINT& color);
-		void Present(ID3D11DeviceContext* context, ID3D11Buffer* cpuBuffer);
+        void DrawQuadClippedMT(const FVector2D& start,
+            const FVector2D& dU,
+            const FVector2D& dV,
+            int i0, int i1, int j0, int j1,
+            int colsTotal, int rowsTotal,
+            const pixel_engine::Texture* tex);
 
-	private:
-		void CreateRenderTarget(const PFE_VIEWPORT& rect);
+        void Present(ID3D11DeviceContext* context, ID3D11Buffer* cpuBuffer);
 
-	private:
-		std::unique_ptr<PEImageBuffer> m_pImageBuffer{ nullptr };
-		PFE_VIEWPORT m_descViewport{ 0, 0, 0, 0 };
-		bool		 m_bBoundCheck { true };
-	};
+        bool IsBounded    (int x, int y) const noexcept;
+        void SetBoundCheck(bool enabled)       noexcept { m_bBoundCheck = enabled;  }
+        bool GetBoundCheck()             const noexcept { return m_bBoundCheck;     }
+
+    private:
+        void CreateRenderTarget(const PFE_VIEWPORT& rect);
+
+    private:
+        std::unique_ptr<PEImageBuffer> m_pImageBuffer{ nullptr };
+        std::unique_ptr<RasterizeScheduler> m_pScheduler{ nullptr };
+
+        PFE_VIEWPORT                   m_descViewport{ 0, 0, 0, 0 };
+        bool                           m_bBoundCheck { true };
+    };
 } // namespace pixel_engine

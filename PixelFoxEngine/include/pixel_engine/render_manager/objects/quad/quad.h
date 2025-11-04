@@ -28,14 +28,6 @@ namespace pixel_engine
         _NODISCARD _Check_return_
         FMatrix2DAffine GetAffineMatrix() const override;
 
-        void SetPreAffine(_In_ const FMatrix2DAffine& m);
-        void ClearPreAffine();
-        _NODISCARD _Check_return_ bool HasPreAffine() const noexcept;
-
-        void SetPostAffine(_In_ const FMatrix2DAffine& m);
-        void ClearPostAffine();
-        _NODISCARD _Check_return_ bool HasPostAffine() const noexcept;
-
         void SetPosition(float x, float y)        override;
         void SetRotation(float radians)           override;
         void SetScale   (float sx, float sy)      override;
@@ -47,10 +39,6 @@ namespace pixel_engine
         _NODISCARD _Check_return_ fox_math::Vector2D<float> GetScale()    const override;
         _NODISCARD _Check_return_ fox_math::Vector2D<float> GetPivot()    const override;
 
-        void SetUnitSize(float widthUnits, float heightUnits) override;
-        _NODISCARD _Check_return_
-        fox_math::Vector2D<float> GetUnitSize() const override;
-
         void SetVisible(bool v)   override;
         _NODISCARD _Check_return_ bool     IsVisible() const override;
 
@@ -58,14 +46,17 @@ namespace pixel_engine
         _NODISCARD _Check_return_ uint32_t GetLayer() const override;
 
         _NODISCARD _Check_return_
-        bool BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const override;
-
-        _NODISCARD _Check_return_
         Texture* GetTexture() const override;
 
+        //~ relative to the camera
+        _NODISCARD _Check_return_
+        FVector2D GetUAxisRelativeToCamera() const noexcept override;
+        _NODISCARD _Check_return_
+        FVector2D GetVAxisRelativeToCamera() const noexcept override;
+        _NODISCARD _Check_return_
+        FVector2D GetPositionRelativeToCamera() const noexcept override;
     private:
-        void RebuildIfDirty(_In_opt_ const Camera2D* camera) const;
-        void UpdateWorldPosition(const PFE_WORLD_SPACE_DESC& space) const;
+        void UpdateObjectToCameraSpace(const PFE_WORLD_SPACE_DESC& space);
 
     private:
         std::string m_szTexturePath{};
@@ -74,24 +65,13 @@ namespace pixel_engine
         //~ Test only
         std::unique_ptr<Texture> m_pSampledTexture{ nullptr };
 
-        FTransform2D              m_base{};
-
-        bool                      m_hasPre{ false };
-        bool                      m_hasPost{ false };
-        FMatrix2DAffine           m_pre{};
-        FMatrix2DAffine           m_post{};
-
-        mutable FMatrix2DAffine   m_cachedWorld{};
-        fox_math::Vector2D<float> m_unitSize{ 1.0f, 1.0f };
-
+        FTransform2D              m_transform{};
         bool                      m_visible{ true };
         uint32_t                  m_layer{ 0 };
 
-        //~ cache grid
-        mutable FVector2D m_SuScreen{};
-        mutable FVector2D m_SvScreen{};
-        mutable FVector2D m_baseScreen{};
-        mutable bool      m_bScreenDirty{ true };
-        mutable Camera2D*         m_pLastCamera{ nullptr };
+        //~ relative to the camera
+        FVector2D m_ObjectCameraAxisU       {};
+        FVector2D m_ObjectCameraAxisV       {};
+        FVector2D m_ObjectCameraViewPosition{};
     };
 } // namespace pixel_engine

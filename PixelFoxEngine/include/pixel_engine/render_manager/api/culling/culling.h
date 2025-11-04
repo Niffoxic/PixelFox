@@ -31,21 +31,10 @@ namespace pixel_engine
         UINT GetViewportWidth()  const noexcept;
         UINT GetViewportHeight() const noexcept;
 
-        bool ShouldCullQuad(
-            const FVector2D& rowStart,
-            const FVector2D& dU,
-            const FVector2D& dV,
-            int cols,
-            int rows) const noexcept;
-
-        PFE_AABB2D ComputeQuadAABB(
-            const FVector2D& rowStart,
-            const FVector2D& dU,
-            const FVector2D& dV,
-            int cols,
-            int rows) const noexcept;
+        bool ShouldCullQuad       (const PFE_SAMPLE_GRID_2D& grid) const noexcept;
+        PFE_AABB2D ComputeQuadAABB(const PFE_SAMPLE_GRID_2D& grid) const noexcept;
 
     private:
-        PFE_VIEWPORT m_viewport{ 0, 0, 0, 0 };
+        PFE_VIEWPORT m_viewport{ 0, 0, 1280, 720 };
     };
 } // namespace pixel_engine
