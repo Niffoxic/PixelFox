@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 #include "core/unordered_map.h"
@@ -23,7 +34,7 @@ namespace pixel_engine
 
 		//~ interface implementation
 		_NODISCARD _Check_return_ bool Initialize() override;
-		_NODISCARD _Check_return_ bool Release() override;
+		_NODISCARD _Check_return_ bool Release   () override;
 
 		_NODISCARD _Check_return_
 		std::string GetObjectName() const override { return "RenderManager"; }
@@ -34,7 +45,6 @@ namespace pixel_engine
 	private:
 		bool InitializeCamera2D ();
 		bool InitializeRenderAPI();
-
 		void SubscribeToEvents  ();
 		void UnSubscribeToEvents();
 
@@ -51,7 +61,7 @@ namespace pixel_engine
 
 		//~ Manage render api
 		std::unique_ptr<PERenderAPI> m_pRenderAPI{ nullptr };
-		std::unique_ptr<Camera2D> m_pCamera		 { nullptr };
+		std::unique_ptr<Camera2D>    m_pCamera   { nullptr };
 
 		HANDLE m_handleStartEvent{ nullptr };
 		HANDLE m_handleEndEvent  { nullptr };

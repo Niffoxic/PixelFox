@@ -1,4 +1,6 @@
-#pragma once
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
 
 /*
  *  -----------------------------------------------------------------------------
@@ -7,6 +9,8 @@
  *  License   : MIT
  *  -----------------------------------------------------------------------------
  */
+
+#pragma once
 
 #include "PixelFoxCoreAPI.h"
 
@@ -70,7 +74,7 @@ namespace fox
 				}
 				else 
 				{
-					tail->next = n;
+					if (tail && tail->next) tail->next = n;
 					tail = n;
 				}
 				++m_nSize;
@@ -100,7 +104,7 @@ namespace fox
 				}
 				else
 				{
-					tail->next = new_node;
+					if (tail && tail->next) tail->next = new_node;
 					tail = new_node;
 				}
 				++m_nSize;

@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 #include <Windows.h>
@@ -47,7 +58,7 @@ namespace pixel_engine
 			_In_ WPARAM wParam,
 			_In_ LPARAM lParam) noexcept override;
 
-		void OnFrameBegin(float deltaTime) noexcept override;
+		void OnFrameBegin(_In_ float deltaTime) noexcept override;
 		void OnFrameEnd  ()				   noexcept override;
 
 		//~ Queries

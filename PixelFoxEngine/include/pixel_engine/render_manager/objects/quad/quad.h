@@ -1,15 +1,25 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 
 #include "pixel_engine/core/interface/interface_sprite.h"
-
 
 namespace pixel_engine
 {
     class PFE_API QuadObject final : public PEISprite
     {
     public:
-        QuadObject() = default;
+         QuadObject()          = default;
         ~QuadObject() override = default;
 
         _NODISCARD _Check_return_
@@ -17,71 +27,67 @@ namespace pixel_engine
 
         _NODISCARD _Check_return_
         bool Initialize() override;
-        bool Release() override;
+        bool Release   () override;
 
-        void Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space) override;
-
+        void Update(
+            _In_ float deltaTime,
+            _In_ const PFE_WORLD_SPACE_DESC& space)   override;
+        
         void SetTransform(_In_ const FTransform2D& t) override;
+        
         _NODISCARD _Check_return_
         const FTransform2D& GetTransform() const override;
 
         _NODISCARD _Check_return_
-        FMatrix2DAffine GetAffineMatrix() const override;
+        FMatrix2DAffine GetAffineMatrix () const override;
 
-        void SetPreAffine(_In_ const FMatrix2DAffine& m);
-        void ClearPreAffine();
-        _NODISCARD _Check_return_ bool HasPreAffine() const noexcept;
+        void SetPosition(_In_ float x, _In_ float y)   override;
+        void SetRotation(_In_ float radians)           override;
+        void SetScale   (_In_ float sx, _In_ float sy) override;
+        void SetPivot   (_In_ float px, _In_ float py) override;
+        void SetTexture (_In_ const std::string& path) override;
 
-        void SetPostAffine(_In_ const FMatrix2DAffine& m);
-        void ClearPostAffine();
-        _NODISCARD _Check_return_ bool HasPostAffine() const noexcept;
+        _NODISCARD _Check_return_ FVector2D GetPosition() const override;
+        _NODISCARD _Check_return_ float     GetRotation() const override;
+        _NODISCARD _Check_return_ FVector2D GetScale   () const override;
+        _NODISCARD _Check_return_ FVector2D GetPivot   () const override;
 
-        void SetPosition(float x, float y) override;
-        void SetRotation(float radians)    override;
-        void SetScale(float sx, float sy)  override;
-        void SetPivot(float px, float py)  override;
-
-        _NODISCARD _Check_return_ fox_math::Vector2D<float> GetPosition() const override;
-        _NODISCARD _Check_return_ float                     GetRotation() const override;
-        _NODISCARD _Check_return_ fox_math::Vector2D<float> GetScale()    const override;
-        _NODISCARD _Check_return_ fox_math::Vector2D<float> GetPivot()    const override;
-
-        void SetUnitSize(float widthUnits, float heightUnits) override;
+        void SetVisible(_In_ bool v) override;
+        
         _NODISCARD _Check_return_
-        fox_math::Vector2D<float> GetUnitSize() const override;
+        bool IsVisible()       const override;
 
-        void SetVisible(bool v)   override;
-        _NODISCARD _Check_return_ bool     IsVisible() const override;
-
-        void SetLayer(uint32_t l) override;
-        _NODISCARD _Check_return_ uint32_t GetLayer() const override;
+        void SetLayer(_In_ ELayer l) override;
+        
+        _NODISCARD _Check_return_ 
+        ELayer GetLayer    () const override;
 
         _NODISCARD _Check_return_
-        bool BuildDiscreteGrid(float step, PFE_SAMPLE_GRID_2D& gridOut) const override;
+        Texture* GetTexture() const override;
+
+        //~ relative to the camera
+        _NODISCARD _Check_return_
+        FVector2D GetUAxisRelativeToCamera   () const noexcept override;
+        
+        _NODISCARD _Check_return_
+        FVector2D GetVAxisRelativeToCamera   () const noexcept override;
+        
+        _NODISCARD _Check_return_
+        FVector2D GetPositionRelativeToCamera() const noexcept override;
+    
+    private:
+        void UpdateObjectToCameraSpace(_In_ const PFE_WORLD_SPACE_DESC& space);
 
     private:
-        void RebuildIfDirty(_In_opt_ const Camera2D* camera) const;
-        void UpdateWorldPosition(const PFE_WORLD_SPACE_DESC& space) const;
+        std::string  m_szTexturePath{};
+        Texture*     m_pTexture     { nullptr };
+        FTransform2D m_transform    {};
+        bool         m_visible      { true };
+        ELayer       m_layer        { ELayer::Obstacles };
 
-    private:
-        FTransform2D              m_base{};
-
-        bool                      m_hasPre{ false };
-        bool                      m_hasPost{ false };
-        FMatrix2DAffine           m_pre{};
-        FMatrix2DAffine           m_post{};
-
-        mutable FMatrix2DAffine   m_cachedWorld{};
-        fox_math::Vector2D<float> m_unitSize{ 1.0f, 1.0f };
-
-        bool                      m_visible{ true };
-        uint32_t                  m_layer{ 0 };
-
-        //~ cache grid
-        mutable FVector2D m_SuScreen{};
-        mutable FVector2D m_SvScreen{};
-        mutable FVector2D m_baseScreen{};
-        mutable bool      m_bScreenDirty{ true };
-        mutable Camera2D*         m_pLastCamera{ nullptr };
+        //~ relative to the camera
+        FVector2D m_ObjectCameraAxisU       {};
+        FVector2D m_ObjectCameraAxisV       {};
+        FVector2D m_ObjectCameraViewPosition{};
     };
 } // namespace pixel_engine

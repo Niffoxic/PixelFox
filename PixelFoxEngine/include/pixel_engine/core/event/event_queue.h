@@ -1,12 +1,24 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
 
 #include <sal.h>  
-#include <unordered_map> // TODO: Replace it with fox::unoredered_map
 #include <functional>
 #include <typeindex>
+
 #include "core/vector.h"
+#include "core/unordered_map.h"
 
 namespace pixel_engine
 {
@@ -64,25 +76,24 @@ namespace pixel_engine
 
         static void DispatchAll()
         {
-            for (auto& kv : Registry()) kv.second.dispatch();
+            for (const auto& kv : s_mapRegistry) kv.second.dispatch();
         }
 
         static void ClearAll()
         {
-            for (auto& kv : Registry()) kv.second.clear();
+            for (const auto& kv : s_mapRegistry) kv.second.clear();
         }
 
         static void Unsubscribe(_Inout_ SubToken& sub)
         {
             if (!sub.valid) return;
 
-            auto& reg = Registry();
-            auto it = reg.find(sub.type);
-
-            if (it != reg.end())
+            auto& reg = s_mapRegistry;
+            if (reg.contains(sub.type)) 
             {
-                it->second.unsubscribe(sub.index);
+                reg[sub.type].unsubscribe(sub.index);
             }
+
             sub.valid = false;
         }
 
@@ -128,25 +139,22 @@ namespace pixel_engine
         template<typename EventT>
         static void RegisterIfNeeded()
         {
-            auto& reg = Registry();
+            auto& reg = s_mapRegistry;
             const std::type_index key(typeid(EventT)); // Handle
-
-            if (reg.find(key) != reg.end()) return;
+            
+            if (reg.contains(key)) return;
 
             // Initialize type operations
-            reg.emplace(key, TypeOps
+            TypeOps op =
             {
                 &DispatchThunk<EventT>,
                 &ClearThunk   <EventT>,
                 &UnsubThunk   <EventT>
-            });
+            };
+            reg[key] = std::move(op);
         }
 
     private:
-        static std::unordered_map<std::type_index, TypeOps>& Registry()
-        {
-            static std::unordered_map<std::type_index, TypeOps> s_mapRegistry{};
-            return s_mapRegistry;
-        }
+        static fox::unordered_map<std::type_index, TypeOps> s_mapRegistry;
     };
 } // namespace pixel_engine

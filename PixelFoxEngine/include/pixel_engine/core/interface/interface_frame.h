@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include <string>
@@ -12,7 +23,7 @@ namespace pixel_engine
 	{
 	public:
 		//~ Interface rules
-		virtual void OnFrameBegin(float deltaTime) = 0;
-		virtual void OnFrameEnd()				   = 0;
+		virtual void OnFrameBegin(_In_ float deltaTime) = 0;
+		virtual void OnFrameEnd()						= 0;
 	};
 }

@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
 #pragma once
 #include "PixelFoxEngineAPI.h"#
 
@@ -15,10 +26,9 @@ namespace pixel_engine
 {
 	typedef struct _PIXEL_ENGINE_CONSTRUCT_DESC
 	{
-		WINDOW_CREATE_DESC const* WindowsDesc;
+		_In_ WINDOW_CREATE_DESC const* WindowsDesc;
 	} PFE_API PIXEL_ENGINE_CONSTRUCT_DESC;
 
-	//~ data to send to application (init time)
 	typedef struct _PIXEL_ENGINE_INIT_DESC
 	{
 
@@ -32,34 +42,36 @@ namespace pixel_engine
 	class PFE_API PixelEngine
 	{
 	public:
-		PixelEngine(PIXEL_ENGINE_CONSTRUCT_DESC const* desc);
+		 PixelEngine(_In_ PIXEL_ENGINE_CONSTRUCT_DESC const* desc);
 		~PixelEngine();
 
-		_NODISCARD _Check_return_  _Success_(return != false)
-		bool	Init(PIXEL_ENGINE_INIT_DESC const* desc);
+		_NODISCARD _Check_return_ _Success_(return != false)
+		bool Init(_In_ PIXEL_ENGINE_INIT_DESC const* desc);
 
 		_Success_(return == S_OK)
-		HRESULT Execute(PIXEL_ENGINE_EXECUTE_DESC const* desc);
+		HRESULT Execute(_In_ PIXEL_ENGINE_EXECUTE_DESC const* desc);
 
 	protected:
 		//~ Application Must Implement them
-		virtual bool InitApplication(PIXEL_ENGINE_INIT_DESC const* desc) = 0;
-		virtual void BeginPlay()										 = 0;
-		virtual void Tick(float deltaTime)								 = 0;
-		virtual void Release()											 = 0;
+		_NODISCARD _Check_return_
+		virtual bool InitApplication(_In_ PIXEL_ENGINE_INIT_DESC const* desc) = 0;
+		
+		virtual void BeginPlay()					 = 0;
+		virtual void Tick     (_In_ float deltaTime) = 0;
+		virtual void Release ()						 = 0;
 
 	private:
-		bool CreateManagers(PIXEL_ENGINE_CONSTRUCT_DESC const* desc);
+		_NODISCARD _Check_return_
+		bool CreateManagers(_In_ PIXEL_ENGINE_CONSTRUCT_DESC const* desc);
 
-		void CreateUtilities();
+		void CreateUtilities	 ();
 		void SetManagerDependency();
-		
-		void SubscribeToEvents();
+		void SubscribeToEvents	 ();
 
 	private:
-		bool m_bEnginePaused{ false };
-		DependencyResolver				  m_dependecyResolver{};
-		
+		bool			   m_bEnginePaused	  { false };
+		DependencyResolver m_dependecyResolver{};
+
 		std::unique_ptr<GameClock>		  m_pClock		   { nullptr };
 		std::unique_ptr<PEWindowsManager> m_pWindowsManager{ nullptr };
 		std::unique_ptr<PERenderManager>  m_pRenderManager { nullptr };

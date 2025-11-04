@@ -1,3 +1,15 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
+
 #pragma once
 #include "PixelFoxEngineAPI.h"
 #include <Windows.h>
@@ -23,5 +35,5 @@ typedef struct _WINDOW_RESIZE_EVENT
 
 typedef struct _WINDOW_DRAG_EVENT
 {
-	bool BeingDrag;
+	bool Paused;
 } PFE_API WINDOW_PAUSE_EVENT;

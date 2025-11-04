@@ -1,3 +1,15 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include <sal.h>
@@ -99,8 +111,8 @@ namespace pixel_engine
 	private:
 		std::string		m_szWindowTitle	  {		"Fox Pixel The Game"	};
 		std::string		m_szClassName	  {			"FoxGameEngine"		};
-		UINT			m_nWindowsWidth   {				640u			};
-		UINT			m_nWindowsHeight  {				360u			};
+		UINT			m_nWindowsWidth   {				0u				};
+		UINT			m_nWindowsHeight  {				0u				};
 		HWND			m_pWindowsHandle  {				nullptr			};
 		HINSTANCE		m_pWindowsInstance{				nullptr			};
 		bool			m_bFullScreen	  {				false			};

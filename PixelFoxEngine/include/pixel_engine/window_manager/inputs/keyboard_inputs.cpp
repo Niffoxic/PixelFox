@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "keyboard_inputs.h"
 #include <cstring>
@@ -54,6 +65,7 @@ bool pixel_engine::PEKeyboardInputs::ProcessMessage(UINT message, WPARAM wParam,
 	return false;
 }
 
+_Use_decl_annotations_
 void pixel_engine::PEKeyboardInputs::OnFrameBegin(float deltaTime) noexcept
 {
 }
