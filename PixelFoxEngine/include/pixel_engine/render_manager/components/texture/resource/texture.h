@@ -127,6 +127,7 @@ namespace pixel_engine
 		_NODISCARD _Check_return_ size_t		SizeInBytes			() const noexcept;
 		
 		//~ Image Data
+		_NODISCARD _Check_return_ const fox::vector<uint8_t>& GetRaw() const noexcept { return m_ppByteColors; }
 		_NODISCARD _Check_return_ CONST_BYTE_VIEW Data() const noexcept;
 		_NODISCARD _Check_return_ BYTE_VIEW       Data()       noexcept;
 

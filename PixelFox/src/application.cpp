@@ -3,6 +3,9 @@
 #include "pixel_engine/render_manager/render_queue/render_queue.h"
 #include "pixel_engine/utilities/logger/logger.h"
 
+#include "pixel_engine/render_manager/components/texture/allocator/texture_resource.h"
+#include "pixel_engine/render_manager/components/texture/allocator/tileset_allocator.h"
+
 _Use_decl_annotations_
 pixel_game::Application::Application(
 	pixel_engine::PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
@@ -56,7 +59,9 @@ void pixel_game::Application::BeginPlay()
         m_objects.push_back(std::move(obj));
     }
 
-    m_anim = std::make_unique<pixel_engine::TileAnim>(m_object.get());
+    m_animSate = std::make_unique<pixel_engine::AnimSateMachine>(m_object.get());
+    m_animSate->AddState("Idle");
+    m_animSate->AddState("Walk");
 
     for (int i = 0; i < 40; i++)
     {
@@ -64,9 +69,24 @@ void pixel_game::Application::BeginPlay()
         if (i <= 9) prefix += "0" + std::to_string(i);
         else prefix += std::to_string(i);
         prefix += ".png";
-        m_anim->AddFrame("assets/sprites/female/" + prefix);
+        std::string path = "assets/sprites/female/idle/" + prefix;
+
+        m_animSate->AddFrame("Idle", path);
     }
-    m_anim->Build();
+
+    //~ walk test female_walk_0
+    for (int i = 0; i < 8; i++)
+    {
+        std::string prefix = "female_walk_" + std::to_string(i);
+        prefix += ".png";
+        std::string path = "assets/sprites/female/walk/" + prefix;
+
+        m_animSate->AddFrame("Walk", path);
+    }
+
+    m_animSate->SetInitialState("Idle");
+
+    m_animSate->Initialize();
 }
 
 void pixel_game::Application::Tick(float deltaTime)
@@ -82,14 +102,17 @@ void pixel_game::Application::Tick(float deltaTime)
     desc.X1      = cam->WorldToCamera({ 1.0f, 0.0f }, 32);
     desc.Y1      = cam->WorldToCamera({ 0.0f, 1.0f }, 32);
 
-    m_anim->OnFrameBegin(deltaTime);
+    if (m_time >= 5.f && m_time <= 10.f) m_animSate->TransitionTo("Walk");
+    if (m_time >= 15.f) m_animSate->TransitionTo("Idle");
+
+    m_animSate->OnFrameBegin(deltaTime);
     m_object->Update(deltaTime, desc);
 
     for (auto& obj: m_objects)
     {
         obj->Update(deltaTime, desc);
     }
-    m_anim->OnFrameEnd();
+    m_animSate->OnFrameEnd();
 }
 
 void pixel_game::Application::Release()

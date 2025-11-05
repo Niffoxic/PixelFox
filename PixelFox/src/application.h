@@ -4,6 +4,7 @@
 
 #include "pixel_engine/render_manager/objects/quad/quad.h"
 #include "pixel_engine/render_manager/components/animator/anim.h"
+#include "pixel_engine/render_manager/components/animator/anim_state.h"
 
 namespace pixel_game
 {
@@ -37,7 +38,7 @@ namespace pixel_game
 		std::unique_ptr<pixel_engine::QuadObject> m_object;
 		fox::vector<std::unique_ptr<pixel_engine::QuadObject>> m_objects;
 
-		std::unique_ptr<pixel_engine::TileAnim> m_anim{ nullptr };
+		std::unique_ptr<pixel_engine::AnimSateMachine> m_animSate{ nullptr };
 
 		float m_time{ 0.0f };
 	};

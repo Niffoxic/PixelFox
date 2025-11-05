@@ -16,7 +16,7 @@
 #include "fox_math/vector.h"
 
 #include "pixel_engine/core/interface/interface_singleton.h"
-#include "pixel_engine/render_manager/components/texture/texture.h"
+#include "pixel_engine/render_manager/components/texture/resource/texture.h"
 
 namespace pixel_engine
 {

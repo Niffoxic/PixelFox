@@ -20,7 +20,7 @@
 
 #pragma comment(lib, "WindowsCodecs.lib")
 
-#include "pixel_engine/render_manager/components/texture/texture.h"
+#include "pixel_engine/render_manager/components/texture/resource/texture.h"
 #include "pixel_engine/exceptions/win_exception.h"
 
 _Use_decl_annotations_

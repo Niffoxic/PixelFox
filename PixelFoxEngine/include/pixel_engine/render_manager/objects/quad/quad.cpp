@@ -12,7 +12,9 @@
 #include "pch.h"
 #include "quad.h"
 
-#include "pixel_engine/render_manager/components/texture/texture_resource.h"
+#include "pixel_engine/render_manager/components/texture/allocator/texture_resource.h"
+#include "pixel_engine/utilities/logger/logger.h"
+
 using namespace pixel_engine;
 
 _Use_decl_annotations_

@@ -21,7 +21,7 @@
 #include <sal.h>
 
 #include "pixel_engine/render_manager/components/camera/camera.h"
-#include "pixel_engine/render_manager/components/texture/texture.h"
+#include "pixel_engine/render_manager/components/texture/resource/texture.h"
 
 namespace pixel_engine
 {

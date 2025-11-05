@@ -18,24 +18,17 @@
 
 #include "pixel_engine/utilities/logger/logger.h"
 #include "pixel_engine/core/interface/interface_singleton.h"
+#include "pixel_engine/render_manager/components/texture/resource/texture.h"
 
-#include "texture.h"
-
-namespace pixel_engine 
+namespace pixel_engine
 {
-	/// <summary>
-	/// Texture Resource Caches and returns a pointer to the resource
-	/// </summary>
-	class PFE_API TextureResource final: public ISingleton<TextureResource>
+	class PFE_API PNGLoader final: public ISingleton<PNGLoader>
 	{
-		friend class ISingleton<TextureResource>;
+		friend class ISingleton<PNGLoader>;
 	public:
-		TextureResource() = default;
+		PNGLoader() = default;
 
 		_NODISCARD _Check_return_ _Success_(return != nullptr)
-		Texture* LoadTexture(_In_ const std::string& path);
-
-	private:
-		fox::unordered_map<std::string, std::unique_ptr<Texture>> m_cacheTextures{};
+		std::unique_ptr<Texture> LoadTexture(_In_ const std::string& path);
 	};
-} // pixel_engine
+} // namespace pixel_engine

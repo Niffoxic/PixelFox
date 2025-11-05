@@ -1,3 +1,14 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #pragma once
 
 #include "PixelFoxEngineAPI.h"
@@ -16,10 +27,10 @@ namespace pixel_engine
 		~TileAnim() override = default;
 
 		TileAnim(const TileAnim&) = default;
-		TileAnim(TileAnim&&)      = default;
+		TileAnim(TileAnim&&) = default;
 
 		TileAnim& operator=(const TileAnim&) = default;
-		TileAnim& operator=(TileAnim&&)   = default;
+		TileAnim& operator=(TileAnim&&) = default;
 
 		//~ Frame Object Interface Impl
 		_NODISCARD _Check_return_
@@ -30,7 +41,7 @@ namespace pixel_engine
 		bool Release   () override { return true; }
 
 		void OnFrameBegin(_In_ float deltaTime) override;
-		void OnFrameEnd() override;
+		void OnFrameEnd  () override;
 
 		void Build(); // after configuring TileAnim
 		void EnableLoop(bool loop);
@@ -47,9 +58,9 @@ namespace pixel_engine
 		void PrepareAnimation();
 
 	private:
-		bool	   m_bBuilt	   { false };
+		bool	   m_bBuilt{ false };
 		PEISprite* m_pSpriteBody{ nullptr };
-		
+
 		struct FrameInformation
 		{
 			std::string filepath;
@@ -57,20 +68,20 @@ namespace pixel_engine
 		};
 		fox::vector<FrameInformation> m_ppFrameInformations{};
 
-		struct FrameData 
+		struct FrameData
 		{
 			FrameInformation info;
-			Texture*    rawTexture;
+			Texture* sampledTexture;
 		};
 		fox::vector<FrameData> m_ppFrames{};
 
 		struct AnimState
 		{
-			float cycleDuration { 1.0f };
-			float TotalTime     { 0.0f };
-			int   currentFrame  { 0 };
-			bool  playing	    { true };
-			bool  shouldLoop    { true };
+			float cycleDuration{ 1.0f };
+			float TotalTime{ 0.0f };
+			int   currentFrame{ 0 };
+			bool  playing{ true };
+			bool  shouldLoop{ true };
 			bool  cycleCompleted{ false };
 		} m_AnimState;
 	};
