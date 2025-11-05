@@ -42,7 +42,7 @@ void pixel_game::Application::BeginPlay()
 
     m_font = std::make_unique<pixel_engine::PEFont>();
     m_font->SetPosition({ 200, 100 });
-    m_font->SetText("Harsh");
+    m_font->SetText("I Love programming");
 
     pixel_engine::PERenderQueue::Instance().AddFont(m_font.get());
     pixel_engine::PERenderQueue::Instance().AddSprite(m_object.get());

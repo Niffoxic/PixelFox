@@ -1,3 +1,15 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+
 #include "pch.h"
 #include "font.h"
 
@@ -11,20 +23,33 @@ void pixel_engine::PEFont::SetText(const std::string& text)
 	m_text = text;
 	m_ppFontTextures.clear();
 
-	auto textures = FontGenerator::Instance().GetGlyphs(text);
+	auto& fg = FontGenerator::Instance();
 
+	auto tex			    = fg.GetGlyph('A');
+	int width			    = tex->GetWidth();
 	FVector2D startPosition = m_position;
 
-	for (auto* tex : textures)
+	float lastWidth = 0.0f;
+
+	for (char c : text)
 	{
+		if (c == ' ')
+		{
+			const float base = (lastWidth > 0.0f) ? lastWidth : width;
+			startPosition.x += base * 0.5f;
+			continue;
+		}
+
+		Texture* tex = fg.GetGlyph(c);
 		if (!tex) continue;
 
 		FONT_POSITION fp{};
-		fp.startPosition = startPosition;
+		fp.startPosition  = startPosition;
 		fp.sampledTexture = tex;
-
 		m_ppFontTextures.push_back(fp);
-		startPosition.x += tex->GetWidth();
+
+		lastWidth = static_cast<float>(tex->GetWidth());
+		startPosition.x += lastWidth;
 	}
 }
 
@@ -36,7 +61,7 @@ std::string pixel_engine::PEFont::GetText() const
 void pixel_engine::PEFont::SetPosition(const FVector2D& pos)
 {
 	FVector2D delta = pos - m_position;
-	m_position		= pos;
+	m_position = pos;
 
 	for (auto& fp : m_ppFontTextures)
 		fp.startPosition += delta;

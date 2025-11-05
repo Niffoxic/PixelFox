@@ -1,5 +1,15 @@
-#include "pch.h"
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+
+/*
+ *  -----------------------------------------------------------------------------
+ *  Project   : PixelFox (WMG Warwick - Module 1)
+ *  Author    : Niffoxic (a.k.a Harsh Dubey)
+ *  License   : MIT
+ *  -----------------------------------------------------------------------------
+ */
+#include "pch.h"
 #include "font_allocator.h"
 
 using namespace pixel_engine;
@@ -8,9 +18,9 @@ FontGenerator::FontGenerator()
 {
 	PFE_CREATE_TILE_SET_FROM_SLICE slice{};
 	slice.tileFilePath = "assets/font.png";
-	slice.tileSize = 32;
-	slice.sliceWidth = 8;
-	slice.sliceHeight = 8;
+	slice.tileSize    = 32;
+	slice.sliceWidth  = 32;
+	slice.sliceHeight = 32;
 	slice.scaledBy = { 1, 1 };
 
 	m_tileSet = TileSetAllocator::Instance().BuildTexture(slice);
@@ -20,7 +30,10 @@ FontGenerator::FontGenerator()
 		return;
 	}
 
-	SetGlyphOrder("abcdefghijklmnopqrstuvwxyz0123456789");
+	static constexpr const char* kGlyphs =
+		R"(!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~)";
+
+	SetGlyphOrder(kGlyphs);
 	logger::debug("FontGenerator initialized successfully with {} glyphs", static_cast<int>(m_fonts.size()));
 }
 
@@ -29,10 +42,9 @@ Texture* FontGenerator::GetGlyph(char c)
 {
 	if (!m_tileSet) return nullptr;
 
-	char lower = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-	if (!m_fonts.contains(lower)) return nullptr;
+	if (!m_fonts.contains(c)) return nullptr;
 
-	return m_tileSet->GetSlice(m_fonts[lower]);
+	return m_tileSet->GetSlice(m_fonts[c]);
 }
 
 _Use_decl_annotations_
