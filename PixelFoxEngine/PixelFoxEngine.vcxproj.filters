@@ -144,6 +144,9 @@
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -222,6 +225,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\core\event\event_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

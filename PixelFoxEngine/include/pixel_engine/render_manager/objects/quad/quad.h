@@ -46,6 +46,7 @@ namespace pixel_engine
         void SetScale   (_In_ float sx, _In_ float sy) override;
         void SetPivot   (_In_ float px, _In_ float py) override;
         void SetTexture (_In_ const std::string& path) override;
+        void SetTexture (_Inout_ Texture* rawTexture) override;
 
         _NODISCARD _Check_return_ FVector2D GetPosition() const override;
         _NODISCARD _Check_return_ float     GetRotation() const override;

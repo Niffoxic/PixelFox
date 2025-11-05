@@ -79,6 +79,7 @@ void QuadObject::SetScale(float sx, float sy)
 {
     m_transform.Scale.x = sx;
     m_transform.Scale.y = sy;
+    m_bResampleNeeded = true;
     MarkDirty(true);
 }
 
@@ -101,6 +102,13 @@ void pixel_engine::QuadObject::SetTexture(const std::string& path)
         return;
     }
     m_szTexturePath = path;
+    m_bResampleNeeded = true;
+}
+
+void pixel_engine::QuadObject::SetTexture(Texture* rawTexture)
+{
+    m_pTexture = rawTexture;
+    m_bResampleNeeded = true;
 }
 
 _Use_decl_annotations_

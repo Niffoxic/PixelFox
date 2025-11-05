@@ -31,7 +31,7 @@ void pixel_game::Application::BeginPlay()
     T.Rotation = 0.0f;
     m_object->SetTransform(T);
 
-    m_object->SetTexture("assets/sprites/A.png");
+    m_object->SetTexture("assets/sprites/test.png");
     
     pixel_engine::PERenderQueue::Instance().AddSprite(m_object.get());
 
@@ -55,6 +55,18 @@ void pixel_game::Application::BeginPlay()
         pixel_engine::PERenderQueue::Instance().AddSprite(obj.get());
         m_objects.push_back(std::move(obj));
     }
+
+    m_anim = std::make_unique<pixel_engine::TileAnim>(m_object.get());
+
+    for (int i = 0; i < 40; i++)
+    {
+        std::string prefix = "female_idle0";
+        if (i <= 9) prefix += "0" + std::to_string(i);
+        else prefix += std::to_string(i);
+        prefix += ".png";
+        m_anim->AddFrame("assets/sprites/female/" + prefix);
+    }
+    m_anim->Build();
 }
 
 void pixel_game::Application::Tick(float deltaTime)
@@ -70,12 +82,14 @@ void pixel_game::Application::Tick(float deltaTime)
     desc.X1      = cam->WorldToCamera({ 1.0f, 0.0f }, 32);
     desc.Y1      = cam->WorldToCamera({ 0.0f, 1.0f }, 32);
 
+    m_anim->OnFrameBegin(deltaTime);
     m_object->Update(deltaTime, desc);
 
     for (auto& obj: m_objects)
     {
         obj->Update(deltaTime, desc);
     }
+    m_anim->OnFrameEnd();
 }
 
 void pixel_game::Application::Release()
