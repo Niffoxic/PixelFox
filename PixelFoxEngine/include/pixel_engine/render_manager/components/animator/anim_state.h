@@ -47,9 +47,19 @@ namespace pixel_engine
             const std::string& stateName,
             const std::string& path);
 
+        /// <summary>
+        /// Extracts all .png files from the dir for building frame
+        /// Must be seprated by '_' like name_index.png
+        /// </summary>
+        void AddFrameFromDir(
+            const std::string& stateName,
+            const std::string& dirPath
+        );
+
         void SetInitialState(const std::string& name);
         void TransitionTo   (const std::string& name);
 
+        TileAnim* GetTileAnim(const std::string& name);
         const std::string& GetCurrentState () const;
         const std::string& GetPreviousState() const;
         bool IsInState(const std::string& name) const;
@@ -72,4 +82,5 @@ namespace pixel_engine
         std::string m_szCurrentState;
         std::string m_szPreviousState;
 	};
+
 } // namespace pixel_engine

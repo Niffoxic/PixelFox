@@ -5,6 +5,7 @@
 #include "pixel_engine/render_manager/objects/quad/quad.h"
 #include "pixel_engine/render_manager/components/animator/anim.h"
 #include "pixel_engine/render_manager/components/animator/anim_state.h"
+#include "pixel_engine/render_manager/components/font/font.h"
 
 namespace pixel_game
 {
@@ -35,6 +36,7 @@ namespace pixel_game
 		static constexpr float kSpeedBase = 4.7f;
 		static constexpr float kRotSpeed = 0.75f;
 
+		std::unique_ptr<pixel_engine::PEFont> m_font;
 		std::unique_ptr<pixel_engine::QuadObject> m_object;
 		fox::vector<std::unique_ptr<pixel_engine::QuadObject>> m_objects;
 

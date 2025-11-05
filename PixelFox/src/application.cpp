@@ -6,6 +6,8 @@
 #include "pixel_engine/render_manager/components/texture/allocator/texture_resource.h"
 #include "pixel_engine/render_manager/components/texture/allocator/tileset_allocator.h"
 
+#include "pixel_engine/render_manager/components/font/font_allocator.h"
+
 _Use_decl_annotations_
 pixel_game::Application::Application(
 	pixel_engine::PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
@@ -23,76 +25,32 @@ bool pixel_game::Application::InitApplication(pixel_engine::PIXEL_ENGINE_INIT_DE
 
 void pixel_game::Application::BeginPlay()
 {
-    constexpr int TilePx = 32;
 
     m_object = std::make_unique<pixel_engine::QuadObject>();
     m_object->Initialize();
-    m_object->SetLayer(pixel_engine::ELayer::Background);
+    m_object->SetLayer(pixel_engine::ELayer::Font);
     FTransform2D T{};
     T.Position = { 0, 0 };
-    T.Scale    = { 50, 50 };
+    T.Scale    = { 1, 1 };
     T.Rotation = 0.0f;
     m_object->SetTransform(T);
 
-    m_object->SetTexture("assets/sprites/test.png");
-    
+    pixel_engine::Texture* tex = pixel_engine::FontGenerator
+        ::Instance().GetGlyph('J');
+
+    m_object->SetTexture(tex);
+
+    m_font = std::make_unique<pixel_engine::PEFont>();
+    m_font->SetPosition({ 200, 100 });
+    m_font->SetText("Harsh");
+
+    pixel_engine::PERenderQueue::Instance().AddFont(m_font.get());
     pixel_engine::PERenderQueue::Instance().AddSprite(m_object.get());
-
-    for (int i = 0; i < 400; i++)
-    {
-        auto obj = std::make_unique<pixel_engine::QuadObject>();
-        obj->Initialize();
-        obj->SetLayer(pixel_engine::ELayer::Obstacles);
-
-        int y = (i / 40) - 20;
-        int x = (i % 40) - 20;
-        FTransform2D res;
-        res.Position.x = static_cast<float>(x);
-        res.Position.y = static_cast<float>(y);
-        res.Scale = { 1.f, 1.f };
-        res.Rotation = 0.0f;
-        obj->SetTransform(res);
-        obj->SetLayer(pixel_engine::ELayer::Obstacles);
-        obj->SetTexture("assets/sprites/A.png");
-
-        pixel_engine::PERenderQueue::Instance().AddSprite(obj.get());
-        m_objects.push_back(std::move(obj));
-    }
-
-    m_animSate = std::make_unique<pixel_engine::AnimSateMachine>(m_object.get());
-    m_animSate->AddState("Idle");
-    m_animSate->AddState("Walk");
-
-    for (int i = 0; i < 40; i++)
-    {
-        std::string prefix = "female_idle0";
-        if (i <= 9) prefix += "0" + std::to_string(i);
-        else prefix += std::to_string(i);
-        prefix += ".png";
-        std::string path = "assets/sprites/female/idle/" + prefix;
-
-        m_animSate->AddFrame("Idle", path);
-    }
-
-    //~ walk test female_walk_0
-    for (int i = 0; i < 8; i++)
-    {
-        std::string prefix = "female_walk_" + std::to_string(i);
-        prefix += ".png";
-        std::string path = "assets/sprites/female/walk/" + prefix;
-
-        m_animSate->AddFrame("Walk", path);
-    }
-
-    m_animSate->SetInitialState("Idle");
-
-    m_animSate->Initialize();
 }
 
 void pixel_game::Application::Tick(float deltaTime)
 {
     m_time += deltaTime;
-    const float dRot = kRotSpeed * deltaTime;
 
     auto cam = pixel_engine::PERenderQueue::Instance().GetCamera();
     
@@ -102,17 +60,7 @@ void pixel_game::Application::Tick(float deltaTime)
     desc.X1      = cam->WorldToCamera({ 1.0f, 0.0f }, 32);
     desc.Y1      = cam->WorldToCamera({ 0.0f, 1.0f }, 32);
 
-    if (m_time >= 5.f && m_time <= 10.f) m_animSate->TransitionTo("Walk");
-    if (m_time >= 15.f) m_animSate->TransitionTo("Idle");
-
-    m_animSate->OnFrameBegin(deltaTime);
     m_object->Update(deltaTime, desc);
-
-    for (auto& obj: m_objects)
-    {
-        obj->Update(deltaTime, desc);
-    }
-    m_animSate->OnFrameEnd();
 }
 
 void pixel_game::Application::Release()

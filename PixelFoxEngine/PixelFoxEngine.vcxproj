@@ -177,6 +177,8 @@
     <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim_state.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\camera\camera.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font_allocator.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\png_loader\png_loader.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\resource\tileset.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\tileset_allocator.h" />
@@ -217,6 +219,8 @@
     <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim_state.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\camera\camera.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font_allocator.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\png_loader\png_loader.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\resource\tileset.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\tileset_allocator.cpp" />

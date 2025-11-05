@@ -14,6 +14,7 @@
 
 #include "pixel_engine/render_manager/api/raster/raster.h"
 #include "sampler/sample_allocator.h"
+#include "pixel_engine/utilities/logger/logger.h"
 
 #include <algorithm>
 
@@ -21,10 +22,10 @@ using namespace pixel_engine;
 
 _Use_decl_annotations_
 PERenderQueue::PERenderQueue(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc)
-    :   m_nScreenHeight(desc.ScreenHeight),
-        m_nScreenWidth (desc.ScreenWidth),
-        m_pCamera      (desc.pCamera),
-        m_nTilePx      (desc.TilePx)
+    : m_nScreenHeight(desc.ScreenHeight),
+    m_nScreenWidth(desc.ScreenWidth),
+    m_pCamera(desc.pCamera),
+    m_nTilePx(desc.TilePx)
 {
     m_nTileStep = 1.f / static_cast<float>(m_nTilePx);
     CreateCulling2D(desc);
@@ -53,6 +54,7 @@ void PERenderQueue::Render(PERaster2D* pRaster)
     }
         
     RenderSprite(pRaster);
+    RenderFont(pRaster);
 }
 
 bool PERenderQueue::AddSprite(PEISprite* sprite)
@@ -81,6 +83,33 @@ bool PERenderQueue::RemoveSprite(UniqueId id)
     std::unique_lock lock(m_mutex);
     const auto erased = m_mapSprites.erase(id);
     if (erased) m_bDirtySprite.store(true, std::memory_order_release);
+    return erased != 0;
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PERenderQueue::AddFont(PEFont* font)
+{
+    if (!font) return false;
+    const UniqueId id = font->GetInstanceID();
+
+    std::unique_lock lock(m_mutex);
+    if (m_mapSprites.contains(font->GetInstanceID())) return false;
+
+    m_mapFonts[font->GetInstanceID()] = font;
+    return true;
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PERenderQueue::RemoveFont(PEFont* font)
+{
+    return font ? RemoveFont(font->GetInstanceID()) : false;
+}
+
+_Use_decl_annotations_
+bool pixel_engine::PERenderQueue::RemoveFont(UniqueId id)
+{
+    std::unique_lock lock(m_mutex);
+    const auto erased = m_mapFonts.erase(id);
     return erased != 0;
 }
 
@@ -207,6 +236,48 @@ void PERenderQueue::BuildSpriteInOrder()
     });
 
     m_ppSortedSprites.swap(local);
+}
+
+_Use_decl_annotations_
+void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
+{
+    if (!pRaster || m_mapFonts.empty()) return;
+
+    for (const auto& kv : m_mapFonts)
+    {
+        PEFont* font = kv.second;
+        if (!font) continue;
+
+        const auto& fontTextures = font->GetFontTextures();
+        if (fontTextures.empty()) continue;
+
+        for (const auto& glyph : fontTextures)
+        {
+            Texture* tex = glyph.sampledTexture;
+            if (!tex) continue;
+
+            FVector2D pos = glyph.startPosition;
+
+            const int drawWidth  = static_cast<int>(tex->GetWidth());
+            const int drawHeight = static_cast<int>(tex->GetHeight());
+
+            PFE_RASTER_DRAW_CMD cmd
+            {
+                .startBase = pos,
+                .deltaAxisU = FVector2D(1, 0),
+                .deltaAxisV = FVector2D(0, 1),
+                .columnStartFrom = 0,
+                .columneEndAt = drawWidth,
+                .rowStartFrom = 0,
+                .rowEndAt = drawHeight,
+                .totalColumns = drawWidth,
+                .totalRows = drawHeight,
+                .sampledTexture = tex,
+                .color = {255, 255, 255},
+            };
+            pRaster->DrawQuadTile(cmd);
+        }
+    }
 }
 
 _Use_decl_annotations_

@@ -156,6 +156,12 @@
     <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font_allocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -246,6 +252,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font_allocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

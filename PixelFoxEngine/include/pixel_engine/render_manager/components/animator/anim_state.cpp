@@ -11,6 +11,11 @@
 
 #include "pch.h"
 #include "anim_state.h"
+#include "core/vector.h"
+
+#include <filesystem>
+#include <string>
+#include <algorithm>
 
 using namespace pixel_engine;
 
@@ -63,6 +68,34 @@ void pixel_engine::AnimSateMachine::AddFrame(const std::string& stateName, const
 	m_states[stateName]->AddFrame(path);
 }
 
+void pixel_engine::AnimSateMachine::AddFrameFromDir(
+	const std::string& stateName,
+	const std::string& dirPath
+) 
+{
+	if (!m_states.contains(stateName)) AddState(stateName);
+
+	std::vector<std::filesystem::path> files;
+	for (const auto& entry : std::filesystem::directory_iterator(dirPath))
+	{
+		const auto& p = entry.path();
+		if (p.extension() == ".png") files.push_back(p);
+	}
+
+	std::sort(files.begin(), files.end(), [](const std::filesystem::path& a, const std::filesystem::path& b)
+	{
+		auto get_index = [](const std::filesystem::path& p)
+		{
+			const auto name = p.stem().string();
+			const auto pos = name.find_last_of('_');
+			return (pos != std::string::npos) ? std::stoi(name.substr(pos + 1)) : 0;
+		};
+		return get_index(a) < get_index(b);
+	});
+
+	for (const auto& file : files) AddFrame(stateName, file.string());
+}
+
 void pixel_engine::AnimSateMachine::SetInitialState(const std::string& name)
 {
 	if (!m_states.contains(name)) return;
@@ -100,6 +133,12 @@ void pixel_engine::AnimSateMachine::TransitionTo(const std::string& name)
 			m_fnOnEnterCallbacks[name]();
 		}
 	}
+}
+
+TileAnim* pixel_engine::AnimSateMachine::GetTileAnim(const std::string& name)
+{
+	if (m_states.contains(name)) return m_states[name].get();
+	return nullptr;
 }
 
 const std::string& pixel_engine::AnimSateMachine::GetCurrentState() const
