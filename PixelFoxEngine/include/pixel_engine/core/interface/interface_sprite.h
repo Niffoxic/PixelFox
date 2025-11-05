@@ -85,6 +85,7 @@ namespace pixel_engine
 		virtual void SetScale   (_In_ float sx, _In_ float sy) = 0;
 		virtual void SetPivot   (_In_ float px, _In_ float py) = 0;
 		virtual void SetTexture (_In_ const std::string& path) = 0;
+		virtual void SetTexture (_Inout_ Texture* rawTexture)  = 0;
 
 		_NODISCARD _Check_return_
 		virtual FVector2D GetPosition() const	 = 0;
@@ -131,8 +132,10 @@ namespace pixel_engine
 		_NODISCARD _Check_return_
 		Texture* GetSampledTexture() const { return m_pSampledTexture; }
 
-	private:
+	protected:
 		bool	 m_bResampleNeeded{ true };
+
+	private:
 		Texture* m_pSampledTexture{ nullptr };
 
 		mutable bool m_bDirty{ true };

@@ -8,7 +8,7 @@ only render onto a texture on the CPU, then upload that texture to the GPU and d
 No engines, no frameworks: every system is built manually from scratch.
 
 ## Output
-![Game Output](docs/output_4.gif)
+![Game Output](docs/output_5.gif)
 
 ## Structure
 - **PixelFoxEngine**: handles rendering, input, and timing  
