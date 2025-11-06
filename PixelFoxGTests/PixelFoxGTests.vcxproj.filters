@@ -41,5 +41,8 @@
     <Filter Include="tests\math">
       <UniqueIdentifier>{5ec3ad38-c3d6-4a97-b16e-5fde3acd0c71}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tests\physics">
+      <UniqueIdentifier>{88df61e3-03e5-4502-82e0-44260e3a2ee8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

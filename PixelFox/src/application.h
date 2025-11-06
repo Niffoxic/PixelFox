@@ -38,6 +38,7 @@ namespace pixel_game
 
 		std::unique_ptr<pixel_engine::PEFont> m_font;
 		std::unique_ptr<pixel_engine::QuadObject> m_object;
+		std::unique_ptr<pixel_engine::QuadObject> m_object1;
 		fox::vector<std::unique_ptr<pixel_engine::QuadObject>> m_objects;
 
 		std::unique_ptr<pixel_engine::AnimSateMachine> m_animSate{ nullptr };

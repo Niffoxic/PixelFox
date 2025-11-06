@@ -14,6 +14,7 @@
 
 #include "pixel_engine/core/event/event_windows.h"
 #include "pixel_engine/utilities/logger/logger.h"
+#include "pixel_engine/physics_manager/physics_queue.h"
 
 _Use_decl_annotations_
 pixel_engine::PERenderManager::PERenderManager(
@@ -41,6 +42,8 @@ bool pixel_engine::PERenderManager::Initialize()
     if (not InitializeCamera2D()) return false;
     if (not InitializeRenderAPI()) return false;
     
+    PhysicsQueue::Instance().Initialize(m_pCamera.get());
+
     logger::success(pixel_engine::logger_config::LogCategory::Render,
         "initialized RenderManager");
 
@@ -73,10 +76,12 @@ void pixel_engine::PERenderManager::OnFrameBegin(float deltaTime)
 {
     HandleCameraInput(deltaTime);
     m_pCamera->OnFrameBegin(deltaTime);
+    PhysicsQueue::Instance().FrameBegin(deltaTime);
 }
 
 void pixel_engine::PERenderManager::OnFrameEnd()
 {
+    PhysicsQueue::Instance().FrameEnd();
     m_pCamera->OnFrameEnd();
 
     if (m_pRenderAPI)

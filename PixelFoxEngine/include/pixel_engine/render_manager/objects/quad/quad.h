@@ -82,9 +82,9 @@ namespace pixel_engine
     private:
         std::string  m_szTexturePath{};
         Texture*     m_pTexture     { nullptr };
-        FTransform2D m_transform    {};
         bool         m_visible      { true };
         ELayer       m_layer        { ELayer::Obstacles };
+        FVector2D    m_scale{ 1.f, 1.f };
 
         //~ relative to the camera
         FVector2D m_ObjectCameraAxisU       {};
