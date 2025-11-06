@@ -12,7 +12,9 @@
 #include "pch.h"
 #include "quad.h"
 
-#include "pixel_engine/render_manager/components/texture/texture_resource.h"
+#include "pixel_engine/render_manager/components/texture/allocator/texture_resource.h"
+#include "pixel_engine/utilities/logger/logger.h"
+
 using namespace pixel_engine;
 
 _Use_decl_annotations_
@@ -43,42 +45,41 @@ void QuadObject::Update(float deltaTime, const PFE_WORLD_SPACE_DESC& space)
 _Use_decl_annotations_
 void QuadObject::SetTransform(const FTransform2D& t)
 {
-    m_transform = t;
+    m_pRigidBody2D->SetTransform(t);
     MarkDirty(true);
 }
 
 _Use_decl_annotations_
 const FTransform2D& QuadObject::GetTransform() const
 {
-    return m_transform;
+    return m_pRigidBody2D->GetTransform();
 }
 
 _Use_decl_annotations_
 FMatrix2DAffine QuadObject::GetAffineMatrix() const
 {
-    return m_transform.ToMatrix();
+    return GetTransform().ToMatrix();
 }
 
 _Use_decl_annotations_
 void QuadObject::SetPosition(float x, float y)
 {
-    m_transform.Position.x = x;
-    m_transform.Position.y = y;
+    m_pRigidBody2D->SetPosition({ x, y });
     MarkDirty(true);
 }
 
 _Use_decl_annotations_
 void QuadObject::SetRotation(float radians)
 {
-    m_transform.Rotation = radians;
+    m_pRigidBody2D->SetRotation(radians);
     MarkDirty(true);
 }
 
 _Use_decl_annotations_
 void QuadObject::SetScale(float sx, float sy)
 {
-    m_transform.Scale.x = sx;
-    m_transform.Scale.y = sy;
+    m_scale.x = sx;
+    m_scale.y = sy;
     m_bResampleNeeded = true;
     MarkDirty(true);
 }
@@ -86,9 +87,8 @@ void QuadObject::SetScale(float sx, float sy)
 _Use_decl_annotations_
 void QuadObject::SetPivot(float px, float py)
 {
-    m_transform.Pivot.x = px;
-    m_transform.Pivot.y = py;
-    MarkDirty(true);
+    // TODO: Create a pivot
+    // MarkDirty(true);
 }
 
 _Use_decl_annotations_
@@ -105,6 +105,7 @@ void pixel_engine::QuadObject::SetTexture(const std::string& path)
     m_bResampleNeeded = true;
 }
 
+_Use_decl_annotations_
 void pixel_engine::QuadObject::SetTexture(Texture* rawTexture)
 {
     m_pTexture = rawTexture;
@@ -114,25 +115,25 @@ void pixel_engine::QuadObject::SetTexture(Texture* rawTexture)
 _Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetPosition() const
 {
-    return m_transform.Position;
+    return m_pRigidBody2D->GetPosition();
 }
 
 _Use_decl_annotations_
 float QuadObject::GetRotation() const
 {
-    return m_transform.Rotation;
+    return m_pRigidBody2D->GetRotation();
 }
 
 _Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetScale() const
 {
-    return m_transform.Scale;
+    return m_scale;
 }
 
 _Use_decl_annotations_
 fox_math::Vector2D<float> QuadObject::GetPivot() const
 {
-    return m_transform.Pivot;
+    return {0 ,0};
 }
 
 _Use_decl_annotations_
@@ -187,23 +188,25 @@ _Use_decl_annotations_
 void pixel_engine::QuadObject::UpdateObjectToCameraSpace(const PFE_WORLD_SPACE_DESC& cameraView)
 {
     FVector2D CamUx
-    { cameraView.X1.x - cameraView.Origin.x,
-      cameraView.X1.y - cameraView.Origin.y };
+    {
+        cameraView.X1.x - cameraView.Origin.x,
+        cameraView.X1.y - cameraView.Origin.y
+    };
+    FVector2D CamUy{
+        cameraView.Y1.x - cameraView.Origin.x,
+        cameraView.Y1.y - cameraView.Origin.y
+    };
 
-    FVector2D CamUy
-    {   cameraView.Y1.x - cameraView.Origin.x,
-        cameraView.Y1.y - cameraView.Origin.y };
+    auto matrix = m_pRigidBody2D->GetTransform().ToMatrix().matrix;
+    const float a  = matrix[0][0];
+    const float b  = matrix[0][1];
+    const float tx = matrix[0][2];
+    const float c  = matrix[1][0];
+    const float d  = matrix[1][1];
+    const float ty = matrix[1][2];
 
-    auto matrix    = m_transform.ToMatrix().matrix;
-    const float a  = matrix[0][0]; // scaling x direction with cos theta
-    const float b  = matrix[0][1]; // -sin theta rotation
-    const float tx = matrix[0][2]; // translation x
-    const float c  = matrix[1][0]; // sin theta
-    const float d  = matrix[1][1]; // scalling y direction with cos theta
-    const float ty = matrix[1][2]; // transation y
-
-    const FVector2D u_local     { a, c };
-    const FVector2D v_local     { b, d };
+    const FVector2D u_local{ a, c };
+    const FVector2D v_local{ b, d };
     const FVector2D center_local{ tx, ty };
 
     m_ObjectCameraAxisU.x = u_local.x * CamUx.x + u_local.y * CamUy.x;
@@ -212,10 +215,6 @@ void pixel_engine::QuadObject::UpdateObjectToCameraSpace(const PFE_WORLD_SPACE_D
     m_ObjectCameraAxisV.x = v_local.x * CamUx.x + v_local.y * CamUy.x;
     m_ObjectCameraAxisV.y = v_local.x * CamUx.y + v_local.y * CamUy.y;
 
-    m_ObjectCameraViewPosition.x = cameraView.Origin.x +
-        center_local.x *
-        CamUx.x + center_local.y * CamUy.x;
-
-    m_ObjectCameraViewPosition.y = cameraView.Origin.y + center_local.x
-        * CamUx.y + center_local.y * CamUy.y;
+    m_ObjectCameraViewPosition.x = cameraView.Origin.x + center_local.x * CamUx.x + center_local.y * CamUy.x;
+    m_ObjectCameraViewPosition.y = cameraView.Origin.y + center_local.x * CamUx.y + center_local.y * CamUy.y;
 }

@@ -44,7 +44,6 @@ void pixel_engine::Camera2D::OnFrameEnd()
 {
 }
 
-_Use_decl_annotations_
 void pixel_engine::Camera2D::SetPosition(const FVector2D& position) noexcept
 {
     m_transformCamera.Position = position;

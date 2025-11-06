@@ -15,6 +15,7 @@
 
 #include "pixel_engine/core/interface/interface_singleton.h"
 #include "pixel_engine/render_manager/components/camera/camera.h"
+#include "pixel_engine/render_manager/components/font/font.h"
 #include "pixel_engine/utilities/id_allocator.h"
 #include "pixel_engine/core/interface/interface_sprite.h"
 #include "pixel_engine/render_manager/api/culling/culling.h"
@@ -64,9 +65,14 @@ namespace pixel_engine
 		bool RemoveSprite(_Inout_ PEISprite* sprite);
 		bool RemoveSprite(_In_ UniqueId id);
 
+		bool AddFont   (_Inout_ PEFont* font);
+		bool RemoveFont(_Inout_ PEFont* font);
+		bool RemoveFont(_In_ UniqueId id);
+
 	private:
 		PERenderQueue() = default;
 
+		//~ Render Sprite
 		void CreateCulling2D(_In_ const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc);
 		
 		void BuildDiscreteGrid(
@@ -77,6 +83,9 @@ namespace pixel_engine
 
 		void RenderSprite	   (_Inout_ PERaster2D* pRaster);
 		void BuildSpriteInOrder();
+
+		//~ Render Font
+		void RenderFont(_Inout_ PERaster2D* pRaster);
 
 		//~ Helpers
 		float Det2(
@@ -105,6 +114,7 @@ namespace pixel_engine
 		int   m_nTilePx  {};
 		float m_nTileStep{};
 
+		//~ Render Sprite
 		fox::unordered_map<UniqueId, PEISprite*> m_mapSprites{};
 		fox::vector<PEISprite*>					 m_ppSortedSprites{};
 		
@@ -114,5 +124,8 @@ namespace pixel_engine
 		Camera2D*		  m_pCamera		 { nullptr };
 
 		mutable std::shared_mutex m_mutex;
+
+		//~ Render Font
+		fox::unordered_map<UniqueId, PEFont*> m_mapFonts{};
 	};
 } // namespace pixel_engine

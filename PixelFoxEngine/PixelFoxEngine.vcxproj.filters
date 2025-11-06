@@ -123,13 +123,13 @@
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\render_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\texture_resource.h">
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\texture_resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\texture.h">
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\resource\texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.h">
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\png_loader\png_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\bilinear\bilinear_sampler.h">
@@ -145,6 +145,36 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\resource\tileset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\tileset_allocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font_allocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\collider\box_collider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\collider\contact.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\resolver\resolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\rigid_body\rigid_body.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -203,13 +233,13 @@
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\render_queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\texture_resource.cpp">
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\texture_resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.cpp">
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\png_loader\png_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\texture.cpp">
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\resource\texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\sampler\bilinear\bilinear_sampler.cpp">
@@ -228,6 +258,33 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\resource\tileset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\tileset_allocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font_allocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_api\collider\box_collider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_api\resolver\resolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_api\rigid_body\rigid_body.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

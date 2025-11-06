@@ -15,7 +15,7 @@
 #include <memory>
 
 #include "pixel_engine/render_manager/api/buffer/image.h"
-#include "pixel_engine/render_manager/components/texture/texture.h"
+#include "pixel_engine/render_manager/components/texture/resource/texture.h"
 #include "pixel_engine/core/types.h"
 
 #include "fox_math/transform.h"

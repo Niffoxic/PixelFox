@@ -109,9 +109,12 @@ void pixel_engine::PERaster2D::DrawQuadTile(const PFE_RASTER_DRAW_CMD& cmd)
 
             if (IsBounded(ix, iy))
             {
-                m_pImageBuffer->WriteAt(
-                    iy, ix,
-                    cmd.sampledTexture->GetPixel(i, j));
+                auto color = cmd.sampledTexture->GetPixel(i, j);
+                
+                if (!color.IsBlack())
+                {
+                    m_pImageBuffer->WriteAt(iy, ix, color);
+                }
             }
 
             p.x += cmd.deltaAxisU.x;

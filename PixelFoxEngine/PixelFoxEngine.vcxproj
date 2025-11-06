@@ -168,6 +168,11 @@
     <ClInclude Include="include\pixel_engine\core\interface\interface_sprite.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_light.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_text.h" />
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\collider\box_collider.h" />
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\collider\contact.h" />
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\resolver\resolver.h" />
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_api\rigid_body\rigid_body.h" />
+    <ClInclude Include="include\pixel_engine\physics_manager\physics_queue.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\buffer\image.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\culling\culling.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\raster\raster.h" />
@@ -175,10 +180,15 @@
     <ClInclude Include="include\pixel_engine\render_manager\api\raster\task\raster_task.h" />
     <ClInclude Include="include\pixel_engine\render_manager\api\render_api.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\animator\anim_state.h" />
     <ClInclude Include="include\pixel_engine\render_manager\components\camera\camera.h" />
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\font\font_allocator.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\png_loader\png_loader.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\resource\tileset.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\tileset_allocator.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\bilinear\bilinear_sampler.h" />
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\texture.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\resource\texture.h" />
     <ClInclude Include="include\pixel_engine\render_manager\objects\quad\quad.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_defines.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.h" />
@@ -198,13 +208,17 @@
     <ClInclude Include="PixelFoxEngineAPI.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_manager.h" />
     <ClInclude Include="include\pixel_engine\core\service\service_locator.h" />
-    <ClInclude Include="include\pixel_engine\render_manager\components\texture\texture_resource.h" />
+    <ClInclude Include="include\pixel_engine\render_manager\components\texture\allocator\texture_resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="include\pixel_engine\core\dependency\dependency_resolver.cpp" />
     <ClCompile Include="include\pixel_engine\core\event\event_queue.cpp" />
     <ClCompile Include="include\pixel_engine\core\service\service_locator.cpp" />
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_api\collider\box_collider.cpp" />
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_api\resolver\resolver.cpp" />
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_api\rigid_body\rigid_body.cpp" />
+    <ClCompile Include="include\pixel_engine\physics_manager\physics_queue.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\buffer\image.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\culling\culling.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\raster\raster.cpp" />
@@ -212,10 +226,15 @@
     <ClCompile Include="include\pixel_engine\render_manager\api\raster\task\raster_task.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\api\render_api.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\animator\anim_state.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\components\camera\camera.cpp" />
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\png_loader\png_loader.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\font\font_allocator.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\png_loader\png_loader.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\resource\tileset.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\tileset_allocator.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\sampler\bilinear\bilinear_sampler.cpp" />
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\texture.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\resource\texture.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\objects\quad\quad.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\render_queue.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.cpp" />
@@ -232,7 +251,7 @@
     <ClCompile Include="include\pixel_engine\PixelEngine.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\windows_manager.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\render_manager.cpp" />
-    <ClCompile Include="include\pixel_engine\render_manager\components\texture\texture_resource.cpp" />
+    <ClCompile Include="include\pixel_engine\render_manager\components\texture\allocator\texture_resource.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

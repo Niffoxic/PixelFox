@@ -71,6 +71,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>PixelFoxMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>call "$(ProjectDir)PixelFoxTestsBuildEvent.bat" "$(TargetDir)" "$(Configuration)" "$(Platform)" "$(SolutionDir)" "$(ProjectDir)"
@@ -109,6 +110,7 @@
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalDependencies>PixelFoxMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>call "$(ProjectDir)PixelFoxTestsBuildEvent.bat" "$(TargetDir)" "$(Configuration)" "$(Platform)" "$(SolutionDir)" "$(ProjectDir)"

@@ -21,7 +21,10 @@
 #include <sal.h>
 
 #include "pixel_engine/render_manager/components/camera/camera.h"
-#include "pixel_engine/render_manager/components/texture/texture.h"
+#include "pixel_engine/render_manager/components/texture/resource/texture.h"
+
+#include "pixel_engine/physics_manager/physics_api/rigid_body/rigid_body.h"
+#include "pixel_engine/physics_manager/physics_api/collider/box_collider.h"
 
 namespace pixel_engine
 {
@@ -31,7 +34,8 @@ namespace pixel_engine
 		Obstacles	= 1,
 		Npc_Deco	= 2,
 		Npc_AI		= 3,
-		Player		= 10
+		Player		= 4,
+		Font        = 5
 	};
 
 	typedef struct _PFE_WORLD_SPACE_DESC
@@ -49,7 +53,10 @@ namespace pixel_engine
 	{
 	public:
 		PEISprite() : m_idAllocated(IDAllocator<PEISprite>::AllocateID())
-		{}
+		{
+			m_pRigidBody2D = std::make_unique<RigidBody2D>();
+			m_pCollider    = std::make_unique<BoxCollider>(m_pRigidBody2D.get());
+		}
 
 		virtual ~PEISprite() = default;
 
@@ -129,11 +136,23 @@ namespace pixel_engine
 			m_bResampleNeeded = false;
 		}
 
+		RigidBody2D* GetRigidBody2D() const
+		{
+			return m_pRigidBody2D.get();
+		}
+
+		BoxCollider* GetCollider() const
+		{
+			return m_pCollider.get();
+		}
+
 		_NODISCARD _Check_return_
 		Texture* GetSampledTexture() const { return m_pSampledTexture; }
 
 	protected:
-		bool	 m_bResampleNeeded{ true };
+		bool					     m_bResampleNeeded{ true };
+		std::unique_ptr<RigidBody2D> m_pRigidBody2D{ nullptr };
+		std::unique_ptr<BoxCollider> m_pCollider  { nullptr };
 
 	private:
 		Texture* m_pSampledTexture{ nullptr };

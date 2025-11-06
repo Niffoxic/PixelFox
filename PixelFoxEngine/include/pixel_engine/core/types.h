@@ -42,6 +42,12 @@ namespace pixel_engine
 		PFE_FORMAT_R8_UINT R;
 		PFE_FORMAT_R8_UINT G;
 		PFE_FORMAT_R8_UINT B;
+
+		bool IsBlack() const
+		{
+			return R.Value <= 10 && G.Value <= 10 && B.Value <= 10;
+		}
+
 	} PFE_FORMAT_R8G8B8_UINT;
 
 	typedef struct _PE_IMAGE_BUFFER_DESC
