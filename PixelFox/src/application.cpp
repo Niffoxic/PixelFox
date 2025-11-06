@@ -44,12 +44,22 @@ void pixel_game::Application::BeginPlay()
 	m_object_1->SetTexture("assets/sprites/player/idle_left/left_0.png");
 
 	pixel_engine::PhysicsQueue::Instance().AddObject(m_object_1.get());
+
+	//~ init enemy
+	PG_ENEMY_SPAWN desc{};
+	desc.SpawnPoint = { 5, 5 };
+	desc.Target = m_player.GetPlayerBody();
+	m_enemy.Initialize(desc);
+
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy.GetBody());
 }
 
 void pixel_game::Application::Tick(float deltaTime)
 {    
 	m_player.HandleInput(&m_pWindowsManager->Keyboard, deltaTime);
+	
 	m_player.Update(deltaTime);
+	m_enemy.Update(deltaTime);
 }
 
 void pixel_game::Application::Release()

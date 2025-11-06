@@ -3,6 +3,7 @@
 #include "pixel_engine/PixelEngine.h"
 
 #include "player/player.h"
+#include "enemy/test_enemy.h"
 
 #include "pixel_engine/render_manager/objects/quad/quad.h"
 
@@ -27,6 +28,8 @@ namespace pixel_game
 
 	private:
 		PlayerCharacter m_player{};
+		TestEnemy m_enemy{};
+
 		pixel_engine::Camera2D* m_pCamera2D{ nullptr };
 
 		std::unique_ptr<pixel_engine::QuadObject> m_object{ nullptr };
