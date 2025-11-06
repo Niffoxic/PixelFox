@@ -34,8 +34,9 @@ namespace pixel_engine
 		Obstacles	= 1,
 		Npc_Deco	= 2,
 		Npc_AI		= 3,
-		Player		= 4,
-		Font        = 5
+		Projectile	= 4,
+		Player		= 5,
+		Font        = 6
 	};
 
 	typedef struct _PFE_WORLD_SPACE_DESC

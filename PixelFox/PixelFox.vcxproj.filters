@@ -24,10 +24,19 @@
     <ClCompile Include="src\player\player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ai\chase_ai.cpp">
+    <ClCompile Include="src\ai\controller\chase\chase_ai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\enemy\test_enemy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ai\controller\turret\turrent_ai.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\enemy\test_turret.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,16 +50,31 @@
     <ClInclude Include="src\player\player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ai\interface_controller.h">
+    <ClInclude Include="src\ai\controller\interface_controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\world\events\player_events.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ai\chase_ai.h">
+    <ClInclude Include="src\ai\controller\chase\chase_ai.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\enemy\test_enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ai\controller\turret\turret_ai.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ai\projectile\interface_projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ai\projectile\straight\straight_projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\GameWorld.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\enemy\test_turret.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

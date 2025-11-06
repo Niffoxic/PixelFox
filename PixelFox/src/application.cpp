@@ -47,11 +47,18 @@ void pixel_game::Application::BeginPlay()
 
 	//~ init enemy
 	PG_ENEMY_SPAWN desc{};
-	desc.SpawnPoint = { 5, 5 };
+	desc.SpawnPoint = { 15, 15 };
 	desc.Target = m_player.GetPlayerBody();
 	m_enemy.Initialize(desc);
 
 	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy.GetBody());
+
+	//~ init turrent
+	PG_ENEMY_SPAWN_TEST test{};
+	test.SpawnPoint = { 10, 10 };
+	test.Target = m_player.GetPlayerBody();
+	m_turrent.Initialize(test);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_turrent.GetBody());
 }
 
 void pixel_game::Application::Tick(float deltaTime)
@@ -60,6 +67,7 @@ void pixel_game::Application::Tick(float deltaTime)
 	
 	m_player.Update(deltaTime);
 	m_enemy.Update(deltaTime);
+	m_turrent.Update(deltaTime);
 }
 
 void pixel_game::Application::Release()

@@ -20,19 +20,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\ai\chase_ai.cpp" />
+    <ClCompile Include="src\ai\controller\chase\chase_ai.cpp" />
+    <ClCompile Include="src\ai\controller\turret\turrent_ai.cpp" />
+    <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp" />
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\enemy\test_enemy.cpp" />
+    <ClCompile Include="src\enemy\test_turret.cpp" />
     <ClCompile Include="src\player\player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\ai\chase_ai.h" />
-    <ClInclude Include="src\ai\interface_controller.h" />
+    <ClInclude Include="src\ai\controller\chase\chase_ai.h" />
+    <ClInclude Include="src\ai\controller\interface_controller.h" />
+    <ClInclude Include="src\ai\controller\turret\turret_ai.h" />
+    <ClInclude Include="src\ai\projectile\interface_projectile.h" />
+    <ClInclude Include="src\ai\projectile\straight\straight_projectile.h" />
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\enemy\test_enemy.h" />
+    <ClInclude Include="src\enemy\test_turret.h" />
     <ClInclude Include="src\player\player.h" />
     <ClInclude Include="src\world\events\player_events.h" />
+    <ClInclude Include="src\world\GameWorld.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PixelFox.rc" />

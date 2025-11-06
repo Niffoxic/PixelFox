@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ai/chase_ai.h"
+#include "ai/controller/chase/chase_ai.h"
 
 #include "pixel_engine/render_manager/render_queue/render_queue.h"
 #include "pixel_engine/render_manager/components/animator/anim_state.h"

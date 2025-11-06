@@ -4,6 +4,7 @@
 
 #include "player/player.h"
 #include "enemy/test_enemy.h"
+#include "enemy/test_turret.h"
 
 #include "pixel_engine/render_manager/objects/quad/quad.h"
 
@@ -27,8 +28,9 @@ namespace pixel_game
 		void Release  ()				override;
 
 	private:
-		PlayerCharacter m_player{};
-		TestEnemy m_enemy{};
+		TestEnemyTurrent m_turrent{};
+		PlayerCharacter  m_player{};
+		TestEnemy	     m_enemy{};
 
 		pixel_engine::Camera2D* m_pCamera2D{ nullptr };
 
