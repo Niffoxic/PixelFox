@@ -13,6 +13,7 @@
 #include "PixelFoxEngineAPI.h"
 
 #include "pixel_engine/core/interface/interface_frame.h"
+#include "pixel_engine/core/interface/interface_sprite.h"
 #include "pixel_engine/core/types.h"
 
 #include "fox_math/matrix.h"
@@ -62,8 +63,10 @@ namespace pixel_engine
             _In_ const FVector2D& pWorld,
             _In_ const uint32_t& tile) const noexcept;
         
-    private:
-        //~ State
+        //~ follow player
+        void FollowSprite(PEISprite* sprite);
+
+        PEISprite* m_pFollowSprite{ nullptr };
         FTransform2D m_transformCamera{};
     };
 } // pixel_engine

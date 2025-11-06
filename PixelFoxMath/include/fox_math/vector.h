@@ -173,6 +173,18 @@ namespace fox_math
             }
         }
 
+        _NODISCARD _CONSTEXPR20
+        Vector2D SafeNormalized(_In_ T eps = static_cast<T>(1e-12)) const noexcept
+        {
+            const T lenSq = LengthSq();
+            
+            if (lenSq <= eps) return Vector2D{};
+            
+            const T inv = static_cast<T>(1) / static_cast<T>(std::sqrt(lenSq));
+            
+            return { x * inv, y * inv };
+        }
+
         //~ Perpendiculars
         _Check_return_ _NODISCARD
         _CONSTEXPR20 Vector2D PerpendicularCCW() const noexcept

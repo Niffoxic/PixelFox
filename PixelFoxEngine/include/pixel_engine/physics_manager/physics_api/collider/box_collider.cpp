@@ -147,6 +147,9 @@ void pixel_engine::BoxCollider::AddCallback(const ON_HIT_CALLBACK& callback)
     }
 }
 
+void BoxCollider::SetScale(const FVector2D& scale) { m_scale = scale; }
+FVector2D BoxCollider::GetScale() const { return m_scale; }
+
 void BoxCollider::SetOffset(const FVector2D& offset) { m_offset = offset; }
 FVector2D BoxCollider::GetOffset() const { return m_offset; }
 

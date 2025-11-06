@@ -26,99 +26,48 @@ bool pixel_game::Application::InitApplication(pixel_engine::PIXEL_ENGINE_INIT_DE
 
 void pixel_game::Application::BeginPlay()
 {
-    //~ font
-    m_font = std::make_unique<pixel_engine::PEFont>();
-    m_font->SetPosition({ 200, 100 });
-    m_font->SetText("I Love programming");
+	m_player.Initialize();
+	
+	m_pCamera2D = pixel_engine::PERenderQueue::Instance().GetCamera();
+	m_pCamera2D->FollowSprite(m_player.GetPlayerBody());
 
-    pixel_engine::PERenderQueue::Instance().AddFont(m_font.get());
+	m_object = std::make_unique<pixel_engine::QuadObject>();
+	m_object->SetPosition(-5, 0);
+	m_object->SetScale(5, 5);
+	m_object->SetTexture("assets/sprites/player/idle_left/left_0.png");
 
-    //~ object 1
-    m_object = std::make_unique<pixel_engine::QuadObject>();
-    m_object->Initialize();
-    m_object->SetLayer(pixel_engine::ELayer::Font);
-    FTransform2D T{};
-    T.Position = { -5, 0 };
-    T.Scale    = { 1, 1 };
-    T.Rotation = 0.0f;
-    m_object->SetTransform(T);
-    m_object->GetCollider()
-        ->SetColliderType(pixel_engine::ColliderType::Dynamic);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_object.get());
 
-    pixel_engine::Texture* tex = pixel_engine::FontGenerator
-        ::Instance().GetGlyph('J');
+	m_object_1 = std::make_unique<pixel_engine::QuadObject>();
+	m_object_1->SetPosition(5, 0);
+	m_object_1->SetScale(3, 3);
+	m_object_1->SetTexture("assets/sprites/player/idle_left/left_0.png");
 
-    m_object->SetTexture(tex);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_object_1.get());
 
-    pixel_engine::PhysicsQueue::Instance().AddObject(m_object.get());
+	//~ init enemy
+	PG_ENEMY_SPAWN desc{};
+	desc.SpawnPoint = { 15, 15 };
+	desc.Target = m_player.GetPlayerBody();
+	m_enemy.Initialize(desc);
 
-    //~ Object 2
-    m_object1 = std::make_unique<pixel_engine::QuadObject>();
-    m_object1->Initialize();
-    m_object1->SetLayer(pixel_engine::ELayer::Font);
-    T.Position = { 5, 0 };
-    T.Scale    = { 1, 1 };
-    T.Rotation = 0.0f;
-    m_object1->SetTransform(T);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy.GetBody());
 
-    tex = pixel_engine::FontGenerator::Instance().GetGlyph('O');
-
-    m_object1->SetTexture(tex);
-    m_object1->GetCollider()
-        ->SetColliderType(pixel_engine::ColliderType::Static);
-
-    pixel_engine::PhysicsQueue::Instance().AddObject(m_object1.get());
-
-    //~ callback test
-    pixel_engine::ON_HIT_CALLBACK callback{};
-    callback.m_fnOnTriggerEnter = [&]()
-    {
-        m_object1->GetRigidBody2D()->SetVelocity({ 0.f, 0.f });
-        pixel_engine::logger::debug("I Got hit!!");
-    };
-    callback.m_fnOnTriggerExit = []()
-    {
-        pixel_engine::logger::debug("left the body");
-    };
-    callback.target = m_object->GetCollider();
-
-    m_object1->GetCollider()->AddCallback(callback);
-    m_object1->GetRigidBody2D()->SetLinearDamping(0.6f);
-    m_object1->GetCollider()->AttachTag("Enemy");
-    m_object->GetRigidBody2D()->SetLinearDamping(0.6f);
-
-    m_object->GetCollider()->SetOnHitEnterCallback(
-    [](pixel_engine::BoxCollider* collider)
-    {
-        if (collider->HasTag("EnemyA"))
-        pixel_engine::logger::debug("Enemy Hurting me");
-        else pixel_engine::logger::debug("Unknown tag");
-    });
-
-    m_object->GetCollider()->SetOnHitExitCallback(
-    [](pixel_engine::BoxCollider* collider)
-    {
-        if (collider->HasTag("EnemyA"))
-        pixel_engine::logger::debug("Enemy stopped Hurting me");
-        else pixel_engine::logger::debug("Unknown tag");
-    });
+	//~ init turrent
+	PG_ENEMY_SPAWN_TEST test{};
+	test.SpawnPoint = { 10, 10 };
+	test.Target = m_player.GetPlayerBody();
+	m_turrent.Initialize(test);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_turrent.GetBody());
 }
 
 void pixel_game::Application::Tick(float deltaTime)
 {    
-    m_time += deltaTime;
-    static bool once = false;
-    static bool bounce = false;
-    if (m_time >= 6.f && not once)
-    {
-        m_object->GetRigidBody2D()->AddVelocity({ 13.f, 0 });
-        once = true;
-    }
-    if (once && m_time >= 10.f && not bounce)
-    {
-        bounce = true;
-        m_object->GetRigidBody2D()->AddVelocity({ -15.f, 0 });
-    }
+	m_player.HandleInput(&m_pWindowsManager->Keyboard, deltaTime);
+	
+	m_player.Update(deltaTime);
+	m_enemy.Update(deltaTime);
+	m_turrent.Update(deltaTime);
 }
 
 void pixel_game::Application::Release()

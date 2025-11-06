@@ -68,12 +68,13 @@ namespace pixel_engine
 		void SetManagerDependency();
 		void SubscribeToEvents	 ();
 
+	protected:
+		std::unique_ptr<GameClock>		  m_pClock{ nullptr };
+		std::unique_ptr<PEWindowsManager> m_pWindowsManager{ nullptr };
+		std::unique_ptr<PERenderManager>  m_pRenderManager{ nullptr };
+
 	private:
 		bool			   m_bEnginePaused	  { false };
 		DependencyResolver m_dependecyResolver{};
-
-		std::unique_ptr<GameClock>		  m_pClock		   { nullptr };
-		std::unique_ptr<PEWindowsManager> m_pWindowsManager{ nullptr };
-		std::unique_ptr<PERenderManager>  m_pRenderManager { nullptr };
 	};
 } // namespace pixel_engine

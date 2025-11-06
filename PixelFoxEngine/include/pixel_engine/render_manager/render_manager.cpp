@@ -74,7 +74,6 @@ bool pixel_engine::PERenderManager::Release()
 _Use_decl_annotations_
 void pixel_engine::PERenderManager::OnFrameBegin(float deltaTime)
 {
-    HandleCameraInput(deltaTime);
     m_pCamera->OnFrameBegin(deltaTime);
     PhysicsQueue::Instance().FrameBegin(deltaTime);
 }
@@ -216,43 +215,4 @@ void pixel_engine::PERenderManager::SafeCloseEvent_(HANDLE& h)
         logger::error("Failed to Close Handle!");
     }
     h = nullptr;
-}
-
-void pixel_engine::PERenderManager::HandleCameraInput(float deltaTime)
-{
-    auto& kb = m_pWindowsManager->Keyboard;
-
-    // === INPUT ===
-    const float moveSpeed = 100.f, rotSpeed = 1.5f, zoomRate = 2.0f;
-    const float minZoom = 0.1f, maxZoom = 2000.f;
-
-    const float ang = m_pCamera->GetRotation();
-    const float cc = std::cos(ang), sc = std::sin(ang);
-    const FVector2D forward{ sc, -cc }; // +Y up in world
-    const FVector2D right{ cc,  sc };
-
-    FVector2D pan{ 0.f,0.f };
-    if (kb.IsKeyPressed('W')) { pan.x -= forward.x * moveSpeed * deltaTime; pan.y -= forward.y * moveSpeed * deltaTime; }
-    if (kb.IsKeyPressed('S')) { pan.x += forward.x * moveSpeed * deltaTime; pan.y += forward.y * moveSpeed * deltaTime; }
-    if (kb.IsKeyPressed('D')) { pan.x -= right.x * moveSpeed * deltaTime; pan.y -= right.y * moveSpeed * deltaTime; }
-    if (kb.IsKeyPressed('A')) { pan.x += right.x * moveSpeed * deltaTime; pan.y += right.y * moveSpeed * deltaTime; }
-    if (pan.x || pan.y)
-    {
-        m_pCamera->AddPosition(pan);
-    }
-
-    if (kb.IsKeyPressed('Q')) m_pCamera->SetRotation(
-        m_pCamera->GetRotation() - rotSpeed * deltaTime);
-    if (kb.IsKeyPressed('E')) m_pCamera->SetRotation(m_pCamera->GetRotation() + rotSpeed * deltaTime);
-
-    float z = m_pCamera->GetScale().x;
-    bool zc = false;
-    
-    if (kb.IsKeyPressed(VK_UP))  { z *= std::exp(zoomRate * deltaTime); zc = true; }
-    if (kb.IsKeyPressed(VK_DOWN)) { z *= std::exp(-zoomRate * deltaTime); zc = true; }
-    if (zc)
-    {
-        float val = std::clamp(z, minZoom, maxZoom);
-        m_pCamera->SetScale({val, val});
-    }
 }

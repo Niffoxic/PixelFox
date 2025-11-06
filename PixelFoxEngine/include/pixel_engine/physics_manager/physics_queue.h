@@ -21,6 +21,8 @@ namespace pixel_engine
 		bool FrameEnd ();
 		void OnRelease();
 
+		void UpdateSprite(float deltaTime, const PFE_WORLD_SPACE_DESC& desc);
+
 		bool AddObject   (PEISprite* sprite);
 		bool RemoveObject(PEISprite* sprite);
 		bool RemoveObject(UniqueId id);
