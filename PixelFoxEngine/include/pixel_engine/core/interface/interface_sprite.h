@@ -20,7 +20,6 @@
 #include <string>
 #include <sal.h>
 
-#include "pixel_engine/render_manager/components/camera/camera.h"
 #include "pixel_engine/render_manager/components/texture/resource/texture.h"
 
 #include "pixel_engine/physics_manager/physics_api/rigid_body/rigid_body.h"
@@ -28,6 +27,7 @@
 
 namespace pixel_engine
 {
+	class Camera2D;
 	enum class PFE_API ELayer
 	{
 		Background	= 0,

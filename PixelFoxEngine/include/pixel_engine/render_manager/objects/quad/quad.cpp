@@ -14,6 +14,7 @@
 
 #include "pixel_engine/render_manager/components/texture/allocator/texture_resource.h"
 #include "pixel_engine/utilities/logger/logger.h"
+#include "pixel_engine/render_manager/components/camera/camera.h"
 
 using namespace pixel_engine;
 
@@ -80,6 +81,7 @@ void QuadObject::SetScale(float sx, float sy)
 {
     m_scale.x = sx;
     m_scale.y = sy;
+    m_pRigidBody2D->m_transform.Scale = m_scale;
     m_bResampleNeeded = true;
     MarkDirty(true);
 }

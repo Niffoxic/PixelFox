@@ -51,9 +51,6 @@ namespace pixel_engine
 		//~ Helpers
 		void SafeCloseEvent_(HANDLE& h);
 
-		//~ tests
-		void HandleCameraInput(float deltaTime);
-
 	private:
 		PEWindowsManager*	  m_pWindowsManager { nullptr };
 		GameClock*			  m_pClock			{ nullptr };

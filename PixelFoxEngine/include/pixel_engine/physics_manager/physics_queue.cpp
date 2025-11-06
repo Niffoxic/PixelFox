@@ -27,15 +27,15 @@ bool pixel_engine::PhysicsQueue::FrameBegin(float delatTime)
 {
     pixel_engine::PFE_WORLD_SPACE_DESC desc{};
     desc.pCamera = m_pCamera;
-    desc.Origin  = m_pCamera->WorldToCamera({ 0.0f, 0.0f }, 32);
+    desc.Origin  = m_pCamera->WorldToCamera({ 0, 0 }, 32);
     desc.X1      = m_pCamera->WorldToCamera({ 1.0f, 0.0f }, 32);
     desc.Y1      = m_pCamera->WorldToCamera({ 0.0f, 1.0f }, 32);
 
     fox::vector<BoxCollider*> colliders;
     for (const auto& obj : m_sprites)
-    {
+    {        
         obj.second->Update(delatTime, desc);
-        
+
         if (auto* rigidBody = obj.second->GetRigidBody2D())
         {
             rigidBody->Integrate(delatTime);
@@ -83,6 +83,14 @@ bool pixel_engine::PhysicsQueue::FrameEnd()
 void pixel_engine::PhysicsQueue::OnRelease()
 {
     Clear();
+}
+
+void pixel_engine::PhysicsQueue::UpdateSprite(float deltaTime, const pixel_engine::PFE_WORLD_SPACE_DESC& desc)
+{
+    for (const auto& obj : m_sprites)
+    {
+        obj.second->Update(deltaTime, desc);
+    }
 }
 
 bool pixel_engine::PhysicsQueue::AddObject(PEISprite* sprite)

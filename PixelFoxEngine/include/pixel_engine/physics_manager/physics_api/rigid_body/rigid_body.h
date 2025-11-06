@@ -62,10 +62,6 @@ namespace pixel_engine
 		void SetLinearDamping(float d);
 		void SetAngularDamping(float d);
 
-	private:
-		void ClearAccumulators();
-
-	private:
 		FTransform2D m_transform{};
 		FVector2D    m_velocity{};
 		FVector2D    m_acceleration{};
@@ -75,5 +71,9 @@ namespace pixel_engine
 		float		 m_angularDamping{ 0.0f };
 		FVector2D	 m_forceAcc{};
 		float		 m_torqueAcc{ 0.0f };
+
+	private:
+		void ClearAccumulators();
+
 	};
 } // namespace fox_physics

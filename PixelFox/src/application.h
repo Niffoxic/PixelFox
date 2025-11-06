@@ -2,10 +2,9 @@
 
 #include "pixel_engine/PixelEngine.h"
 
+#include "player/player.h"
+
 #include "pixel_engine/render_manager/objects/quad/quad.h"
-#include "pixel_engine/render_manager/components/animator/anim.h"
-#include "pixel_engine/render_manager/components/animator/anim_state.h"
-#include "pixel_engine/render_manager/components/font/font.h"
 
 namespace pixel_game
 {
@@ -27,22 +26,11 @@ namespace pixel_game
 		void Release  ()				override;
 
 	private:
+		PlayerCharacter m_player{};
+		pixel_engine::Camera2D* m_pCamera2D{ nullptr };
 
-		//~ tests
-		static constexpr int   kTilePx = 32;
-		static constexpr float kUnitW = 1.0f;
-		static constexpr float kUnitH = 1.0f;
-		static constexpr float kAmpBase = 1.5f;
-		static constexpr float kSpeedBase = 4.7f;
-		static constexpr float kRotSpeed = 0.75f;
-
-		std::unique_ptr<pixel_engine::PEFont> m_font;
-		std::unique_ptr<pixel_engine::QuadObject> m_object;
-		std::unique_ptr<pixel_engine::QuadObject> m_object1;
-		fox::vector<std::unique_ptr<pixel_engine::QuadObject>> m_objects;
-
-		std::unique_ptr<pixel_engine::AnimSateMachine> m_animSate{ nullptr };
-
-		float m_time{ 0.0f };
+		std::unique_ptr<pixel_engine::QuadObject> m_object{ nullptr };
+		std::unique_ptr<pixel_engine::QuadObject> m_object_1{ nullptr };
+		
 	};
 } // namespace pixel_game

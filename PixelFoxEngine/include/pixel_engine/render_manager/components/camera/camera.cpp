@@ -38,6 +38,21 @@ bool pixel_engine::Camera2D::Release()
 _Use_decl_annotations_
 void pixel_engine::Camera2D::OnFrameBegin(float deltaTime)
 {
+    if (m_pFollowSprite && deltaTime > 0.0f)
+    {
+        const FVector2D targetPos = m_pFollowSprite->GetPosition();
+
+        constexpr float stiffness = 10.0f;
+        const float alpha = 1.0f - std::exp(-stiffness * deltaTime);
+
+        const FVector2D delta = FVector2D
+        {
+            targetPos.x - m_transformCamera.Position.x,
+            targetPos.y - m_transformCamera.Position.y
+        };
+        m_transformCamera.Position.x += delta.x * alpha;
+        m_transformCamera.Position.y += delta.y * alpha;
+    }
 }
 
 void pixel_engine::Camera2D::OnFrameEnd()
@@ -105,11 +120,38 @@ const FTransform2D& pixel_engine::Camera2D::GetTransform() const noexcept
 
 _Use_decl_annotations_
 FVector2D pixel_engine::Camera2D::WorldToCamera(
-    const FVector2D & pWorld,
+    const FVector2D& pWorld,
     const uint32_t& tile) const noexcept
 {
-    FVector2D vec = m_transformCamera.ToMatrix().TransformPoint(pWorld);
-    vec.x *= tile;
-    vec.y *= tile;
-    return vec;
+    FVector2D rel
+    {
+        pWorld.x - m_transformCamera.Position.x,
+        pWorld.y - m_transformCamera.Position.y
+    };
+
+    const float r = -m_transformCamera.Rotation;
+    const float cs = std::cos(r);
+    const float sn = std::sin(r);
+
+    FVector2D v
+    {
+        rel.x * cs - rel.y * sn,
+        rel.x * sn + rel.y * cs
+    };
+
+    v.x *= (m_transformCamera.Scale.x * static_cast<float>(tile));
+    v.y *= (m_transformCamera.Scale.y * static_cast<float>(tile));
+
+    return v;
+}
+
+void pixel_engine::Camera2D::FollowSprite(PEISprite* sprite)
+{
+    m_pFollowSprite = sprite;
+
+    if (m_pFollowSprite)
+    {
+        const FVector2D targetPos = m_pFollowSprite->GetPosition();
+        m_transformCamera.Position = targetPos;
+    }
 }
