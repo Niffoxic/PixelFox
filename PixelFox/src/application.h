@@ -5,7 +5,7 @@
 #include "player/player.h"
 #include "enemy/goblin/enemy_goblin.h"
 
-#include "pixel_engine/render_manager/objects/quad/quad.h"
+#include "world/enemy_manager/enemy_manager.h"
 
 namespace pixel_game
 {
@@ -28,12 +28,10 @@ namespace pixel_game
 
 	private:
 		PlayerCharacter  m_player{};
-		EnemyGoblin		 m_enemy {};
+		EnemyGoblin		 m_goblin{};
+		std::unique_ptr<IEnemy> m_enemy{ nullptr };
+		std::unique_ptr<EnemySpawner> m_spawner{ nullptr };
 
 		pixel_engine::Camera2D* m_pCamera2D{ nullptr };
-
-		std::unique_ptr<pixel_engine::QuadObject> m_object{ nullptr };
-		std::unique_ptr<pixel_engine::QuadObject> m_object_1{ nullptr };
-		
 	};
 } // namespace pixel_game

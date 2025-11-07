@@ -23,6 +23,9 @@ namespace pixel_game
 		virtual void Update    (_In_ float deltaTime)			     = 0;
 		virtual void Release   ()									 = 0;
 		
+		virtual void SetTypeName(const std::string& name) = 0;
+		virtual std::string GetTypeName() const = 0;
+
 		virtual bool						   IsActive	   () const = 0;
 		virtual pixel_engine::PEISprite*       GetBody     () const = 0;
 		virtual pixel_engine::AnimSateMachine* GetAnimState() const = 0;

@@ -1,6 +1,5 @@
 #include "enemy_goblin.h"
 
-#include "pixel_engine/physics_manager/physics_queue.h"
 #include "pixel_engine/utilities/logger/logger.h"
 
 #include "world/events/projectile_events.h"
@@ -19,8 +18,6 @@ bool pixel_game::EnemyGoblin::Initialize(const PG_ENEMY_INIT_DESC& desc)
     InitCollisionCallback();
     AddColliderTags      ();
 
-    pixel_engine::PhysicsQueue::Instance().AddObject(m_pBody.get());
-
     return true;
 }
 
@@ -35,11 +32,6 @@ void pixel_game::EnemyGoblin::Release()
 {
     m_bActive = false;
     m_pTarget = nullptr;
-
-    if (m_pBody)
-    {
-        pixel_engine::PhysicsQueue::Instance().RemoveObject(m_pBody.get());
-    }
 
     m_pBody      .reset();
     m_pAnimState .reset();
@@ -109,6 +101,7 @@ bool pixel_game::EnemyGoblin::InitEnemyBody(const PG_ENEMY_INIT_DESC& desc)
     m_pBody->SetPosition(desc.SpawnPoint);
     m_pBody->SetLayer(pixel_engine::ELayer::Npc_AI);
     m_pBody->SetVisible(true);
+    m_pBody->GetCollider()->SetColliderType(pixel_engine::ColliderType::Dynamic);
 
     std::string idle = m_szBaseFile + "Idle/idle_left/00.png";
     m_pBody->SetTexture(idle);
@@ -120,47 +113,44 @@ bool pixel_game::EnemyGoblin::InitEnemyAnimStateMachine()
 {
     m_pAnimState = std::make_unique<pixel_engine::AnimSateMachine>(m_pBody.get());
 
-    using pixel_game::CharacterState;
-    using pixel_game::ToString;
-
     //~ Idle
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_LEFT), m_szBaseFile + "Idle/idle_left/");
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_RIGHT), m_szBaseFile + "Idle/idle_right/");
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_UP), m_szBaseFile + "Idle/idle_left/");    
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_DOWN), m_szBaseFile + "Idle/idle_right/");    
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_UP_LEFT), m_szBaseFile + "Idle/idle_left/");    
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_UP_RIGHT), m_szBaseFile + "Idle/idle_right/");     
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_DOWN_LEFT), m_szBaseFile + "Idle/idle_left/");   
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_DOWN_RIGHT), m_szBaseFile + "Idle/idle_right/");     
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_UP), m_szBaseFile + "Idle/idle_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_DOWN), m_szBaseFile + "Idle/idle_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_UP_LEFT), m_szBaseFile + "Idle/idle_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_UP_RIGHT), m_szBaseFile + "Idle/idle_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_DOWN_LEFT), m_szBaseFile + "Idle/idle_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::IDLE_DOWN_RIGHT), m_szBaseFile + "Idle/idle_right/");
 
     //~ Attack
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_LEFT), m_szBaseFile + "Attacking/attacking_left/");
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_RIGHT), m_szBaseFile + "Attacking/attacking_right/");
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_UP), m_szBaseFile + "Attacking/attacking_left/");   
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_DOWN), m_szBaseFile + "Attacking/attacking_right/");  
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_UP_LEFT), m_szBaseFile + "Attacking/attacking_left/"); 
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_UP_RIGHT), m_szBaseFile + "Attacking/attacking_right/");  
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_DOWN_LEFT), m_szBaseFile + "Attacking/attacking_left/");  
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_DOWN_RIGHT), m_szBaseFile + "Attacking/attacking_right/");  
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_UP), m_szBaseFile + "Attacking/attacking_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_DOWN), m_szBaseFile + "Attacking/attacking_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_UP_LEFT), m_szBaseFile + "Attacking/attacking_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_UP_RIGHT), m_szBaseFile + "Attacking/attacking_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_DOWN_LEFT), m_szBaseFile + "Attacking/attacking_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::ATTACK1_DOWN_RIGHT), m_szBaseFile + "Attacking/attacking_right/");
 
     //~ Die
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_LEFT), m_szBaseFile + "Dying/dying_left/");
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_RIGHT), m_szBaseFile + "Dying/dying_right/");
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_UP), m_szBaseFile + "Dying/dying_left/");    
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_DOWN), m_szBaseFile + "Dying/dying_right/");    
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_UP_LEFT), m_szBaseFile + "Dying/dying_left/");     
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_UP_RIGHT), m_szBaseFile + "Dying/dying_right/");  
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_DOWN_LEFT), m_szBaseFile + "Dying/dying_left/");  
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_DOWN_RIGHT), m_szBaseFile + "Dying/dying_right/");  
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_UP), m_szBaseFile + "Dying/dying_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_DOWN), m_szBaseFile + "Dying/dying_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_UP_LEFT), m_szBaseFile + "Dying/dying_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_UP_RIGHT), m_szBaseFile + "Dying/dying_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_DOWN_LEFT), m_szBaseFile + "Dying/dying_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::DIE_DOWN_RIGHT), m_szBaseFile + "Dying/dying_right/");
 
     //~ Hurt
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_LEFT), m_szBaseFile + "Hurt/hurt_left/");
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_RIGHT), m_szBaseFile + "Hurt/hurt_right/");
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_UP), m_szBaseFile + "Hurt/hurt_left/");      
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_DOWN), m_szBaseFile + "Hurt/hurt_right/");    
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_UP_LEFT), m_szBaseFile + "Hurt/hurt_left/");     
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_UP_RIGHT), m_szBaseFile + "Hurt/hurt_right/");     
-    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_DOWN_LEFT), m_szBaseFile + "Hurt/hurt_left/");     
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_UP), m_szBaseFile + "Hurt/hurt_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_DOWN), m_szBaseFile + "Hurt/hurt_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_UP_LEFT), m_szBaseFile + "Hurt/hurt_left/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_UP_RIGHT), m_szBaseFile + "Hurt/hurt_right/");
+    m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_DOWN_LEFT), m_szBaseFile + "Hurt/hurt_left/");
     m_pAnimState->AddFrameFromDir(ToString(CharacterState::HURT_DOWN_RIGHT), m_szBaseFile + "Hurt/hurt_right/");
 
     //~ Walk
@@ -183,7 +173,8 @@ bool pixel_game::EnemyGoblin::InitEnemyAI(_In_ const PG_ENEMY_INIT_DESC& desc)
 {
     m_pController = std::make_unique<ChaseAI>();
     m_pController->SetTarget(desc.pTarget);
-    
+    m_pController->SetAttackDistance(1.5f);
+
     PE_AI_CONTROLLER_DESC controllerDesc{};
     controllerDesc.pAiBody           = m_pBody.get();
     controllerDesc.pAnimStateMachine = m_pAnimState.get();
@@ -204,7 +195,6 @@ void pixel_game::EnemyGoblin::SubscribeEvents()
 
                 if (m_nHealth <= 0.f)
                 {
-                    // TODO: Call Death
                     pixel_engine::logger::debug("Goblin Died!");
                 }
             });
@@ -300,7 +290,6 @@ void pixel_game::EnemyGoblin::SetOnCollisionExit()
             if (collider->HasTag("Player"))
             {
                 //~ TODO: Play attack animation
-                m_pAnimState->SetInitialState("walk_left");
                 pixel_engine::logger::debug("Enemy Should stop Attacking Player now");
             }
 

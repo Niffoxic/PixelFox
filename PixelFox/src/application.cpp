@@ -9,6 +9,8 @@
 #include "pixel_engine/render_manager/components/font/font_allocator.h"
 #include "pixel_engine/physics_manager/physics_queue.h"
 
+#include "enemy/define_enemy.h"
+
 _Use_decl_annotations_
 pixel_game::Application::Application(
 	pixel_engine::PIXEL_ENGINE_CONSTRUCT_DESC const* desc)
@@ -31,36 +33,46 @@ void pixel_game::Application::BeginPlay()
 	m_pCamera2D = pixel_engine::PERenderQueue::Instance().GetCamera();
 	m_pCamera2D->FollowSprite(m_player.GetPlayerBody());
 
-	m_object = std::make_unique<pixel_engine::QuadObject>();
-	m_object->SetPosition(-5, 0);
-	m_object->SetScale(5, 5);
-	m_object->SetTexture("assets/sprites/player/idle_left/left_0.png");
+	m_spawner = std::make_unique<EnemySpawner>(&m_player);
 
-	pixel_engine::PhysicsQueue::Instance().AddObject(m_object.get());
+	pixel_game::PG_SPAWN_DESC spawnDesc{};
+	spawnDesc.SpawnStartTime = 5.0f;
+	spawnDesc.SpawnInterval = 3.0f;
+	spawnDesc.SpawnMaxCount = 200;
+	spawnDesc.SpawnRampTime = 120.0f;
 
-	m_object_1 = std::make_unique<pixel_engine::QuadObject>();
-	m_object_1->SetPosition(5, 0);
-	m_object_1->SetScale(3, 3);
-	m_object_1->SetTexture("assets/sprites/player/idle_left/left_0.png");
+	m_spawner->Initialize(spawnDesc);
 
-	pixel_engine::PhysicsQueue::Instance().AddObject(m_object_1.get());
+	//~ test 1
+	PG_ENEMY_INIT_DESC desc{};
+	desc.pTarget = m_player.GetPlayerBody();
+	desc.Scale = { 3, 3 };
+	desc.SpawnPoint = { 20, 20 };
+	m_goblin.Initialize(desc);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_goblin.GetBody());
 
-	PG_ENEMY_INIT_DESC enemyDesc{};
-	enemyDesc.pTarget	 = m_player.GetPlayerBody();
-	enemyDesc.Scale		 = { 3, 3 };
-	enemyDesc.SpawnPoint = { 10, 10 };
-
-	m_enemy.Initialize(enemyDesc);
+	//~ test 2
+	m_enemy = RegistryEnemy::CreateEnemy("EnemyGoblin");
+	desc.SpawnPoint = { -20, -20 };
+	m_enemy->Initialize(desc);
+	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy->GetBody());
 }
 
 void pixel_game::Application::Tick(float deltaTime)
 {    
 	m_player.HandleInput(&m_pWindowsManager->Keyboard, deltaTime);
 	
+	m_spawner->Update(deltaTime);
 	m_player.Update(deltaTime);
-	m_enemy .Update(deltaTime);
+	m_goblin.Update(deltaTime);
+	m_enemy->Update(deltaTime);
 }
 
 void pixel_game::Application::Release()
 {
+	if (m_spawner)
+	{
+		m_spawner->Release();
+		m_spawner.reset();
+	}
 }

@@ -16,6 +16,7 @@
 #include "pixel_engine/core/interface/interface_sprite.h"
 
 #include "core/unordered_map.h"
+#include "core/vector.h"
 
 #include "pixel_engine/render_manager/components/animator/anim.h"
 #include <filesystem>
@@ -52,7 +53,7 @@ namespace pixel_engine
         /// Extracts all .png files from the dir for building frame
         /// Must be seprated by '_' like name_index.png
         /// </summary>
-        void AddFrameFromDir(
+        TileAnim* AddFrameFromDir(
             const std::string& stateName,
             const std::string& dirPath
         );
@@ -60,6 +61,7 @@ namespace pixel_engine
         void SetInitialState(const std::string& name);
         void TransitionTo   (const std::string& name);
 
+        TileAnim* GetCurrentAnim() const;
         TileAnim* GetTileAnim(const std::string& name);
         const std::string& GetCurrentState () const;
         const std::string& GetPreviousState() const;
@@ -89,9 +91,9 @@ namespace pixel_engine
     private:
         PEISprite* m_pSprite{ nullptr };
 
-        fox::unordered_map<std::string, std::unique_ptr<TileAnim>> m_states;
-        fox::unordered_map<std::string, std::function<void()>>      m_fnOnEnterCallbacks;
-        fox::unordered_map<std::string, std::function<void()>>      m_fnOnExitCallbacks;
+        fox::unordered_map<std::string, std::unique_ptr<TileAnim>>          m_states;
+        fox::unordered_map<std::string, fox::vector<std::function<void()>>> m_fnOnEnterCallbacks;
+        fox::unordered_map<std::string, fox::vector<std::function<void()>>> m_fnOnExitCallbacks;
 
         std::string m_szCurrentState;
         std::string m_szPreviousState;

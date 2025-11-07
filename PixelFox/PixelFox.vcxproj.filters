@@ -27,19 +27,16 @@
     <ClCompile Include="src\ai\controller\chase\chase_ai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\enemy\test_enemy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ai\controller\turret\turrent_ai.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\enemy\test_turret.cpp">
+    <ClCompile Include="src\ai\controller\turret\turret_ai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\enemy_manager\enemy_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,9 +59,6 @@
     <ClInclude Include="src\ai\controller\chase\chase_ai.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\enemy\test_enemy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ai\controller\turret\turret_ai.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -75,9 +69,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\world\GameWorld.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\enemy\test_turret.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\enemy\interface_enemy.h">
@@ -93,6 +84,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\world\state\character_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\enemy_manager\enemy_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\enemy\registry_enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\enemy\define_enemy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

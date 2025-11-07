@@ -25,6 +25,9 @@ namespace pixel_game
         void Update    (_In_ float deltaTime) override;
         void Release   () override;
 
+        void SetTypeName(const std::string& name) override { m_szEnemyType = name; }
+        std::string GetTypeName() const override { return m_szEnemyType; }
+
         //~ getters
         _NODISCARD _Check_return_
         bool IsActive() const override;
@@ -80,6 +83,7 @@ namespace pixel_game
 
     private:
         //~ I HATE HARD CODING THIS!!
+        std::string m_szEnemyType{ "NotGiven" };
         std::string m_szBaseFile{ "assets/sprites/Enemy/Goblin/" };
 
         //~ Internals
@@ -91,8 +95,8 @@ namespace pixel_game
         bool      m_bActive      { false };
         float     m_nHealth      { 100.0f };
         float     m_nMoveSpeedUPS{ 2.5f };
-        float     m_nDamage{ 10.f };
-        float     m_nKnockBack{ 5.f };
+        float     m_nDamage      { 10.f };
+        float     m_nKnockBack   { 5.f };
         FVector2D m_scale        { 1.0f, 1.0f };
 
         //~ subscribed tokens
