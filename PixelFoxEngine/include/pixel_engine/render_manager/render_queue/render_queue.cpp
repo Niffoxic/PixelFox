@@ -57,16 +57,11 @@ void PERenderQueue::Render(PERaster2D* pRaster)
     RenderFont(pRaster);
 }
 
+_Use_decl_annotations_
 bool PERenderQueue::AddSprite(PEISprite* sprite)
 {
     if (!sprite) return false;
-    const UniqueId id = sprite->GetInstanceID();
-
-    std::unique_lock lock(m_mutex);
-    if (m_mapSprites.contains(sprite->GetInstanceID())) return false;
-
-    m_mapSprites[sprite->GetInstanceID()] = sprite;
-
+    m_pendingAdd.push_back(sprite);
     m_bDirtySprite.store(true, std::memory_order_release);
     return true;
 }
@@ -80,10 +75,9 @@ bool PERenderQueue::RemoveSprite(PEISprite* sprite)
 _Use_decl_annotations_
 bool PERenderQueue::RemoveSprite(UniqueId id)
 {
-    std::unique_lock lock(m_mutex);
-    const auto erased = m_mapSprites.erase(id);
-    if (erased) m_bDirtySprite.store(true, std::memory_order_release);
-    return erased != 0;
+    m_pendingRemove.push_back(id);
+    m_bDirtySprite.store(true, std::memory_order_release);
+    return true;
 }
 
 _Use_decl_annotations_
@@ -92,7 +86,6 @@ bool pixel_engine::PERenderQueue::AddFont(PEFont* font)
     if (!font) return false;
     const UniqueId id = font->GetInstanceID();
 
-    std::unique_lock lock(m_mutex);
     if (m_mapSprites.contains(font->GetInstanceID())) return false;
 
     m_mapFonts[font->GetInstanceID()] = font;
@@ -108,7 +101,6 @@ bool pixel_engine::PERenderQueue::RemoveFont(PEFont* font)
 _Use_decl_annotations_
 bool pixel_engine::PERenderQueue::RemoveFont(UniqueId id)
 {
-    std::unique_lock lock(m_mutex);
     const auto erased = m_mapFonts.erase(id);
     return erased != 0;
 }
@@ -136,7 +128,6 @@ void PERenderQueue::BuildDiscreteGrid(
     const FVector2D center = sprite->GetPositionRelativeToCamera();
     const FVector2D axisU  = sprite->GetUAxisRelativeToCamera   ();
     const FVector2D axisV  = sprite->GetVAxisRelativeToCamera   ();
-
     int cols = 0, rows = 0;
     if (sampledTexture)
     {
@@ -165,28 +156,12 @@ void PERenderQueue::RenderSprite(PERaster2D* pRaster)
     PFE_SAMPLE_GRID_2D grid{};
     for (auto* sprite : m_ppSortedSprites)
     {
-        //~ precheck
         if (!sprite || !sprite->IsVisible()) continue;
-        if (!sprite->GetTexture()) continue;
-
-        Texture* sampled = nullptr; 
-        if (sprite->NeedSampling())
-        {
-            PFE_CREATE_SAMPLE_TEXTURE desc{};
-            
-            desc.texture  = sprite->GetTexture();
-            desc.scaledBy = sprite->GetScale();
-            desc.tileSize = m_nTilePx;
-            auto* sampled = Sampler::Instance().BuildTexture(desc);
-            
-            sprite->AssignSampledTexture(sampled);
-        }
-        sampled = sprite->GetSampledTexture();
+        Texture*  sampled = sprite->GetSampledTexture();
         if (!sampled) continue;
 
         BuildDiscreteGrid(sprite, sampled, m_nTilePx, grid);
 
-        // pixel coordinate space
         grid.RowStart += FVector2D(m_nScreenWidth / 2, m_nScreenHeight / 2);
 
         if (m_pCulling2D->ShouldCullQuad(grid)) continue;
@@ -196,28 +171,33 @@ void PERenderQueue::RenderSprite(PERaster2D* pRaster)
 
         PFE_RASTER_DRAW_CMD cmd
         {
-            .startBase       = grid.RowStart,
-            .deltaAxisU      = grid.deltaAxisU,
-            .deltaAxisV      = grid.deltaAxisV,
+            .startBase = grid.RowStart,
+            .deltaAxisU = grid.deltaAxisU,
+            .deltaAxisV = grid.deltaAxisV,
             .columnStartFrom = cg.columnStartFrom,
-            .columneEndAt    = cg.columneEndAt,
-            .rowStartFrom    = cg.j0,
-            .rowEndAt        = cg.j1,
-            .totalColumns    = grid.cols,
-            .totalRows       = grid.rows,
-            .sampledTexture  = sampled,
-            .color           = {100, 100, 100},
+            .columneEndAt = cg.columneEndAt,
+            .rowStartFrom = cg.j0,
+            .rowEndAt = cg.j1,
+            .totalColumns = grid.cols,
+            .totalRows = grid.rows,
+            .sampledTexture = sampled,
+            .color = {100, 100, 100},
         };
 
-        //~ if background then draw with multi threads
         if (sprite->GetLayer() == ELayer::Background)
             pRaster->DrawQuadBackground(cmd);
-        else pRaster->DrawQuadTile(cmd);
+        else
+            pRaster->DrawQuadTile(cmd);
     }
 }
 
 void PERenderQueue::BuildSpriteInOrder()
 {
+    ApplyPending();
+
+    if (!m_bDirtySprite.load(std::memory_order_acquire))
+        return;
+
     fox::vector<PEISprite*> local;
     local.reserve(m_mapSprites.size());
 
@@ -225,17 +205,16 @@ void PERenderQueue::BuildSpriteInOrder()
         if (kv.second) local.push_back(kv.second);
 
     std::stable_sort(local.begin(), local.end(),
-    [](const PEISprite* a, const PEISprite* b)
-    {
-        const uint32_t la = static_cast<int>(a->GetLayer());
-        const uint32_t lb = static_cast<int>(b->GetLayer());
-
-        if (la != lb) return la < lb;
-        
-        return a->GetInstanceID() < b->GetInstanceID();
-    });
+        [](const PEISprite* a, const PEISprite* b)
+        {
+            const uint32_t la = static_cast<uint32_t>(a->GetLayer());
+            const uint32_t lb = static_cast<uint32_t>(b->GetLayer());
+            if (la != lb) return la < lb;
+            return a->GetInstanceID() < b->GetInstanceID();
+        });
 
     m_ppSortedSprites.swap(local);
+    m_bDirtySprite.store(false, std::memory_order_release);
 }
 
 _Use_decl_annotations_
@@ -380,4 +359,34 @@ bool pixel_engine::PERenderQueue::ClipGridToViewport(
     out.start = { g.RowStart.x + g.deltaAxisU.x * static_cast<float>(columnStartFrom) + g.deltaAxisV.x * static_cast<float>(j0),
                   g.RowStart.y + g.deltaAxisU.y * static_cast<float>(columnStartFrom) + g.deltaAxisV.y * static_cast<float>(j0) };
     return true;
+}
+
+void pixel_engine::PERenderQueue::ApplyPending()
+{
+    bool changed = false;
+
+    if (!m_pendingRemove.empty())
+    {
+        for (const auto id : m_pendingRemove)
+            changed |= (m_mapSprites.erase(id) != 0);
+        m_pendingRemove.clear();
+    }
+
+    if (!m_pendingAdd.empty())
+    {
+        for (auto* s : m_pendingAdd)
+        {
+            if (!s) continue;
+            const UniqueId id = s->GetInstanceID();
+            if (!m_mapSprites.contains(id))
+            {
+                m_mapSprites[id] = s;
+                changed = true;
+            }
+        }
+        m_pendingAdd.clear();
+    }
+
+    if (changed)
+        m_bDirtySprite.store(true, std::memory_order_release);
 }

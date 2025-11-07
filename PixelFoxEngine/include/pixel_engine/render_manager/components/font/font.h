@@ -56,9 +56,13 @@ namespace pixel_engine
 		void SetScale(const FVector2D& scale);
 		FVector2D GetScale() const;
 
+		void SetPx(const int px) { m_nPx = px; }
+		int GetPx() const { return m_nPx; }
+
 		const fox::vector<FONT_POSITION>& GetFontTextures() const;
 
 	private:
+		int m_nPx{ 32 };
 		FVector2D   m_position{ 0, 0 };
 		FVector2D   m_scale   { 0, 0 };
 		std::string m_text    { "" };

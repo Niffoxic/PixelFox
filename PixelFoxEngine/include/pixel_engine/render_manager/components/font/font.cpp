@@ -25,7 +25,7 @@ void pixel_engine::PEFont::SetText(const std::string& text)
 
 	auto& fg = FontGenerator::Instance();
 
-	auto tex			    = fg.GetGlyph('A');
+	auto tex			    = fg.GetGlyph('A', m_nPx);
 	int width			    = tex->GetWidth();
 	FVector2D startPosition = m_position;
 
@@ -40,7 +40,7 @@ void pixel_engine::PEFont::SetText(const std::string& text)
 			continue;
 		}
 
-		Texture* tex = fg.GetGlyph(c);
+		Texture* tex = fg.GetGlyph(c, m_nPx);
 		if (!tex) continue;
 
 		FONT_POSITION fp{};

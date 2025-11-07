@@ -2,6 +2,7 @@
 
 #include "enemy/define_enemy.h"
 #include "pixel_engine/utilities/logger/logger.h"
+#include "pixel_engine/render_manager/render_queue/sampler/sample_allocator.h"
 
 #include <algorithm>
 #include <cmath>
@@ -38,8 +39,15 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 
 	for (auto& enemy : m_pEnemies)
 	{
+		if (enemy->IsDead())
+		{
+			m_mapEnemies[enemy.get()] = false;
+			pixel_engine::PhysicsQueue::Instance().RemoveObject(enemy->GetBody());
+		}
 		if (m_mapEnemies[enemy.get()])
+		{
 			enemy->Update(deltaTime);
+		}
 	}
 
 	m_elapsedTime += deltaTime;

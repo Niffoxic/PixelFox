@@ -29,6 +29,8 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include "pixel_engine/render_manager/components/font/font.h"
+
 namespace pixel_engine
 {
 	typedef struct _CONSTRUCT_RENDER_API_DESC
@@ -104,6 +106,13 @@ namespace pixel_engine
 	private:
 		//~ Core
 		Camera2D*  m_pCamera{ nullptr };
+
+		PEFont	   m_fps		 {};
+		bool	   m_bShowingFPS { false };
+		int		   m_nFrameCount { 0 };
+		float	   m_nTimeElapsed{ 0.f };
+		int		   m_nLastFps	 { 0 };
+		std::unique_ptr<GameClock> m_pClock{ nullptr };
 		
 		std::unique_ptr<PERaster2D>  m_pRaster2D { nullptr };
 

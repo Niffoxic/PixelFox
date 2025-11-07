@@ -16,6 +16,7 @@
 
 #include "pixel_engine/render_manager/render_queue/render_queue.h"
 #include "pixel_engine/utilities/logger/logger.h"
+#include "pixel_engine/render_manager/render_queue/sampler/sample_allocator.h"
 
 bool pixel_engine::PhysicsQueue::Initialize(Camera2D* camera)
 {
@@ -34,6 +35,19 @@ bool pixel_engine::PhysicsQueue::FrameBegin(float delatTime)
     fox::vector<BoxCollider*> colliders;
     for (const auto& obj : m_sprites)
     {        
+        auto* sprite = obj.second;
+
+        if (sprite && sprite->NeedSampling())
+        {
+            pixel_engine::PFE_CREATE_SAMPLE_TEXTURE desc{};
+            desc.texture = sprite->GetTexture();
+            desc.scaledBy = sprite->GetScale();
+            desc.tileSize = 32;
+
+            auto* built = Sampler::Instance().BuildTexture(desc);
+            sprite->AssignSampledTexture(built);
+        }
+
         obj.second->Update(delatTime, desc);
 
         if (auto* rigidBody = obj.second->GetRigidBody2D())

@@ -11,13 +11,12 @@
 
 #include "enemy/interface_enemy.h"
 
-
 namespace pixel_game
 {
 	struct PG_SPAWN_DESC
 	{
 		float SpawnStartTime{ 5.0f };
-		float SpawnInterval{ 3.0f };
+		float SpawnInterval{ 10.0f };
 		int   SpawnMaxCount{ 200 };
 		float SpawnRampTime{ 120.0f };
 	};

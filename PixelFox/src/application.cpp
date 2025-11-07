@@ -56,10 +56,35 @@ void pixel_game::Application::BeginPlay()
 	desc.SpawnPoint = { -20, -20 };
 	m_enemy->Initialize(desc);
 	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy->GetBody());
+
+	//~ test 
+	m_fps.SetPosition({ 10, 10 });
+	m_fps.SetPx(16);
+	m_fps.SetText("System Thread FPS: ");
+	m_fps.SetScale({40, 40 });
+
+	pixel_engine::PERenderQueue::Instance().AddFont(&m_fps);
+	pixel_engine::PERenderQueue::Instance().EnableFPS(true, { 10, 40});
 }
 
 void pixel_game::Application::Tick(float deltaTime)
 {    
+	static int frameCount = 0;
+	static float elapsedTime = 0.0f;
+	static int lastFPS = 0;
+
+	frameCount++;
+	elapsedTime += deltaTime;
+
+	if (elapsedTime >= 1.0f)
+	{
+		lastFPS = frameCount;
+		frameCount = 0;
+		elapsedTime = 0.0f;
+
+		m_fps.SetText(std::format("System Thread FPS: {}", lastFPS));
+	}
+
 	m_player.HandleInput(&m_pWindowsManager->Keyboard, deltaTime);
 	
 	m_spawner->Update(deltaTime);

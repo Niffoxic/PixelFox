@@ -55,6 +55,7 @@ _Use_decl_annotations_
 bool pixel_engine::PERenderAPI::Init(const INIT_RENDER_API_DESC* desc)
 {
     m_pCamera = desc->Camera;
+    m_pClock = std::make_unique<GameClock>();
 
     if (not InitializeDirectX(desc))   return false;
     if (not InitializeRenderAPI(desc)) return false;
@@ -73,8 +74,42 @@ DWORD pixel_engine::PERenderAPI::Execute()
     auto lastReport = clock::now();
     uint64_t framesSinceReport = 0;
 
+    m_pClock->ResetTime();
     while (true)
     {
+        float dt = m_pClock->Tick();
+
+        bool showFPS = PERenderQueue::Instance().IsShowFPS();
+        if (showFPS && !m_bShowingFPS)
+        {
+            m_bShowingFPS = true;
+            auto pos = PERenderQueue::Instance().GetFPSPosition();
+            int px   = PERenderQueue::Instance().GetFPSPx();
+            m_fps.SetPosition(pos);
+            m_fps.SetPx(px);
+            PERenderQueue::Instance().AddFont(&m_fps);
+        }
+        if (!showFPS && m_bShowingFPS)
+        {
+            PERenderQueue::Instance().RemoveFont(&m_fps);
+            m_bShowingFPS = false;
+        } 
+
+        if (m_bShowingFPS)
+        {
+            m_nFrameCount++;
+            m_nTimeElapsed += dt;
+
+            if (m_nTimeElapsed >= 1.0f)
+            {
+                m_nLastFps = m_nFrameCount;
+                m_nFrameCount = 0;
+                m_nTimeElapsed = 0.0f;
+
+                m_fps.SetText(std::format("Render Thread FPS: {}", m_nLastFps));
+            }
+        }
+
         if (WaitForSingleObject(m_handleExitEvent, 0) == WAIT_OBJECT_0)
         {
             logger::info("[RenderThread] Exit signal received — shutting down.");
@@ -87,20 +122,6 @@ DWORD pixel_engine::PERenderAPI::Execute()
 
         PresentFrame();
         SetEvent(m_handlePresentDoneEvent);
-
-        // FPS each second rolling average
-        ++framesSinceReport;
-        const auto now = clock::now();
-        const auto elapsed = std::chrono::duration<double>(now - lastReport).count();
-        if (elapsed >= 1.0)
-        {
-            const double fps = static_cast<double>(framesSinceReport) / elapsed;
-            const double ms = 1000.0 / (fps > 0.0 ? fps : 1.0);
-            logger::info("[RenderThread] avg FPS: {:.1f} ({:.3f} ms/frame)", fps, ms);
-
-            lastReport = now;
-            framesSinceReport = 0;
-        }
 
         //const DWORD flag = WaitForMultipleObjects(2, waits, FALSE, INFINITE);
         //if (flag == WAIT_OBJECT_0) // exit

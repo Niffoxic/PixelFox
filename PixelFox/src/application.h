@@ -6,6 +6,7 @@
 #include "enemy/goblin/enemy_goblin.h"
 
 #include "world/enemy_manager/enemy_manager.h"
+#include "pixel_engine/render_manager/components/font/font.h"
 
 namespace pixel_game
 {
@@ -29,6 +30,7 @@ namespace pixel_game
 	private:
 		PlayerCharacter  m_player{};
 		EnemyGoblin		 m_goblin{};
+		pixel_engine::PEFont m_fps{};
 		std::unique_ptr<IEnemy> m_enemy{ nullptr };
 		std::unique_ptr<EnemySpawner> m_spawner{ nullptr };
 
