@@ -13,6 +13,7 @@
 
 #include "PixelFoxEngineAPI.h"
 
+#include <typeindex>
 #include <sal.h>  
 #include <functional>
 #include <typeindex>
@@ -46,7 +47,7 @@ namespace pixel_engine
     };
 
     //~ Event queue Facade
-    class EventQueue
+    class PFE_API EventQueue
     {
         struct TypeOps
         {

@@ -75,23 +75,8 @@ void pixel_engine::AnimSateMachine::AddFrameFromDir(
 {
 	if (!m_states.contains(stateName)) AddState(stateName);
 
-	std::vector<std::filesystem::path> files;
-	for (const auto& entry : std::filesystem::directory_iterator(dirPath))
-	{
-		const auto& p = entry.path();
-		if (p.extension() == ".png") files.push_back(p);
-	}
-
-	std::sort(files.begin(), files.end(), [](const std::filesystem::path& a, const std::filesystem::path& b)
-	{
-		auto get_index = [](const std::filesystem::path& p)
-		{
-			const auto name = p.stem().string();
-			const auto pos = name.find_last_of('_');
-			return (pos != std::string::npos) ? std::stoi(name.substr(pos + 1)) : 0;
-		};
-		return get_index(a) < get_index(b);
-	});
+	auto files = CollectPngFiles(dirPath);
+	SortFramesByIndex(files);
 
 	for (const auto& file : files) AddFrame(stateName, file.string());
 }
@@ -164,4 +149,80 @@ void pixel_engine::AnimSateMachine::SetOnEnterCallback(const std::string& state,
 void pixel_engine::AnimSateMachine::SetOnExitCallback(const std::string& state, std::function<void()> callback)
 {
 	m_fnOnExitCallbacks[state] = std::move(callback);
+}
+
+_Use_decl_annotations_
+bool pixel_engine::AnimSateMachine::IsPngFile(const std::filesystem::path& p) const noexcept
+{
+	if (!p.has_extension()) return false;
+	const std::string ext = p.extension().string();
+
+	if (ext.size() != 4) return false;
+
+	return	std::tolower(static_cast<unsigned char>(ext[0])) == '.' &&
+			std::tolower(static_cast<unsigned char>(ext[1])) == 'p' &&
+			std::tolower(static_cast<unsigned char>(ext[2])) == 'n' &&
+			std::tolower(static_cast<unsigned char>(ext[3])) == 'g';
+}
+
+_Use_decl_annotations_
+std::optional<int> pixel_engine::AnimSateMachine::ExtractFrameIndex(const std::filesystem::path& p) const noexcept
+{
+	const std::string name = p.stem().string();
+
+	int end = static_cast<int>(name.size()) - 1;
+	while (end >= 0 && !std::isdigit(static_cast<unsigned char>(name[end]))) --end;
+	if (end < 0) return std::nullopt;
+
+	int start = end;
+	while (start >= 0 && std::isdigit(static_cast<unsigned char>(name[start]))) --start;
+
+	const std::string digits = name.substr(
+		static_cast<size_t>(start + 1),
+		static_cast<size_t>(end - start));
+	
+	try 
+	{
+		return std::stoi(digits); //~ for 00
+	}
+	catch (...) 
+	{
+		return std::nullopt;
+	}
+}
+
+_Use_decl_annotations_
+std::vector<std::filesystem::path> pixel_engine::AnimSateMachine::CollectPngFiles(const std::string& dirPath) const
+{
+	std::vector<std::filesystem::path> files;
+
+	for (const auto& entry : std::filesystem::directory_iterator(dirPath))
+	{
+		if (!entry.is_regular_file()) continue;
+		const auto& p = entry.path();
+		
+		if (IsPngFile(p)) files.push_back(p);
+	}
+
+	return files;
+}
+
+_Use_decl_annotations_
+void pixel_engine::AnimSateMachine::SortFramesByIndex(std::vector<std::filesystem::path>& files) const
+{
+	std::sort(files.begin(), files.end(),
+	[this](const std::filesystem::path& a, const std::filesystem::path& b)
+	{
+		const auto ia = ExtractFrameIndex(a);
+		const auto ib = ExtractFrameIndex(b);
+
+		if (ia && ib)
+		{
+			if (*ia != *ib) return *ia < *ib;
+			return a.filename().string() < b.filename().string();
+		}
+		if (ia) return true;
+		if (ib) return false;
+		return a.filename().string() < b.filename().string();
+	});
 }

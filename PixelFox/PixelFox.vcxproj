@@ -24,6 +24,7 @@
     <ClCompile Include="src\ai\controller\turret\turrent_ai.cpp" />
     <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp" />
     <ClCompile Include="src\application.cpp" />
+    <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp" />
     <ClCompile Include="src\enemy\test_enemy.cpp" />
     <ClCompile Include="src\enemy\test_turret.cpp" />
     <ClCompile Include="src\player\player.cpp" />
@@ -36,10 +37,14 @@
     <ClInclude Include="src\ai\projectile\interface_projectile.h" />
     <ClInclude Include="src\ai\projectile\straight\straight_projectile.h" />
     <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\enemy\goblin\enemy_goblin.h" />
+    <ClInclude Include="src\enemy\interface_enemy.h" />
     <ClInclude Include="src\enemy\test_enemy.h" />
     <ClInclude Include="src\enemy\test_turret.h" />
     <ClInclude Include="src\player\player.h" />
+    <ClInclude Include="src\world\events\enemy_events.h" />
     <ClInclude Include="src\world\events\player_events.h" />
+    <ClInclude Include="src\world\events\projectile_events.h" />
     <ClInclude Include="src\world\GameWorld.h" />
   </ItemGroup>
   <ItemGroup>

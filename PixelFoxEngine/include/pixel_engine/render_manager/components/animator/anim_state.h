@@ -18,6 +18,7 @@
 #include "core/unordered_map.h"
 
 #include "pixel_engine/render_manager/components/animator/anim.h"
+#include <filesystem>
 
 namespace pixel_engine 
 {
@@ -71,6 +72,19 @@ namespace pixel_engine
         void SetOnExitCallback(
             const std::string& state,
             std::function<void()> callback);
+
+    private:
+        //~ helpers
+        _NODISCARD _Check_return_
+        bool IsPngFile(_In_ const std::filesystem::path& p) const noexcept;
+        
+        _NODISCARD _Check_return_
+        std::optional<int> ExtractFrameIndex(_In_ const std::filesystem::path& p) const noexcept;
+        
+        _NODISCARD _Check_return_
+        std::vector<std::filesystem::path> CollectPngFiles(_In_ const std::string& dirPath) const;
+        
+        void SortFramesByIndex(_Inout_ std::vector<std::filesystem::path>& files) const;
 
     private:
         PEISprite* m_pSprite{ nullptr };

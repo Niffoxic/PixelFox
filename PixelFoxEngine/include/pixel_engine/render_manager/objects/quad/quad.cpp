@@ -69,6 +69,12 @@ void QuadObject::SetPosition(float x, float y)
     MarkDirty(true);
 }
 
+void pixel_engine::QuadObject::SetPosition(const FVector2D& position)
+{
+    m_pRigidBody2D->SetPosition(position);
+    MarkDirty(true);
+}
+
 _Use_decl_annotations_
 void QuadObject::SetRotation(float radians)
 {
@@ -81,6 +87,14 @@ void QuadObject::SetScale(float sx, float sy)
 {
     m_scale.x = sx;
     m_scale.y = sy;
+    m_pRigidBody2D->m_transform.Scale = m_scale;
+    m_bResampleNeeded = true;
+    MarkDirty(true);
+}
+
+void pixel_engine::QuadObject::SetScale(const FVector2D& scale)
+{
+    m_scale = scale;
     m_pRigidBody2D->m_transform.Scale = m_scale;
     m_bResampleNeeded = true;
     MarkDirty(true);
