@@ -46,6 +46,7 @@
     <ClInclude Include="src\world\events\player_events.h" />
     <ClInclude Include="src\world\events\projectile_events.h" />
     <ClInclude Include="src\world\GameWorld.h" />
+    <ClInclude Include="src\world\state\character_state.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PixelFox.rc" />

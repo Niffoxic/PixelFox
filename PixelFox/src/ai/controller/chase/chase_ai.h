@@ -14,7 +14,7 @@ namespace pixel_game
         ~ChaseAI() override = default;
 
         _NODISCARD _Check_return_
-        bool Init(_In_ pixel_engine::PEISprite* aiBody) override;
+        bool Init(_In_ const PE_AI_CONTROLLER_DESC& desc) override;
 
         void Update(_In_ float deltaTime) override;
 
@@ -49,8 +49,9 @@ namespace pixel_game
         void UpdateAIDecision() override;
 
     private:
-        pixel_engine::PEISprite* m_pBody  { nullptr };
-        pixel_engine::PEISprite* m_pTarget{ nullptr };
+        pixel_engine::AnimSateMachine* m_pAnimStateMachine{ nullptr };
+        pixel_engine::PEISprite*       m_pBody            { nullptr };
+        pixel_engine::PEISprite*       m_pTarget          { nullptr };
 
         bool      m_bActive         { true };
         float     m_nLifeRemaining  { -1.0f };

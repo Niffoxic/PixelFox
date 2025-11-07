@@ -5,6 +5,7 @@
 #include "core/vector.h"
 
 #include "pixel_engine/core/event/event_queue.h"
+#include "world/state/character_state.h"
 
 #include <memory>
 #include <sal.h>
@@ -90,6 +91,8 @@ namespace pixel_game
         bool      m_bActive      { false };
         float     m_nHealth      { 100.0f };
         float     m_nMoveSpeedUPS{ 2.5f };
+        float     m_nDamage{ 10.f };
+        float     m_nKnockBack{ 5.f };
         FVector2D m_scale        { 1.0f, 1.0f };
 
         //~ subscribed tokens

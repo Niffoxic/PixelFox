@@ -5,12 +5,13 @@ using namespace pixel_game;
 using namespace pixel_engine;
 
 _Use_decl_annotations_
-bool ChaseAI::Init(PEISprite* aiBody)
+bool ChaseAI::Init(const PE_AI_CONTROLLER_DESC& desc)
 {
-    m_pBody            = aiBody;
-    m_bActive          = (m_pBody != nullptr);
-    m_desiredDirection = { 0.f, 0.f };
-    m_nDesiredSpeed    = 0.f;
+    m_pBody              = desc.pAiBody;
+    m_pAnimStateMachine  = desc.pAnimStateMachine;
+    m_bActive            = (m_pBody != nullptr);
+    m_desiredDirection   = { 0.f, 0.f };
+    m_nDesiredSpeed      = 0.f;
     return m_bActive;
 }
 
