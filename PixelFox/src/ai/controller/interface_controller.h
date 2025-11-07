@@ -1,15 +1,28 @@
 #pragma once
 #include "pixel_engine/core/interface/interface_sprite.h"
+#include "pixel_engine/render_manager/components/animator/anim_state.h"
+
+#include "world/state/character_state.h"
+
+#include <string>
+#include <string_view>
+#include <sal.h>
 
 namespace pixel_game
 {
+	typedef struct _PE_AI_CONTROLLER_DESC
+	{
+		_In_ pixel_engine::PEISprite*	    pAiBody;
+		_In_ pixel_engine::AnimSateMachine* pAnimStateMachine;
+	}PE_AI_CONTROLLER_DESC;
+
 	class IAIController
 	{
 	public:
 		virtual ~IAIController() = default;
 
 		_NODISCARD _Check_return_
-		virtual bool Init(_In_ pixel_engine::PEISprite* aiBody) = 0;
+		virtual bool Init(_In_ const PE_AI_CONTROLLER_DESC& desc) = 0;
 
 		virtual void Update(_In_ float deltaTime) = 0;
 

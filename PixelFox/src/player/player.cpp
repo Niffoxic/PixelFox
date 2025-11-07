@@ -14,6 +14,8 @@ bool PlayerCharacter::Initialize()
     if (!InitializePlayer    ()) return false;
     if (!InitializeAppearance()) return false;
 
+    m_pBody->GetCollider()->AttachTag("Player");
+    m_pBody->GetCollider()->AttachTag("player");
     return true;
 }
 

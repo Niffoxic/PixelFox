@@ -59,7 +59,12 @@ bool TestEnemyTurrent::InitializeBody(const PG_ENEMY_SPAWN_TEST& spawnDesc)
 bool TestEnemyTurrent::InitializeAIController(const PG_ENEMY_SPAWN_TEST& spawnDesc)
 {
 	m_pAIController = std::make_unique<TurretAI>();
-	m_pAIController->Init(m_pEnemyBody.get());
+
+	PE_AI_CONTROLLER_DESC edesc{};
+	edesc.pAiBody = m_pEnemyBody.get();
+	edesc.pAnimStateMachine = m_pAnimState.get();
+
+	m_pAIController->Init(edesc);
 	m_pAIController->SetTarget(spawnDesc.Target);
 	m_pAIController->SetFireCooldown(0.6f);
 	m_pAIController->SetMuzzleOffset({ 0.5f, 0.0f });

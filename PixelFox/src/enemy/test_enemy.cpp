@@ -58,8 +58,11 @@ bool TestEnemy::InitializeBody(const PG_ENEMY_SPAWN& spawnDesc)
 
 bool TestEnemy::InitializeAIController(const PG_ENEMY_SPAWN& spawnDesc)
 {
+	PE_AI_CONTROLLER_DESC desc{};
+	desc.pAiBody		   = m_pEnemyBody.get();
+	desc.pAnimStateMachine = m_pAnimState.get();
 	m_pAIController = std::make_unique<ChaseAI>();
-	m_pAIController->Init(m_pEnemyBody.get());
+	m_pAIController->Init(desc);
 	m_pAIController->SetTarget(spawnDesc.Target);
 	return true;
 }

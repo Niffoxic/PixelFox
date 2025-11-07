@@ -5,11 +5,12 @@ using namespace pixel_game;
 using namespace pixel_engine;
 
 _Use_decl_annotations_
-bool TurretAI::Init(PEISprite* aiBody)
+bool TurretAI::Init(const PE_AI_CONTROLLER_DESC& desc)
 {
-    m_pBody      = aiBody;
-    m_bActive    = (m_pBody != nullptr);
-    m_nFireTimer = 0.0f;
+    m_pAnimStateMachine = desc.pAnimStateMachine;
+    m_pBody             = desc.pAiBody;
+    m_bActive           = (m_pBody != nullptr);
+    m_nFireTimer        = 0.0f;
 
     if (m_pBody)
     {

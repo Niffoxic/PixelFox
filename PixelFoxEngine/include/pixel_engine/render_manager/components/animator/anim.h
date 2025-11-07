@@ -75,7 +75,7 @@ namespace pixel_engine
 		};
 		fox::vector<FrameData> m_ppFrames{};
 
-		struct AnimState
+		struct CharacterState
 		{
 			float cycleDuration{ 1.0f };
 			float TotalTime{ 0.0f };

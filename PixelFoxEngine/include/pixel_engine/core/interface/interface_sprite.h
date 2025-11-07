@@ -89,8 +89,10 @@ namespace pixel_engine
 
 		//~ transform
 		virtual void SetPosition(_In_ float x, _In_ float y)   = 0;
+		virtual void SetPosition(_In_ const FVector2D& position)     = 0;
 		virtual void SetRotation(_In_ float radians)		   = 0;
 		virtual void SetScale   (_In_ float sx, _In_ float sy) = 0;
+		virtual void SetScale   (_In_ const FVector2D& scale)		   = 0;
 		virtual void SetPivot   (_In_ float px, _In_ float py) = 0;
 		virtual void SetTexture (_In_ const std::string& path) = 0;
 		virtual void SetTexture (_Inout_ Texture* rawTexture)  = 0;
