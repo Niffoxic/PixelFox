@@ -57,6 +57,7 @@ void pixel_game::MainMenu::Show()
     m_bVisible = true;
     if (m_eState == EMenuState::Main) ShowMainMenu();
     else                              ShowControlsMenu();
+    ShowCommonLayout();
 }
 
 void pixel_game::MainMenu::Hide()
@@ -64,7 +65,7 @@ void pixel_game::MainMenu::Hide()
     m_bVisible = false;
     HideMainMenu();
     HideControlsMenu();
-    HideControlsMenu();
+    HideCommonLayout();
 }
 
 _Use_decl_annotations_
@@ -150,7 +151,7 @@ void pixel_game::MainMenu::BuildLayout()
         screenH = static_cast<float>(ch);
     }
 
-    constexpr float kUnit = 32.f;
+    constexpr float pxUnit = 32.f;
     auto U = [](float px) { return px / 32.f; };
 
     const float menuW = U(screenW);
@@ -275,8 +276,8 @@ void pixel_game::MainMenu::BuildFonts()
     { // esc hint common
         auto hint = std::make_unique<pixel_engine::PEFont>();
         hint->SetPx(16);
-        hint->SetPosition({ 24.f, 24.f });
-        hint->SetText("ESC to quit");
+        hint->SetPosition({ screenW - 300.f, 24.f });
+        hint->SetText("ESC to quit/back");
         m_menuTexts.push_back(std::move(hint));
     }
 
@@ -311,6 +312,72 @@ void pixel_game::MainMenu::BuildFonts()
 
 void pixel_game::MainMenu::BuildControlsLayout()
 {
+    //~ window size
+    float screenW = 1280.f;
+    float screenH = 720.f;
+    if (m_pWindows)
+    {
+        const int cw = m_pWindows->GetWindowsWidth();
+        const int ch = m_pWindows->GetWindowsHeight();
+        if (cw > 0) screenW = static_cast<float>(cw);
+        if (ch > 0) screenH = static_cast<float>(ch);
+    }
+
+    //~ world units
+    auto U = [](float px) { return px / 32.f; };
+
+    //~ larger controls panel
+    const float panelW = U(800.f);
+    const float panelH = U(560.f);
+
+    m_controlsPanel.SetPosition({ 0.f, 2.f });
+    m_controlsPanel.SetScale({ panelW, panelH });
+    m_controlsPanel.SetTexture("assets/menu/panel.png");
+    if (auto* colP = m_controlsPanel.GetCollider())
+        colP->SetColliderType(pixel_engine::ColliderType::Trigger);
+
+    //~ controls
+    m_controlsPanelTexts.clear();
+
+    const float startX = screenW * 0.30f;  
+    const float descX  = screenW * 0.49f;  
+    const float startY = screenH * 0.25f;  
+    const float stepY  = 50.f; 
+
+    struct Row { const char* key; const char* desc; float y; };
+    Row rows[] = 
+    {
+        { "W",      "Move Upward",                  startY + stepY * 0.f },
+        { "A",      "Move Left",                    startY + stepY * 1.f },
+        { "S",      "Move Downward",                startY + stepY * 2.f },
+        { "D",      "Move Right",                   startY + stepY * 3.f },
+        { "E",      "Special Attack",               startY + stepY * 4.f },
+        { "SPACE",  "Dash",                         startY + stepY * 5.f },
+        { "Ctrl+S", "Save Current Game State",      startY + stepY * 6.f },
+        { "Ctrl+L", "Load Last Saved State",        startY + stepY * 7.f },
+        { "Esc",    "To go back or open main menu", startY + stepY * 8.f },
+        { "F",      "Show FPS",                     startY + stepY * 9.f },
+    };
+
+    for (const auto& r : rows)
+    {
+        //~ key
+        {
+            pixel_engine::PEFont key;
+            key.SetPx(32);                      
+            key.SetPosition({ startX, r.y });
+            key.SetText(r.key);           
+            m_controlsPanelTexts.push_back(std::move(key));
+        }
+        //~ description
+        {
+            pixel_engine::PEFont desc;
+            desc.SetPx(16);                    
+            desc.SetPosition({ descX, r.y });
+            desc.SetText(r.desc);    
+            m_controlsPanelTexts.push_back(std::move(desc));
+        }
+    }
 }
 
 void pixel_game::MainMenu::ShowCommonLayout()
@@ -337,8 +404,6 @@ void pixel_game::MainMenu::HideCommonLayout()
 
 void pixel_game::MainMenu::ShowMainMenu()
 {
-    ShowCommonLayout();
-
     auto& q = pixel_engine::PhysicsQueue::Instance();
 
     // inner screen panel
@@ -390,19 +455,24 @@ void pixel_game::MainMenu::HideMainMenu()
 
 void pixel_game::MainMenu::ShowControlsMenu()
 {
-    ShowCommonLayout();
+    auto& physicsQ = pixel_engine::PhysicsQueue::Instance();
+    physicsQ.AddObject(&m_controlsPanel);
 
-    auto& q = pixel_engine::PhysicsQueue::Instance();
-    q.AddObject(&m_controlsBackground);
-    q.AddObject(&m_controlsPanel);
+    // fonts for control keys
+    auto& renderQ = pixel_engine::PERenderQueue::Instance();
+    for (auto& font : m_controlsPanelTexts)
+        renderQ.AddFont(&font);
 }
 
 void pixel_game::MainMenu::HideControlsMenu()
 {
-    auto& q = pixel_engine::PhysicsQueue::Instance();
+    auto& physicsQ = pixel_engine::PhysicsQueue::Instance();
+    physicsQ.RemoveObject(&m_controlsPanel);
 
-    q.RemoveObject(&m_controlsBackground);
-    q.RemoveObject(&m_controlsPanel);
+    // remove control fonts
+    auto& renderQ = pixel_engine::PERenderQueue::Instance();
+    for (auto& font : m_controlsPanelTexts)
+        renderQ.RemoveFont(&font);
 }
 
 void pixel_game::MainMenu::SelectNext()

@@ -86,10 +86,10 @@ namespace pixel_game
 		pixel_engine::PEWindowsManager* m_pWindows{ nullptr };
 
 		//~ backgrounds
-		pixel_engine::QuadObject				m_menuBackground;
-		std::unique_ptr<pixel_engine::AnimSateMachine>	m_pBackgroundAnim{nullptr};
-		pixel_engine::QuadObject				m_menuScreen;
-		fox::vector<std::unique_ptr<pixel_engine::PEFont>>		m_menuTexts;
+		pixel_engine::QuadObject						   m_menuBackground;
+		std::unique_ptr<pixel_engine::AnimSateMachine>	   m_pBackgroundAnim{nullptr};
+		pixel_engine::QuadObject						   m_menuScreen;
+		fox::vector<std::unique_ptr<pixel_engine::PEFont>> m_menuTexts;
 
 		//~ options
 		pixel_engine::QuadObject m_menuFiniteMap;
@@ -109,7 +109,6 @@ namespace pixel_game
 		pixel_engine::PEFont	 m_menuQuitOptionText;
 
 		// settings page
-		pixel_engine::QuadObject		  m_controlsBackground;
 		pixel_engine::QuadObject		  m_controlsPanel;
 		fox::vector<pixel_engine::PEFont> m_controlsPanelTexts{};
 

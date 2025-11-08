@@ -98,6 +98,7 @@ namespace pixel_engine
 
 		//~ Render Font
 		void RenderFont(_Inout_ PERaster2D* pRaster);
+		void BuildFontsInOrder();
 
 		//~ Helpers
 		float Det2(
@@ -122,6 +123,7 @@ namespace pixel_engine
 
 	private:
 		void ApplyPending();
+		void ApplyPendingFonts();
 
 	private:
 		bool	  m_bShowFPS	{ false };
@@ -145,10 +147,16 @@ namespace pixel_engine
 		Camera2D*		  m_pCamera		 { nullptr };
 
 		//~ Render Font
+		std::atomic<bool> m_bDirtyFont{ true };
 		fox::unordered_map<UniqueId, PEFont*> m_mapFonts{};
+		fox::vector<PEFont*> m_ppFontsToRender{};
 
-		//~ manage adding 
+		//~ manage adding sprite
 		fox::vector<PEISprite*> m_pendingAdd{};
 		fox::vector<UniqueId>   m_pendingRemove{};
+
+		//~ manage adding and removing fonts
+		fox::vector<PEFont*> m_pendingAddFont{};
+		fox::vector<UniqueId>   m_pendingRemoveFont{};
 	};
 } // namespace pixel_engine

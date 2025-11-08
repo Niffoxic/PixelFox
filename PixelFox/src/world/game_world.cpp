@@ -1,14 +1,12 @@
 #include "game_world.h"
+#include "pixel_engine/utilities/logger/logger.h"
 
 pixel_game::GameWorld::GameWorld(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
 {
-	PG_MAIN_MENU_DESC menuDesc{};
-	menuDesc.pKeyboard = desc.pKeyboard;
-	menuDesc.pWindows  = desc.pWindowsManager;
-	m_pMainMenu = std::make_unique<MainMenu>(menuDesc);
-
-	m_pMainMenu->Init();
-	m_pMainMenu->Show();
+    m_pKeyboard = desc.pKeyboard;
+    m_pWindows  = desc.pWindowsManager;
+	BuildMainMenu(desc);
+    BuildFPSFont();
 }
 
 pixel_game::GameWorld::~GameWorld()
@@ -17,12 +15,209 @@ pixel_game::GameWorld::~GameWorld()
 
 void pixel_game::GameWorld::Update(float deltaTime)
 {
-	if (m_pMainMenu)
-	{
-		m_pMainMenu->Update(deltaTime);
-	}
+    ComputeFPS(deltaTime);
+    KeyWatcher       (deltaTime);
+	HandleTransition ();
+	UpdateActiveState(deltaTime);
+}
+
+void pixel_game::GameWorld::BuildMainMenu(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
+{
+    PG_MAIN_MENU_DESC menuDesc{};
+    menuDesc.pKeyboard = desc.pKeyboard;
+    menuDesc.pWindows = desc.pWindowsManager;
+
+    menuDesc.OnEnterPress_FiniteMap = [this]()
+        {
+            pixel_engine::logger::debug("MainMenu to Finite");
+            SetState(GameState::Finite);
+        };
+
+    menuDesc.OnEnterPress_InfiniteMap = [this]()
+        {
+            pixel_engine::logger::debug("MainMenu to Infinite");
+            SetState(GameState::Infinite);
+        };
+
+    menuDesc.OnEnterPress_Quit = []()
+        {
+            PostQuitMessage(0);
+        };
+
+    m_pMainMenu = std::make_unique<MainMenu>(menuDesc);
+    m_pMainMenu->Init();
+    m_pMainMenu->Show();
 }
 
 void pixel_game::GameWorld::AttachCameraToPlayer() const
 {
+}
+
+void pixel_game::GameWorld::UpdateActiveState(float deltaTime)
+{
+    switch (m_eGameState)
+    {
+    case GameState::Menu:
+    {
+        if (m_pMainMenu) m_pMainMenu->Update(deltaTime);
+        return;
+    }
+    case GameState::Finite:
+    {
+        return;
+    }
+    case GameState::Infinite:
+    {
+        return;
+    }
+    }
+}
+
+void pixel_game::GameWorld::HandleTransition()
+{
+    if (m_ePrevGameState == m_eGameState) return;
+    ExitState(m_ePrevGameState);
+    EnterState(m_eGameState);
+    m_ePrevGameState = m_eGameState;
+}
+
+void pixel_game::GameWorld::SetState(GameState next)
+{
+    if (next == m_eGameState) return;
+    m_ePrevGameState = m_eGameState;
+    m_eGameState     = next;
+}
+
+void pixel_game::GameWorld::EnterState(GameState state)
+{
+    switch (state)
+    {
+    case GameState::Menu:
+    {
+        if (m_pMainMenu) m_pMainMenu->Show();
+        return;
+    }
+    case GameState::Finite: 
+    {
+        if (m_pMainMenu) m_pMainMenu->Hide();
+        AttachCameraToPlayer();
+        return;
+    }
+    case GameState::Infinite:
+    {
+        if (m_pMainMenu) m_pMainMenu->Hide();
+        AttachCameraToPlayer();
+        return;
+    }
+    }
+}
+
+void pixel_game::GameWorld::ExitState(GameState state)
+{
+    switch (state)
+    {
+    case GameState::Menu:
+        if (m_pMainMenu) m_pMainMenu->Hide();
+        break;
+
+    case GameState::Finite:
+        break;
+
+    case GameState::Infinite:
+        break;
+    }
+}
+
+void pixel_game::GameWorld::KeyWatcher(float deltaTime)
+{
+    if (!m_pKeyboard) return;
+
+    //~ Reduce cooldown timer
+    if (m_nInputBlockTimer > 0.0f)
+        m_nInputBlockTimer -= deltaTime;
+
+    if (m_nInputBlockTimer <= 0.0f)
+    {
+        if (m_pKeyboard->WasKeyPressed(VK_ESCAPE))
+        {
+            switch (m_eGameState)
+            {
+            case GameState::Finite:
+                pixel_engine::logger::debug("Returning to Main Menu");
+                SetState(GameState::Menu);
+                m_nInputBlockTimer = m_nInputDelay;
+                break;
+            case GameState::Infinite:
+                pixel_engine::logger::debug("Returning to Main Menu");
+                SetState(GameState::Menu);
+                m_nInputBlockTimer = m_nInputDelay;
+                break;
+
+            case GameState::Menu:
+            default:
+                break;
+            }
+        }
+        if (m_pKeyboard->WasKeyPressed('F'))
+        {
+            ShowFPS();
+            m_nInputBlockTimer = m_nInputDelay;
+        }
+    }
+}
+
+void pixel_game::GameWorld::BuildFPSFont()
+{
+    if (!m_fps)
+    {
+        m_fps = std::make_unique<pixel_engine::PEFont>();
+        m_fps->SetPx(16);
+        m_fps->SetPosition({ 10, 10 });
+        m_fps->SetText("System Thread FPS: 0");
+
+        pixel_engine::PERenderQueue::Instance().SetFPSPx(16);
+    }
+}
+
+void pixel_game::GameWorld::ComputeFPS(float deltaTime)
+{
+    if (!m_bShowFPS) return;
+
+    if (deltaTime < 0.0f) deltaTime = 0.0f;
+
+    ++m_nFrameCount;
+    m_nTimeElapsed += deltaTime;
+
+    if (m_nTimeElapsed >= 1.0f)
+    {
+        m_nLastFps      = m_nFrameCount;
+        m_nFrameCount   = 0;
+        m_nTimeElapsed -= 1.0f;
+
+        if (m_fps)
+        {
+            m_fps->SetText(std::format("System Thread FPS: {}", m_nLastFps));
+        } 
+    }
+}
+
+void pixel_game::GameWorld::ShowFPS()
+{
+    if (!m_fps) return;
+    m_bShowFPS = !m_bShowFPS;
+
+    auto& rq = pixel_engine::PERenderQueue::Instance();
+
+    if (m_bShowFPS) // turning on
+    {
+        rq.EnableFPS(true, { 10, 40 });
+        if (m_fps) rq.AddFont(m_fps.get());
+        pixel_engine::logger::debug("FPS ON (last={})", m_nLastFps);
+    }
+    else // turning off
+    {
+        rq.EnableFPS(false, { 10, 40 });
+        if (m_fps) rq.RemoveFont(m_fps.get());
+        pixel_engine::logger::debug("FPS OFF");
+    }
 }

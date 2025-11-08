@@ -37,6 +37,10 @@ Camera2D* PERenderQueue::GetCamera() const { return m_pCamera; }
 
 void PERenderQueue::Update()
 {
+    ApplyPendingFonts();
+    if (m_bDirtyFont.exchange(false, std::memory_order_acq_rel))
+        BuildFontsInOrder();
+
     if (m_bDirtySprite.exchange(false, std::memory_order_acq_rel))
     {
         BuildSpriteInOrder();
@@ -84,11 +88,8 @@ _Use_decl_annotations_
 bool pixel_engine::PERenderQueue::AddFont(PEFont* font)
 {
     if (!font) return false;
-    const UniqueId id = font->GetInstanceID();
-
-    if (m_mapSprites.contains(font->GetInstanceID())) return false;
-
-    m_mapFonts[font->GetInstanceID()] = font;
+    m_pendingAddFont.push_back(font);
+    m_bDirtyFont.store(true, std::memory_order_release);
     return true;
 }
 
@@ -101,8 +102,9 @@ bool pixel_engine::PERenderQueue::RemoveFont(PEFont* font)
 _Use_decl_annotations_
 bool pixel_engine::PERenderQueue::RemoveFont(UniqueId id)
 {
-    const auto erased = m_mapFonts.erase(id);
-    return erased != 0;
+    m_pendingRemoveFont.push_back(id);
+    m_bDirtyFont.store(true, std::memory_order_release);
+    return true;
 }
 
 _Use_decl_annotations_
@@ -224,6 +226,7 @@ void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
 
     for (const auto& kv : m_mapFonts)
     {
+
         PEFont* font = kv.second;
         if (!font) continue;
 
@@ -257,6 +260,24 @@ void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
             pRaster->DrawQuadTile(cmd);
         }
     }
+}
+
+void pixel_engine::PERenderQueue::BuildFontsInOrder()
+{
+    fox::vector<PEFont*> local;
+    local.reserve(m_mapFonts.size());
+
+    for (const auto& kv : m_mapFonts)
+        if (kv.second) local.push_back(kv.second);
+
+    std::stable_sort(local.begin(), local.end(),
+        [](const PEFont* a, const PEFont* b)
+        {
+            return a->GetInstanceID() < b->GetInstanceID();
+        });
+
+    m_ppFontsToRender.swap(local);
+    m_bDirtyFont.store(false, std::memory_order_release);
 }
 
 _Use_decl_annotations_
@@ -389,4 +410,33 @@ void pixel_engine::PERenderQueue::ApplyPending()
 
     if (changed)
         m_bDirtySprite.store(true, std::memory_order_release);
+}
+
+void pixel_engine::PERenderQueue::ApplyPendingFonts()
+{
+    bool changed = false;
+
+    if (!m_pendingRemoveFont.empty())
+    {
+        for (const auto id : m_pendingRemoveFont)
+            changed |= (m_mapFonts.erase(id) != 0);
+        m_pendingRemoveFont.clear();
+    }
+
+    if (!m_pendingAddFont.empty())
+    {
+        for (auto* f : m_pendingAddFont)
+        {
+            if (!f) continue;
+            const UniqueId id = f->GetInstanceID();
+            if (!m_mapFonts.contains(id))
+            {
+                m_mapFonts[id] = f;
+                changed = true;
+            }
+        }
+        m_pendingAddFont.clear();
+    }
+
+    if (changed) m_bDirtyFont.store(true, std::memory_order_release);
 }
