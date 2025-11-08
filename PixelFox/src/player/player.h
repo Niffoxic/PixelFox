@@ -44,6 +44,7 @@ namespace pixel_game
 		//~ Events 
 
 	private:
+		bool m_bInitialized{ false };
 		std::unique_ptr<pixel_engine::QuadObject>       m_pBody    { nullptr };
 		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimState{ nullptr };
 

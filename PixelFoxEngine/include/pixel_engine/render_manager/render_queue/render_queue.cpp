@@ -35,16 +35,26 @@ PERenderQueue::PERenderQueue(const PFE_RENDER_QUEUE_CONSTRUCT_DESC& desc)
 _Use_decl_annotations_
 Camera2D* PERenderQueue::GetCamera() const { return m_pCamera; }
 
+_Use_decl_annotations_
 void PERenderQueue::Update()
 {
-    ApplyPendingFonts();
-    if (m_bDirtyFont.exchange(false, std::memory_order_acq_rel))
+    bool rebuilt = false;
+
+    if (m_bDirtyFont.exchange(false, std::memory_order_acq_rel)) 
+    {
         BuildFontsInOrder();
+        rebuilt = true;
+    }
 
     if (m_bDirtySprite.exchange(false, std::memory_order_acq_rel))
     {
         BuildSpriteInOrder();
+        rebuilt = true;
+    }
+
+    if (rebuilt) {
         m_bDirtySprite.store(false, std::memory_order_release);
+        m_bDirtyFont.store(false, std::memory_order_release);
     }
 }
 
@@ -52,11 +62,10 @@ _Use_decl_annotations_
 void PERenderQueue::Render(PERaster2D* pRaster)
 {
     if (m_bDirtySprite.exchange(false, std::memory_order_acq_rel))
-    {
         BuildSpriteInOrder();
-        m_bDirtySprite.store(false, std::memory_order_release);
-    }
-        
+    if (m_bDirtyFont.exchange(false, std::memory_order_acq_rel))
+        BuildFontsInOrder();
+
     RenderSprite(pRaster);
     RenderFont(pRaster);
 }
@@ -65,7 +74,8 @@ _Use_decl_annotations_
 bool PERenderQueue::AddSprite(PEISprite* sprite)
 {
     if (!sprite) return false;
-    m_pendingAdd.push_back(sprite);
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+    m_mapSprites[sprite->GetInstanceID()] = sprite;
     m_bDirtySprite.store(true, std::memory_order_release);
     return true;
 }
@@ -79,7 +89,8 @@ bool PERenderQueue::RemoveSprite(PEISprite* sprite)
 _Use_decl_annotations_
 bool PERenderQueue::RemoveSprite(UniqueId id)
 {
-    m_pendingRemove.push_back(id);
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+    m_mapSprites.erase(id);
     m_bDirtySprite.store(true, std::memory_order_release);
     return true;
 }
@@ -88,7 +99,8 @@ _Use_decl_annotations_
 bool pixel_engine::PERenderQueue::AddFont(PEFont* font)
 {
     if (!font) return false;
-    m_pendingAddFont.push_back(font);
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+    m_mapFonts[font->GetInstanceID()] = font;
     m_bDirtyFont.store(true, std::memory_order_release);
     return true;
 }
@@ -102,7 +114,8 @@ bool pixel_engine::PERenderQueue::RemoveFont(PEFont* font)
 _Use_decl_annotations_
 bool pixel_engine::PERenderQueue::RemoveFont(UniqueId id)
 {
-    m_pendingRemoveFont.push_back(id);
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+    m_mapFonts.erase(id);
     m_bDirtyFont.store(true, std::memory_order_release);
     return true;
 }
@@ -155,15 +168,17 @@ void PERenderQueue::BuildDiscreteGrid(
 _Use_decl_annotations_
 void PERenderQueue::RenderSprite(PERaster2D* pRaster)
 {
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+
     PFE_SAMPLE_GRID_2D grid{};
     for (auto* sprite : m_ppSortedSprites)
     {
         if (!sprite || !sprite->IsVisible()) continue;
-        Texture*  sampled = sprite->GetSampledTexture();
+
+        Texture* sampled = sprite->GetSampledTexture();
         if (!sampled) continue;
 
         BuildDiscreteGrid(sprite, sampled, m_nTilePx, grid);
-
         grid.RowStart += FVector2D(m_nScreenWidth / 2, m_nScreenHeight / 2);
 
         if (m_pCulling2D->ShouldCullQuad(grid)) continue;
@@ -195,14 +210,10 @@ void PERenderQueue::RenderSprite(PERaster2D* pRaster)
 
 void PERenderQueue::BuildSpriteInOrder()
 {
-    ApplyPending();
-
-    if (!m_bDirtySprite.load(std::memory_order_acquire))
-        return;
+    std::lock_guard<std::mutex> lock(m_renderMutex);
 
     fox::vector<PEISprite*> local;
     local.reserve(m_mapSprites.size());
-
     for (const auto& kv : m_mapSprites)
         if (kv.second) local.push_back(kv.second);
 
@@ -219,15 +230,15 @@ void PERenderQueue::BuildSpriteInOrder()
     m_bDirtySprite.store(false, std::memory_order_release);
 }
 
+
 _Use_decl_annotations_
 void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
 {
-    if (!pRaster || m_mapFonts.empty()) return;
+    if (!pRaster) return;
+    std::lock_guard<std::mutex> lock(m_renderMutex);
 
-    for (const auto& kv : m_mapFonts)
+    for (auto* font : m_ppFontsToRender)
     {
-
-        PEFont* font = kv.second;
         if (!font) continue;
 
         const auto& fontTextures = font->GetFontTextures();
@@ -239,8 +250,7 @@ void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
             if (!tex) continue;
 
             FVector2D pos = glyph.startPosition;
-
-            const int drawWidth  = static_cast<int>(tex->GetWidth());
+            const int drawWidth = static_cast<int>(tex->GetWidth());
             const int drawHeight = static_cast<int>(tex->GetHeight());
 
             PFE_RASTER_DRAW_CMD cmd
@@ -264,9 +274,10 @@ void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
 
 void pixel_engine::PERenderQueue::BuildFontsInOrder()
 {
+    std::lock_guard<std::mutex> lock(m_renderMutex);
+
     fox::vector<PEFont*> local;
     local.reserve(m_mapFonts.size());
-
     for (const auto& kv : m_mapFonts)
         if (kv.second) local.push_back(kv.second);
 
@@ -336,7 +347,6 @@ bool pixel_engine::PERenderQueue::ClipGridToViewport(
     if (clipMinX >= clipMaxX || clipMinY >= clipMaxY)
         return false; // fully off screen
 
-    // Invert the 2x2 matrix to map
     float m00, m01, m10, m11;
     if (!InvertColumns(g.deltaAxisU, g.deltaAxisV, m00, m01, m10, m11)) return false;
 
@@ -345,13 +355,11 @@ bool pixel_engine::PERenderQueue::ClipGridToViewport(
         const float dx = px - g.RowStart.x;
         const float dy = py - g.RowStart.y;
             
-        // transpose(i j) = inv * transpose(dx dy)
         const float i = m00 * dx + m01 * dy;
         const float j = m10 * dx + m11 * dy;
         return { i, j };
     };
 
-    // Map the clipped rectangle corners into (i,j) space
     const auto [i00, j00] = toIJ(clipMinX, clipMinY);
     const auto [i10, j10] = toIJ(clipMaxX, clipMinY);
     const auto [i01, j01] = toIJ(clipMinX, clipMaxY);
@@ -380,63 +388,4 @@ bool pixel_engine::PERenderQueue::ClipGridToViewport(
     out.start = { g.RowStart.x + g.deltaAxisU.x * static_cast<float>(columnStartFrom) + g.deltaAxisV.x * static_cast<float>(j0),
                   g.RowStart.y + g.deltaAxisU.y * static_cast<float>(columnStartFrom) + g.deltaAxisV.y * static_cast<float>(j0) };
     return true;
-}
-
-void pixel_engine::PERenderQueue::ApplyPending()
-{
-    bool changed = false;
-
-    if (!m_pendingRemove.empty())
-    {
-        for (const auto id : m_pendingRemove)
-            changed |= (m_mapSprites.erase(id) != 0);
-        m_pendingRemove.clear();
-    }
-
-    if (!m_pendingAdd.empty())
-    {
-        for (auto* s : m_pendingAdd)
-        {
-            if (!s) continue;
-            const UniqueId id = s->GetInstanceID();
-            if (!m_mapSprites.contains(id))
-            {
-                m_mapSprites[id] = s;
-                changed = true;
-            }
-        }
-        m_pendingAdd.clear();
-    }
-
-    if (changed)
-        m_bDirtySprite.store(true, std::memory_order_release);
-}
-
-void pixel_engine::PERenderQueue::ApplyPendingFonts()
-{
-    bool changed = false;
-
-    if (!m_pendingRemoveFont.empty())
-    {
-        for (const auto id : m_pendingRemoveFont)
-            changed |= (m_mapFonts.erase(id) != 0);
-        m_pendingRemoveFont.clear();
-    }
-
-    if (!m_pendingAddFont.empty())
-    {
-        for (auto* f : m_pendingAddFont)
-        {
-            if (!f) continue;
-            const UniqueId id = f->GetInstanceID();
-            if (!m_mapFonts.contains(id))
-            {
-                m_mapFonts[id] = f;
-                changed = true;
-            }
-        }
-        m_pendingAddFont.clear();
-    }
-
-    if (changed) m_bDirtyFont.store(true, std::memory_order_release);
 }

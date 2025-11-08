@@ -9,6 +9,8 @@ using namespace pixel_game;
 
 bool PlayerCharacter::Initialize()
 {
+    if (m_bInitialized) return true;
+    m_bInitialized = true;
     pixel_engine::PERenderQueue::Instance().GetCamera()->SetScale({ 1, 1 });
 
     if (!InitializePlayer    ()) return false;

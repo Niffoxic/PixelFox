@@ -1,16 +1,30 @@
-#include "game_world.h"
+﻿#include "game_world.h"
 #include "pixel_engine/utilities/logger/logger.h"
 
 pixel_game::GameWorld::GameWorld(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
 {
     m_pKeyboard = desc.pKeyboard;
     m_pWindows  = desc.pWindowsManager;
+
 	BuildMainMenu(desc);
     BuildFPSFont();
+    BuildLoadingDetails();
+
+    m_pPlayer       = std::make_unique<PlayerCharacter>();
+    m_pFiniteMap    = std::make_unique<FiniteMap>();
+    m_pEnemySpawner = std::make_unique<EnemySpawner>(m_pPlayer.get());
 }
 
 pixel_game::GameWorld::~GameWorld()
 {
+    if (m_pFiniteMap) 
+    {
+        if (m_pFiniteMap->IsActive())
+        {
+            m_pFiniteMap->UnLoad();
+        }
+        m_pFiniteMap->Release();
+    }
 }
 
 void pixel_game::GameWorld::Update(float deltaTime)
@@ -19,6 +33,16 @@ void pixel_game::GameWorld::Update(float deltaTime)
     KeyWatcher       (deltaTime);
 	HandleTransition ();
 	UpdateActiveState(deltaTime);
+
+    if (m_eGameState != GameState::Menu)
+    {
+        m_pPlayer->Update(deltaTime);
+
+        if (m_pKeyboard)
+        {
+            m_pPlayer->HandleInput(m_pKeyboard, deltaTime);
+        }
+    }
 }
 
 void pixel_game::GameWorld::BuildMainMenu(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
@@ -64,6 +88,7 @@ void pixel_game::GameWorld::UpdateActiveState(float deltaTime)
     }
     case GameState::Finite:
     {
+        if (m_pFiniteMap) m_pFiniteMap->Update(deltaTime);
         return;
     }
     case GameState::Infinite:
@@ -101,6 +126,15 @@ void pixel_game::GameWorld::EnterState(GameState state)
     {
         if (m_pMainMenu) m_pMainMenu->Hide();
         AttachCameraToPlayer();
+
+        if (m_pFiniteMap)
+        {
+            if (!m_pFiniteMap->IsInitialized())
+            {
+                InitializeFiniteMap();
+            }
+            m_pFiniteMap->Start();
+        }
         return;
     }
     case GameState::Infinite:
@@ -117,14 +151,23 @@ void pixel_game::GameWorld::ExitState(GameState state)
     switch (state)
     {
     case GameState::Menu:
+    {
         if (m_pMainMenu) m_pMainMenu->Hide();
         break;
-
+    }
     case GameState::Finite:
-        break;
+    {
+        if (m_pFiniteMap)
+        {
+            m_pFiniteMap->UnLoad();
+        }
+        return;
+    }
 
     case GameState::Infinite:
-        break;
+    {
+        return;
+    }
     }
 }
 
@@ -143,16 +186,20 @@ void pixel_game::GameWorld::KeyWatcher(float deltaTime)
             switch (m_eGameState)
             {
             case GameState::Finite:
+            {
                 pixel_engine::logger::debug("Returning to Main Menu");
                 SetState(GameState::Menu);
                 m_nInputBlockTimer = m_nInputDelay;
-                break;
-            case GameState::Infinite:
-                pixel_engine::logger::debug("Returning to Main Menu");
-                SetState(GameState::Menu);
-                m_nInputBlockTimer = m_nInputDelay;
-                break;
+                return;
+            }
 
+            case GameState::Infinite:
+            {
+                pixel_engine::logger::debug("Returning to Main Menu");
+                SetState(GameState::Menu);
+                m_nInputBlockTimer = m_nInputDelay;
+                return;
+            }
             case GameState::Menu:
             default:
                 break;
@@ -220,4 +267,90 @@ void pixel_game::GameWorld::ShowFPS()
         if (m_fps) rq.RemoveFont(m_fps.get());
         pixel_engine::logger::debug("FPS OFF");
     }
+}
+
+void pixel_game::GameWorld::BuildLoadingDetails()
+{
+    m_pLoadingInfo  = std::make_unique<pixel_engine::PEFont>();
+    m_pLoadingTitle = std::make_unique<pixel_engine::PEFont>();
+    m_pLoadingDesc  = std::make_unique<pixel_engine::PEFont>();
+
+    m_pLoadingInfo ->SetPx(64);
+    m_pLoadingTitle->SetPx(32);
+    m_pLoadingDesc ->SetPx(16);
+
+    float height = m_pWindows->GetWindowsHeight() / 2;
+    float width  = m_pWindows->GetWindowsWidth() / 2;
+
+    m_pLoadingInfo ->SetPosition({ 100, height - 200 });
+    m_pLoadingTitle->SetPosition({ width - 350, height });
+    m_pLoadingDesc ->SetPosition({ width - 300, height + 50 });
+}
+
+void pixel_game::GameWorld::InitializeFiniteMap()
+{
+    if (!m_pPlayer || !m_pEnemySpawner)
+    {
+        pixel_engine::logger::error("GameWorld::InitializeFiniteMap - Missing Player or EnemySpawner!");
+        return;
+    }
+
+    //~ Set Loading Screen Active
+    if (m_pLoadingInfo) 
+    {
+        m_pLoadingInfo->SetText("Loading Finite Map!");
+        pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingInfo.get());
+    }
+    if (m_pLoadingTitle)
+    {
+        m_pLoadingTitle->SetText("Setting up Resouces");
+        pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingTitle.get());
+    }
+    if (m_pLoadingDesc)
+    {
+        m_pLoadingDesc->SetText("fetching descriptions");
+        pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingDesc.get());
+    }
+
+    LOAD_SCREEN_DETAILS details{};
+    details.pLoadTitle       = m_pLoadingTitle.get();
+    details.pLoadDescription = m_pLoadingDesc .get();
+
+    // prepare map descriptor
+    MAP_INIT_DESC mapDesc{};
+    mapDesc.LoadScreen       = details;
+    mapDesc.pPlayerCharacter = m_pPlayer.get();
+    mapDesc.pEnemySpawner    = m_pEnemySpawner.get();
+    mapDesc.MapDuration      = 120.f; 
+    mapDesc.UseBounds        = true;
+    mapDesc.Bounds           = { { -50.f, -50.f }, { 50.f, 50.f } };
+    mapDesc.Type             = EMapType::Finite;
+
+    mapDesc.OnMapComplete = [this]()
+    {
+        pixel_engine::logger::debug("Finite Map Complete → Returning to Menu");
+        SetState(GameState::Menu);
+    };
+
+    // create and initialize
+    m_pFiniteMap->Initialize(mapDesc);
+
+    if (m_pLoadingInfo)
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_pLoadingInfo.get());
+    }
+    if (m_pLoadingTitle)
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_pLoadingTitle.get());
+    }
+    if (m_pLoadingDesc) 
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_pLoadingDesc.get());
+    }
+
+    if (!m_pLoadingDesc) pixel_engine::logger::error("FAILED TO RELESAE");
+
+    m_pFiniteMap->Start();
+
+    pixel_engine::logger::debug("GameWorld::InitializeFiniteMap - Finite Map initialized successfully!");
 }

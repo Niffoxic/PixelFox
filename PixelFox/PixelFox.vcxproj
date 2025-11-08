@@ -25,9 +25,11 @@
     <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp" />
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp" />
+    <ClCompile Include="src\obsticle\obsitcle.cpp" />
     <ClCompile Include="src\player\player.cpp" />
     <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp" />
     <ClCompile Include="src\world\game_world.cpp" />
+    <ClCompile Include="src\world\map_generator\finite_map\finite_map.cpp" />
     <ClCompile Include="src\world\menu_gui\main_menu.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -42,12 +44,14 @@
     <ClInclude Include="src\enemy\goblin\enemy_goblin.h" />
     <ClInclude Include="src\enemy\interface_enemy.h" />
     <ClInclude Include="src\enemy\registry_enemy.h" />
+    <ClInclude Include="src\obsticle\obsiticle.h" />
     <ClInclude Include="src\player\player.h" />
     <ClInclude Include="src\world\enemy_spawner\enemy_spawner.h" />
     <ClInclude Include="src\world\events\enemy_events.h" />
     <ClInclude Include="src\world\events\player_events.h" />
     <ClInclude Include="src\world\events\projectile_events.h" />
     <ClInclude Include="src\world\game_world.h" />
+    <ClInclude Include="src\world\map_generator\finite_map\finite_map.h" />
     <ClInclude Include="src\world\map_generator\interface_map.h" />
     <ClInclude Include="src\world\menu_gui\main_menu.h" />
     <ClInclude Include="src\world\state\character_state.h" />

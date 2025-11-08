@@ -122,10 +122,8 @@ namespace pixel_engine
 			_Out_ PFE_CLIPPED_GRID&			out) const;
 
 	private:
-		void ApplyPending();
-		void ApplyPendingFonts();
+		mutable std::mutex m_renderMutex;
 
-	private:
 		bool	  m_bShowFPS	{ false };
 		FVector2D m_fpsPosition	{34, 10};
 		int		  m_nFontPx	    { 16 };

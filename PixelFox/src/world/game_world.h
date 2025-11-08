@@ -7,6 +7,8 @@
 #include "pixel_engine/window_manager/inputs/keyboard_inputs.h"
 #include "menu_gui/main_menu.h"
 
+#include "map_generator/finite_map/finite_map.h"
+
 namespace pixel_game
 {
 	typedef struct _PG_GAME_WORLD_CONSTRUCT_DESC
@@ -50,7 +52,20 @@ namespace pixel_game
 		void BuildFPSFont();
 		void ComputeFPS(float deltaTime);
 		void ShowFPS();
+
+		//~ loading details
+		void BuildLoadingDetails();
+
+		//~ initialize map
+		void InitializeFiniteMap();
 	private:
+		//~ Maps
+		std::unique_ptr<FiniteMap> m_pFiniteMap{ nullptr };
+		//~ loading data
+		std::unique_ptr<pixel_engine::PEFont> m_pLoadingInfo { nullptr };
+		std::unique_ptr<pixel_engine::PEFont> m_pLoadingTitle{ nullptr };
+		std::unique_ptr<pixel_engine::PEFont> m_pLoadingDesc { nullptr };
+
 		//~ systems
 		pixel_engine::PEWindowsManager* m_pWindows { nullptr };
 		pixel_engine::PEKeyboardInputs* m_pKeyboard{ nullptr };
