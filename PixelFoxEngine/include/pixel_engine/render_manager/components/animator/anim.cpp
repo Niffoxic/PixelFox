@@ -18,11 +18,13 @@
 #include <ranges>
 #include <cmath>
 
+_Use_decl_annotations_
 pixel_engine::TileAnim::TileAnim(pixel_engine::PEISprite* body)
 	: m_pSpriteBody(body)
 {
 }
 
+_Use_decl_annotations_
 void pixel_engine::TileAnim::OnFrameBegin(float deltaTime)
 {
 	if (not IsBuilt()) Build();
@@ -38,6 +40,7 @@ void pixel_engine::TileAnim::OnFrameBegin(float deltaTime)
 		m_AnimState.playing = false;
 
 		m_pSpriteBody->SetTexture(m_ppFrames.back().sampledTexture);
+		m_pSpriteBody->AssignSampledTexture(m_ppFrames.back().sampledTexture);
 	}
 
 	if (m_AnimState.shouldLoop &&
@@ -63,6 +66,7 @@ void pixel_engine::TileAnim::OnFrameBegin(float deltaTime)
 				if (m_pSpriteBody)
 				{
 					m_pSpriteBody->SetTexture(m_ppFrames[i].sampledTexture);
+					m_pSpriteBody->AssignSampledTexture(m_ppFrames[i].sampledTexture);
 				}
 			}
 			return; // update already so leaving

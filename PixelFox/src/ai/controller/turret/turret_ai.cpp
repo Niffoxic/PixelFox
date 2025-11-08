@@ -32,7 +32,11 @@ void TurretAI::Update(float deltaTime)
     if (m_nLifeRemaining >= 0.0f)
     {
         m_nLifeRemaining -= deltaTime;
-        if (m_nLifeRemaining <= 0.0f) { m_bActive = false; return; }
+        if (m_nLifeRemaining <= 0.0f) 
+        {
+            m_bActive = false; 
+            return; 
+        }
     }
 
     //~ fire cooldown
@@ -125,34 +129,46 @@ void TurretAI::UpdateAIDecision()
     if (!m_pBody) return;
 
     auto* rigidBody = m_pBody->GetRigidBody2D();
-
-    if (rigidBody) 
+    if (rigidBody)
     {
+        //~ turret stays idle
         rigidBody->SetVelocity({ 0.f, 0.f });
-    } 
+    }
 
     if (!m_pTarget) return;
 
-    const float distance = DistanceFromPlayer();
+    const float distSq = DistanceFromPlayer();
+    const float attack = m_nMaxShootDistance;
+    const float attackSq = attack * attack;
 
-    if (distance > m_nMaxShootDistance)
+    //~ faces towards the target
+    const FVector2D aimDir = DirectionToTarget();
+    if (m_pAnimStateMachine)
     {
-        return; 
+        const CharacterState idleFace = PickIdleFromDir(aimDir);
+        m_pAnimStateMachine->TransitionTo(ToString(idleFace));
     }
 
-    const FVector2D dir = DirectionToTarget();
-    
-    if (!(rigidBody && (dir.x != 0.f || dir.y != 0.f))) return;
+    if (rigidBody)
+    {
+        rigidBody->SetRotation(std::atan2(aimDir.y, aimDir.x));
+    }
 
-    rigidBody->SetRotation(std::atan2(dir.y, dir.x));
+    //~ out of range
+    if (distSq > attackSq) return;
 
+    //~ in range
     if (m_pProjectile && m_nFireTimer <= 0.0f)
     {
-        FVector2D spawn = rigidBody->GetPosition();
+        FVector2D spawn = rigidBody ? rigidBody->GetPosition() : FVector2D{ 0.f, 0.f };
         spawn += m_muzzleOffset;
 
-        if (m_pProjectile->Fire(spawn, dir))
+        if (m_pProjectile->Fire(spawn, aimDir))
         {
+            //~ raise attack callback with direction
+            EAttackDirection dir = DirToAttackDirection(aimDir);
+            if (dir == EAttackDirection::Invalid) dir = EAttackDirection::Right;
+            FireAttack(dir);
             m_nFireTimer = m_nFireCooldown;
         }
     }
@@ -177,7 +193,45 @@ void pixel_game::TurretAI::SetMuzzleOffset(const FVector2D& off) noexcept
 }
 
 _Use_decl_annotations_
-void pixel_game::TurretAI::SetMaxShootDistance(float distance) noexcept
+void pixel_game::TurretAI::SetOnAttack(AttackCallbackType cb)
 {
-    m_nMaxShootDistance = (distance >= 0.f ? distance : 40.f);
+    if (cb)
+    {
+        m_fnOnAttackCallback = std::move(cb);
+    }
+}
+
+_Use_decl_annotations_
+void pixel_game::TurretAI::SetAttackDistance(float distance)
+{
+    m_nMaxShootDistance = distance;
+}
+
+_Use_decl_annotations_
+void pixel_game::TurretAI::FireAttack(EAttackDirection direction)
+{
+    if (m_fnOnAttackCallback) m_fnOnAttackCallback(*this, direction);
+}
+
+_Use_decl_annotations_
+void pixel_game::TurretAI::SetOnCantAttack(CantAttackCallbackType cb)
+{
+    if (cb) m_fnOnStopCallback = std::move(cb);
+}
+
+void pixel_game::TurretAI::FireStopAttack()
+{
+    if (m_fnOnStopCallback) m_fnOnStopCallback(*this);
+}
+
+_Use_decl_annotations_
+bool pixel_game::TurretAI::HasOnAttack() const
+{
+    return static_cast<bool>(m_fnOnAttackCallback);
+}
+
+_Use_decl_annotations_
+float pixel_game::TurretAI::GetAttackDistance() const
+{
+    return m_nMaxShootDistance;
 }

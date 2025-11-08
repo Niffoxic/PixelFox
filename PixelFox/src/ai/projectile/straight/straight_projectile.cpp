@@ -20,7 +20,7 @@ bool StraightProjectile::Init(INIT_PROJECTILE_DESC& desc)
 	PhysicsQueue::Instance().AddObject(m_pBody.get());
 
 	m_bActive  = false;
-	m_timeLeft = 0.0f;
+	m_nTimeLeft = 0.0f;
 
 	//~ set callbacks
 	m_fnOnActive  = desc.OnActive;
@@ -36,9 +36,9 @@ void StraightProjectile::Update(float dt)
 {
 	if (!m_bActive || dt <= 0.f) return;
 
-	m_timeLeft -= dt;
+	m_nTimeLeft -= dt;
 
-	if (m_timeLeft <= 0.0f)
+	if (m_nTimeLeft <= 0.0f)
 	{
 		if (m_fnOnExpired) m_fnOnExpired(this);
 		Deactivate();
@@ -49,8 +49,8 @@ void StraightProjectile::Update(float dt)
 	if (rb)
 	{
 		FVector2D pos = rb->GetPosition();
-		pos.x += m_direction.x * m_speed * dt;
-		pos.y += m_direction.y * m_speed * dt;
+		pos.x += m_direction.x * m_nSpeed * dt;
+		pos.y += m_direction.y * m_nSpeed * dt;
 		rb->m_transform.Position = pos;
 	}
 }
@@ -71,9 +71,9 @@ bool StraightProjectile::Fire(const FVector2D& worldPos,
 	if (m_bActive) return false;
 
 	m_direction = directionNorm;
-	if (speed > 0.f) m_speed = speed;
+	if (speed > 0.f) m_nSpeed = speed;
 
-	m_timeLeft = m_lifeSpan;
+	m_nTimeLeft = m_nLifeSpan;
 	m_bActive = true;
 	SetPosition(worldPos);
 	SetActive(true);
@@ -89,7 +89,7 @@ void StraightProjectile::Deactivate()
 
 	m_bActive = false;
 	SetActive(false);
-	m_timeLeft = 0.0f;
+	m_nTimeLeft = 0.0f;
 
 	if (auto* rb = m_pBody->GetRigidBody2D())
 	{
@@ -160,44 +160,44 @@ FVector2D StraightProjectile::GetDirection() const
 _Use_decl_annotations_
 void StraightProjectile::SetSpeed(float unitsPerSecond)
 {
-	m_speed = unitsPerSecond;
+	m_nSpeed = unitsPerSecond;
 }
 
 _Use_decl_annotations_
 float StraightProjectile::GetSpeed() const
 {
-	return m_speed; 
+	return m_nSpeed; 
 }
 
 _Use_decl_annotations_
 bool StraightProjectile::SetLifeSpan(float seconds)
 {
-	m_lifeSpan = seconds;
+	m_nLifeSpan = seconds;
 	return true;
 }
 
 _Use_decl_annotations_
 float StraightProjectile::GetLifeSpan() const
 {
-	return m_lifeSpan;
+	return m_nLifeSpan;
 }
 
 _Use_decl_annotations_
 float StraightProjectile::GetTimeLeft() const
 {
-	return m_timeLeft;
+	return m_nTimeLeft;
 }
 
 _Use_decl_annotations_
 void StraightProjectile::SetDamage(float amount)
 {
-	m_damage = amount;
+	m_nDamage = amount;
 }
 
 _Use_decl_annotations_
 float StraightProjectile::GetDamage() const 
 {
-	return m_damage; 
+	return m_nDamage; 
 }
 
 void StraightProjectile::OnHit()

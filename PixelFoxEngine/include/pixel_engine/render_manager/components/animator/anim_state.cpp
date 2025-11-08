@@ -41,6 +41,17 @@ void pixel_engine::AnimSateMachine::OnFrameBegin(float deltaTime)
 		m_states[m_szCurrentState] != nullptr)
 	{
 		m_states[m_szCurrentState]->OnFrameBegin(deltaTime);
+
+		if (m_states[m_szCurrentState]->IsCycleComplete())
+		{
+			if (m_fnOnExitCallbacks.contains(m_szCurrentState))
+			{
+				for (auto& fn : m_fnOnExitCallbacks[m_szCurrentState])
+				{
+					if (fn) fn();
+				}
+			}
+		}
 	}
 }
 
@@ -68,7 +79,7 @@ void pixel_engine::AnimSateMachine::AddFrame(const std::string& stateName, const
 	m_states[stateName]->AddFrame(path);
 }
 
-void pixel_engine::AnimSateMachine::AddFrameFromDir(
+TileAnim* pixel_engine::AnimSateMachine::AddFrameFromDir(
 	const std::string& stateName,
 	const std::string& dirPath
 ) 
@@ -79,6 +90,8 @@ void pixel_engine::AnimSateMachine::AddFrameFromDir(
 	SortFramesByIndex(files);
 
 	for (const auto& file : files) AddFrame(stateName, file.string());
+
+	return m_states[stateName].get();
 }
 
 void pixel_engine::AnimSateMachine::SetInitialState(const std::string& name)
@@ -91,33 +104,50 @@ void pixel_engine::AnimSateMachine::SetInitialState(const std::string& name)
 
 void pixel_engine::AnimSateMachine::TransitionTo(const std::string& name)
 {
-	if (name == m_szCurrentState || !m_states.contains(name))
+	if (!m_states.contains(name)) return;
+
+	auto* currentAnim = GetCurrentAnim();
+	if (name == m_szCurrentState && currentAnim && !currentAnim->IsCycleComplete())
 		return;
 
-	if (m_fnOnExitCallbacks.contains(m_szCurrentState))
+	if (!m_szCurrentState.empty())
 	{
-		if (m_fnOnExitCallbacks[m_szCurrentState])
+		if (m_fnOnExitCallbacks.contains(m_szCurrentState))
 		{
-			m_fnOnExitCallbacks[m_szCurrentState]();
+			for (auto& fn : m_fnOnExitCallbacks[m_szCurrentState])
+			{
+				if (fn) fn();
+			}
 		}
+
+		if (m_states.contains(m_szCurrentState) && m_states[m_szCurrentState])
+			m_states[m_szCurrentState]->Stop();
+
+		m_szPreviousState = m_szCurrentState;
 	}
 
-	if (!m_states[m_szCurrentState]) return;
-	if (!m_states[m_szCurrentState]->IsBuilt()) return;
-
-	m_states[m_szCurrentState]->Stop();
-	m_szPreviousState = m_szCurrentState;
-
 	m_szCurrentState = name;
+
+	if (!m_states[name] || !m_states[name]->IsBuilt()) return;
+
 	m_states[name]->Play();
 
 	if (m_fnOnEnterCallbacks.contains(name))
 	{
-		if (m_fnOnEnterCallbacks[name])
+		for (auto& fn : m_fnOnEnterCallbacks[name])
 		{
-			m_fnOnEnterCallbacks[name]();
+			if (fn) fn();
 		}
 	}
+}
+
+TileAnim* pixel_engine::AnimSateMachine::GetCurrentAnim() const
+{
+	if (m_szCurrentState.size())
+	{
+		return m_states.at(m_szCurrentState).get();
+	}
+	return nullptr;
 }
 
 TileAnim* pixel_engine::AnimSateMachine::GetTileAnim(const std::string& name)
@@ -143,12 +173,13 @@ bool pixel_engine::AnimSateMachine::IsInState(const std::string& name) const
 
 void pixel_engine::AnimSateMachine::SetOnEnterCallback(const std::string& state, std::function<void()> callback)
 {
-	m_fnOnEnterCallbacks[state] = std::move(callback);
+	m_fnOnEnterCallbacks[state].push_back(std::move(callback));
 }
 
 void pixel_engine::AnimSateMachine::SetOnExitCallback(const std::string& state, std::function<void()> callback)
 {
-	m_fnOnExitCallbacks[state] = std::move(callback);
+
+	m_fnOnExitCallbacks[state].push_back(std::move(callback));
 }
 
 _Use_decl_annotations_

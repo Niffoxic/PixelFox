@@ -21,10 +21,18 @@ FontGenerator::FontGenerator()
 	slice.tileSize    = 32;
 	slice.sliceWidth  = 32;
 	slice.sliceHeight = 32;
-	slice.scaledBy = { 1, 1 };
 
-	m_tileSet = TileSetAllocator::Instance().BuildTexture(slice);
-	if (!m_tileSet)
+	slice.scaledBy = { 0.25f, 0.25f };
+	m_tileSet_8 = TileSetAllocator::Instance().BuildTexture(slice);
+	slice.scaledBy = { 0.5f, 0.5f };
+	m_tileSet_16 = TileSetAllocator::Instance().BuildTexture(slice);
+	slice.scaledBy = { 1.f, 1.f };
+	m_tileSet_32 = TileSetAllocator::Instance().BuildTexture(slice);
+	slice.scaledBy = { 2.f, 2.f };
+	m_tileSet_64 = TileSetAllocator::Instance().BuildTexture(slice);
+	
+
+	if (!m_tileSet_8 || !m_tileSet_16 || !m_tileSet_32 || !m_tileSet_64)
 	{
 		logger::error("FontGenerator: failed to load '{}'", slice.tileFilePath);
 		return;
@@ -38,17 +46,27 @@ FontGenerator::FontGenerator()
 }
 
 _Use_decl_annotations_
-Texture* FontGenerator::GetGlyph(char c)
+Texture* FontGenerator::GetGlyph(char c, int px)
 {
-	if (!m_tileSet) return nullptr;
-
 	if (!m_fonts.contains(c)) return nullptr;
 
-	return m_tileSet->GetSlice(m_fonts[c]);
+	TileSet* ts = nullptr;
+	switch (px)
+	{
+	case 8:  ts = m_tileSet_8;  break;
+	case 16: ts = m_tileSet_16; break;
+	case 32: ts = m_tileSet_32; break;
+	case 64: ts = m_tileSet_64; break;
+	default: ts = m_tileSet_32; break;
+	}
+
+	if (!ts) return nullptr;
+
+	return ts->GetSlice(m_fonts[c]);
 }
 
 _Use_decl_annotations_
-fox::vector<Texture*> FontGenerator::GetGlyphs(const std::string& text)
+fox::vector<Texture*> FontGenerator::GetGlyphs(const std::string& text, int px)
 {
 	fox::vector<Texture*> result;
 	result.reserve(text.size());
@@ -56,12 +74,7 @@ fox::vector<Texture*> FontGenerator::GetGlyphs(const std::string& text)
 	for (char c : text)
 	{
 		Texture* tex = GetGlyph(c);
-
-		if (not tex)
-		{
-			tex = m_tileSet->GetSlice(39); // Error Display
-		}
-
+		if (not tex) continue;
 		result.push_back(tex);
 	}
 

@@ -33,16 +33,19 @@ namespace pixel_engine
 		FontGenerator();
 
 		_NODISCARD _Use_decl_annotations_
-		Texture* GetGlyph(char c);
+		Texture* GetGlyph(char c, int px=8);
 
 		_NODISCARD _Use_decl_annotations_
-		fox::vector<Texture*> GetGlyphs(const std::string& text);
+		fox::vector<Texture*> GetGlyphs(const std::string& text, int px = 8);
 
 	private:
 		void SetGlyphOrder(const std::string& glyphs);
 
 	private:
-		TileSet* m_tileSet{ nullptr };
+		TileSet* m_tileSet_64{ nullptr };
+		TileSet* m_tileSet_32{ nullptr };
+		TileSet* m_tileSet_16{ nullptr };
+		TileSet* m_tileSet_8{ nullptr };
 		fox::unordered_map<char, int> m_fonts;
 	};
 }

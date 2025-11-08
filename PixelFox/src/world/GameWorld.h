@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "player/player.h"
+#include "enemy_spawner/enemy_spawner.h"
 
 namespace pixel_game
 {
@@ -13,6 +14,5 @@ namespace pixel_game
 
 	private:
 		std::unique_ptr<PlayerCharacter> m_pPlayer{ nullptr };
-
 	};
 }

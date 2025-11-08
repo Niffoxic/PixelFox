@@ -69,6 +69,18 @@ namespace pixel_engine
 		bool RemoveFont(_Inout_ PEFont* font);
 		bool RemoveFont(_In_ UniqueId id);
 
+		void EnableFPS(bool flag, const FVector2D& position)
+		{
+			m_bShowFPS    = flag;
+			m_fpsPosition = position;
+		}
+
+		void SetFPSPx(int px ) { m_nFontPx = px; }
+		int  GetFPSPx() const { return m_nFontPx; }
+
+		bool IsShowFPS			() const { return m_bShowFPS;	 }
+		FVector2D GetFPSPosition() const { return m_fpsPosition; }
+
 	private:
 		PERenderQueue() = default;
 
@@ -109,6 +121,15 @@ namespace pixel_engine
 			_Out_ PFE_CLIPPED_GRID&			out) const;
 
 	private:
+		void ApplyPending();
+
+	private:
+		bool	  m_bShowFPS	{ false };
+		FVector2D m_fpsPosition	{34, 10};
+		int		  m_nFontPx	    { 16 };
+		int		  m_nFrameCount { 0 };
+		int		  m_nlastFps	{ 0 };
+
 		std::unique_ptr<PECulling2D> m_pCulling2D{ nullptr };
 
 		int   m_nTilePx  {};
@@ -123,9 +144,11 @@ namespace pixel_engine
 		UINT			  m_nScreenHeight{ 0u };
 		Camera2D*		  m_pCamera		 { nullptr };
 
-		mutable std::shared_mutex m_mutex;
-
 		//~ Render Font
 		fox::unordered_map<UniqueId, PEFont*> m_mapFonts{};
+
+		//~ manage adding 
+		fox::vector<PEISprite*> m_pendingAdd{};
+		fox::vector<UniqueId>   m_pendingRemove{};
 	};
 } // namespace pixel_engine
