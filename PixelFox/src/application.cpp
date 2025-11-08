@@ -28,75 +28,18 @@ bool pixel_game::Application::InitApplication(pixel_engine::PIXEL_ENGINE_INIT_DE
 
 void pixel_game::Application::BeginPlay()
 {
-	//~ test 
-	m_fps.SetPosition({ 10, 10 });
-	m_fps.SetPx(16);
-	m_fps.SetText("System Thread FPS: ");
-	m_fps.SetScale({ 40, 40 });
-
-	pixel_engine::PERenderQueue::Instance().AddFont(&m_fps);
-	pixel_engine::PERenderQueue::Instance().EnableFPS(true, { 10, 40 });
-
-	m_player.Initialize();
-	
-	m_pCamera2D = pixel_engine::PERenderQueue::Instance().GetCamera();
-	m_pCamera2D->FollowSprite(m_player.GetPlayerBody());
-
-	m_spawner = std::make_unique<EnemySpawner>(&m_player);
-
-	pixel_game::PG_SPAWN_DESC spawnDesc{};
-	spawnDesc.SpawnStartTime = 5.0f;
-	spawnDesc.SpawnMaxCount = 10;
-	spawnDesc.SpawnRampTime = 10.f;
-
-	m_spawner->Initialize(spawnDesc);
-
-	//~ test 1
-	PG_ENEMY_INIT_DESC desc{};
-	desc.pTarget = m_player.GetPlayerBody();
-	desc.Scale = { 3, 3 };
-	desc.SpawnPoint = { 20, 20 };
-	m_goblin.Initialize(desc);
-	pixel_engine::PhysicsQueue::Instance().AddObject(m_goblin.GetBody());
-
-	//~ test 2
-	m_enemy = RegistryEnemy::CreateEnemy("EnemyGoblin");
-	desc.SpawnPoint = { -20, -20 };
-	m_enemy->Initialize(desc);
-	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy->GetBody());
+	PG_GAME_WORLD_CONSTRUCT_DESC desc{};
+	desc.pKeyboard       = &m_pWindowsManager->Keyboard;
+	desc.pWindowsManager = m_pWindowsManager.get();
+	m_pGameWorld = std::make_unique<GameWorld>(desc);
 }
 
 void pixel_game::Application::Tick(float deltaTime)
 {    
-	static int frameCount = 0;
-	static float elapsedTime = 0.0f;
-	static int lastFPS = 0;
-
-	frameCount++;
-	elapsedTime += deltaTime;
-
-	if (elapsedTime >= 1.0f)
-	{
-		lastFPS = frameCount;
-		frameCount = 0;
-		elapsedTime = 0.0f;
-
-		m_fps.SetText(std::format("System Thread FPS: {}", lastFPS));
-	}
-
-	m_player.HandleInput(&m_pWindowsManager->Keyboard, deltaTime);
-	
-	m_spawner->Update(deltaTime);
-	m_player.Update(deltaTime);
-	m_goblin.Update(deltaTime);
-	m_enemy->Update(deltaTime);
+	m_pGameWorld->Update(deltaTime);
 }
 
 void pixel_game::Application::Release()
 {
-	if (m_spawner)
-	{
-		m_spawner->Release();
-		m_spawner.reset();
-	}
+
 }

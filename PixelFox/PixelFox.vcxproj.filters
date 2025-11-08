@@ -39,6 +39,12 @@
     <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\game_world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\menu_gui\main_menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -68,7 +74,7 @@
     <ClInclude Include="src\ai\projectile\straight\straight_projectile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\world\GameWorld.h">
+    <ClInclude Include="src\world\game_world.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\enemy\interface_enemy.h">
@@ -93,6 +99,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\enemy\define_enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\map_generator\interface_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\menu_gui\main_menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

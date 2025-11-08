@@ -1,12 +1,7 @@
 #pragma once
 
 #include "pixel_engine/PixelEngine.h"
-
-#include "player/player.h"
-#include "enemy/goblin/enemy_goblin.h"
-
-#include "world/enemy_spawner/enemy_spawner.h"
-#include "pixel_engine/render_manager/components/font/font.h"
+#include "world/game_world.h"
 
 namespace pixel_game
 {
@@ -28,12 +23,6 @@ namespace pixel_game
 		void Release  ()				override;
 
 	private:
-		PlayerCharacter  m_player{};
-		EnemyGoblin		 m_goblin{};
-		pixel_engine::PEFont m_fps{};
-		std::unique_ptr<IEnemy> m_enemy{ nullptr };
-		std::unique_ptr<EnemySpawner> m_spawner{ nullptr };
-
-		pixel_engine::Camera2D* m_pCamera2D{ nullptr };
+		std::unique_ptr<GameWorld> m_pGameWorld{ nullptr };
 	};
 } // namespace pixel_game

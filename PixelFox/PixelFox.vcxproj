@@ -27,6 +27,8 @@
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp" />
     <ClCompile Include="src\player\player.cpp" />
     <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp" />
+    <ClCompile Include="src\world\game_world.cpp" />
+    <ClCompile Include="src\world\menu_gui\main_menu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -45,7 +47,9 @@
     <ClInclude Include="src\world\events\enemy_events.h" />
     <ClInclude Include="src\world\events\player_events.h" />
     <ClInclude Include="src\world\events\projectile_events.h" />
-    <ClInclude Include="src\world\GameWorld.h" />
+    <ClInclude Include="src\world\game_world.h" />
+    <ClInclude Include="src\world\map_generator\interface_map.h" />
+    <ClInclude Include="src\world\menu_gui\main_menu.h" />
     <ClInclude Include="src\world\state\character_state.h" />
   </ItemGroup>
   <ItemGroup>
