@@ -47,6 +47,7 @@ bool pixel_engine::PhysicsQueue::FrameBegin(float delatTime)
             auto* built = Sampler::Instance().BuildTexture(desc);
             sprite->AssignSampledTexture(built);
         }
+        if (!obj.second->IsVisible()) continue;
 
         obj.second->Update(delatTime, desc);
 

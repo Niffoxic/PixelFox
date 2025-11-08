@@ -36,7 +36,7 @@
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\world\enemy_manager\enemy_manager.cpp">
+    <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,7 +86,7 @@
     <ClInclude Include="src\world\state\character_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\world\enemy_manager\enemy_manager.h">
+    <ClInclude Include="src\world\enemy_spawner\enemy_spawner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\enemy\registry_enemy.h">

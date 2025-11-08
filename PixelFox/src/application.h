@@ -5,7 +5,7 @@
 #include "player/player.h"
 #include "enemy/goblin/enemy_goblin.h"
 
-#include "world/enemy_manager/enemy_manager.h"
+#include "world/enemy_spawner/enemy_spawner.h"
 #include "pixel_engine/render_manager/components/font/font.h"
 
 namespace pixel_game

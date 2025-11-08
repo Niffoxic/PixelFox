@@ -28,6 +28,15 @@ bool pixel_game::Application::InitApplication(pixel_engine::PIXEL_ENGINE_INIT_DE
 
 void pixel_game::Application::BeginPlay()
 {
+	//~ test 
+	m_fps.SetPosition({ 10, 10 });
+	m_fps.SetPx(16);
+	m_fps.SetText("System Thread FPS: ");
+	m_fps.SetScale({ 40, 40 });
+
+	pixel_engine::PERenderQueue::Instance().AddFont(&m_fps);
+	pixel_engine::PERenderQueue::Instance().EnableFPS(true, { 10, 40 });
+
 	m_player.Initialize();
 	
 	m_pCamera2D = pixel_engine::PERenderQueue::Instance().GetCamera();
@@ -37,9 +46,8 @@ void pixel_game::Application::BeginPlay()
 
 	pixel_game::PG_SPAWN_DESC spawnDesc{};
 	spawnDesc.SpawnStartTime = 5.0f;
-	spawnDesc.SpawnInterval = 3.0f;
-	spawnDesc.SpawnMaxCount = 200;
-	spawnDesc.SpawnRampTime = 120.0f;
+	spawnDesc.SpawnMaxCount = 10;
+	spawnDesc.SpawnRampTime = 10.f;
 
 	m_spawner->Initialize(spawnDesc);
 
@@ -56,15 +64,6 @@ void pixel_game::Application::BeginPlay()
 	desc.SpawnPoint = { -20, -20 };
 	m_enemy->Initialize(desc);
 	pixel_engine::PhysicsQueue::Instance().AddObject(m_enemy->GetBody());
-
-	//~ test 
-	m_fps.SetPosition({ 10, 10 });
-	m_fps.SetPx(16);
-	m_fps.SetText("System Thread FPS: ");
-	m_fps.SetScale({40, 40 });
-
-	pixel_engine::PERenderQueue::Instance().AddFont(&m_fps);
-	pixel_engine::PERenderQueue::Instance().EnableFPS(true, { 10, 40});
 }
 
 void pixel_game::Application::Tick(float deltaTime)
