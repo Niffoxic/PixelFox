@@ -59,6 +59,7 @@ namespace pixel_game
 		}
 
 		bool RangedEnemy() const { return m_bRangedEnemy; }
+		virtual void SetInvisible() = 0;
 
 	protected:
 		_NODISCARD _Check_return_

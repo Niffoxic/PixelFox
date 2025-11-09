@@ -234,7 +234,14 @@ bool pixel_game::EnemyFireDog::InitEnemyAI(_In_ const PG_ENEMY_INIT_DESC& desc)
     m_pAIController->SetFireCooldown(m_nFireCoolDown);
     m_pAIController->SetMuzzleOffset(m_MuzzleOffset);
 
+    PE_AI_CONTROLLER_DESC controllerDesc{};
+    controllerDesc.pAiBody           = m_pBody.get();
+    controllerDesc.pAnimStateMachine = m_pAnimState.get();
+    m_pAIController->Init(controllerDesc);
+
     INIT_PROJECTILE_DESC projectileDesc{};
+    projectileDesc.pOwner = m_pAIController->GetBody();
+
     m_pProjectile = std::make_unique<StraightProjectile>();
     m_pProjectile->Init(projectileDesc);
     m_pProjectile->SetSpeed(m_nProjectileSpeed);
@@ -264,11 +271,7 @@ bool pixel_game::EnemyFireDog::InitEnemyAI(_In_ const PG_ENEMY_INIT_DESC& desc)
     }
     m_pAIController->SetProjectile(m_pProjectile.get());
 
-    PE_AI_CONTROLLER_DESC controllerDesc{};
-    controllerDesc.pAiBody = m_pBody.get();
-    controllerDesc.pAnimStateMachine = m_pAnimState.get();
-
-    return m_pAIController->Init(controllerDesc);
+    return true;
 }
 
 void pixel_game::EnemyFireDog::SubscribeEvents()
@@ -329,7 +332,8 @@ void pixel_game::EnemyFireDog::UpdateAIController(float deltaTime)
 {
     if (!m_pAIController) return;
 
-    m_pAIController->Update(deltaTime);
+    if (m_pBody && m_pBody->IsVisible())
+        m_pAIController->Update(deltaTime);
 }
 
 void pixel_game::EnemyFireDog::SetOnCollisionEnter()

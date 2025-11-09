@@ -77,6 +77,14 @@ namespace pixel_game
         void UpdateAnimState(_In_ float deltaTime) override;
         void UpdateAIController(_In_ float deltaTime) override;
 
+        void SetInvisible() override
+        {
+            if (m_pBody)
+            {
+                m_pBody->SetVisible(false);
+            }
+        }
+
     private:
         void SetOnCollisionEnter();
         void SetOnCollisionExit();

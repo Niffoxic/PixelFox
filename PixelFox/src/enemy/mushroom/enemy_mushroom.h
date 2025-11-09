@@ -42,19 +42,27 @@ namespace pixel_game
             pixel_engine::BoxCollider* GetCollider() const override;
 
         _NODISCARD _Check_return_ _Ret_maybenull_
-            IAIController* GetController() const override;
+        IAIController* GetController() const override;
 
         void SetTarget(_In_opt_ pixel_engine::PEISprite* target) override;
 
         _NODISCARD _Check_return_ _Ret_maybenull_
-            pixel_engine::PEISprite* GetTarget() const override;
+        pixel_engine::PEISprite* GetTarget() const override;
 
         _NODISCARD _Check_return_
-            bool HasTarget() const override;
+        bool HasTarget() const override;
 
         // States
         _NODISCARD _Check_return_
-            bool IsDead() const override;
+        bool IsDead() const override;
+
+        void SetInvisible() override
+        {
+            if (m_pBody)
+            {
+                m_pBody->SetVisible(false);
+            }
+        }
 
     protected:
         // Initialization helpers

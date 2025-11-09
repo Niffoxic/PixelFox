@@ -56,6 +56,14 @@ namespace pixel_game
         _NODISCARD _Check_return_
         bool IsDead() const override;
 
+        void SetInvisible() override
+        {
+            if (m_pBody)
+            {
+                m_pBody->SetVisible(false);
+            }
+        }
+
     protected:
         // Initialization helpers
         _NODISCARD _Check_return_

@@ -7,6 +7,7 @@ using namespace pixel_engine;
 _Use_decl_annotations_
 bool StraightProjectile::Init(INIT_PROJECTILE_DESC& desc)
 {
+	m_pOwner = desc.pOwner;
 	m_pBody = std::make_unique<QuadObject>();
 	if (!m_pBody) return false;
 
@@ -36,6 +37,15 @@ _Use_decl_annotations_
 void StraightProjectile::Update(float dt)
 {
 	if (!m_bActive || dt <= 0.f) return;
+	if (m_pOwner)
+	{
+		if (!m_pOwner->IsVisible())
+		{
+			m_pBody->SetVisible(false);
+			Deactivate();
+			return;
+		}
+	}
 
 	if (m_pAnimState)
 	{
@@ -65,6 +75,14 @@ bool StraightProjectile::Fire(const FVector2D& worldPos,
 	float speed)
 {
 	if (m_bActive) return false;
+	if (m_pOwner)
+	{
+		if (!m_pOwner->IsVisible())
+		{
+			m_pBody->SetVisible(false);
+			return true;
+		}
+	}
 
 	const float len2 = directionNorm.LengthSq();
 	
@@ -99,21 +117,21 @@ bool StraightProjectile::Fire(const FVector2D& worldPos,
 
 void StraightProjectile::Deactivate()
 {
-	if (!m_bActive) return;
-
 	if (auto* rb = m_pBody->GetRigidBody2D())
 	{
 		rb->SetVelocity({ 0.f, 0.f });
+		rb->m_transform.Position = { -100000.f, -100000.f };
 	}
 
 	m_pBody->SetVisible(false);
-	m_bActive = false;
+	m_bActive   = false;
 	m_nTimeLeft = 0.0f;
 }
 
 _Use_decl_annotations_
 void StraightProjectile::SetActive(bool on)
 {
+	m_bActive = on;
 	if (m_pBody) m_pBody->SetVisible(on);
 
 	if (on && !m_bActive)

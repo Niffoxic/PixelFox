@@ -89,6 +89,7 @@ namespace pixel_game
 		}
 
 	private:
+		pixel_engine::PEISprite* m_pOwner{ nullptr };
 		std::unique_ptr<pixel_engine::QuadObject> m_pBody{ nullptr };
 
 		bool      m_bActive   { false };

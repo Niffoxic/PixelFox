@@ -463,7 +463,11 @@ void pixel_game::FiniteMap::SetPlayerSpawnPosition()
         {
             m_pPlayerCharacter->Initialize();
         }
-        m_pPlayerCharacter->GetPlayerBody()->SetPosition({ 0.f, 0.f });
+        if (auto* body = m_pPlayerCharacter->GetPlayerBody())
+        {
+            body->SetPosition({ 0.f, 0.f });
+        }
+        
     }
 }
 

@@ -17,6 +17,8 @@ namespace pixel_game
 		std::function<void(_In_ IProjectile* projectile)> OnHit;
 		std::function<void(_In_ IProjectile* projectile)> OnExpired;
 		std::function<void(_In_ IProjectile* projectile)> OnActive;
+
+		pixel_engine::PEISprite* pOwner{ nullptr };
 	} INIT_PROJECTILE_DESC;
 
 	class IProjectile

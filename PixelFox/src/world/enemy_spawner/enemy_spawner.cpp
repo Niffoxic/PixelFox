@@ -202,29 +202,40 @@ bool pixel_game::EnemySpawner::Initialize(const PG_SPAWN_DESC& desc)
 
 void pixel_game::EnemySpawner::BuildEnemies()
 {
-	m_pEnemies  .clear();
+	m_pEnemies.clear();
 	m_mapEnemies.clear();
 
 	const auto& names = RegistryEnemy::GetEnemyNames();
-	
+
 	if (names.empty())
 	{
 		logger::error("RegistryEnemy::GetEnemyNames() is empty!");
 		return;
 	}
 
-	m_pEnemies.reserve(static_cast<size_t>(m_desc.SpawnMaxCount));
+	const int totalCount = m_desc.SpawnMaxCount;
+	const int enemyTypeCount = static_cast<int>(names.size());
+	m_pEnemies.reserve(static_cast<size_t>(totalCount));
 
-	for (int i = 0; i < m_desc.SpawnMaxCount; ++i)
+	const int baseCount = totalCount / enemyTypeCount;
+	const int remainder = totalCount % enemyTypeCount;
+
+	int count = 0;
+	for (int t = 0; t < enemyTypeCount; ++t)
 	{
-		const int idx = RandInt(0, static_cast<int>(names.size()) - 1);
-		std::unique_ptr<IEnemy> ptr = RegistryEnemy::CreateEnemy(names[idx]);
-		
-		if (!ptr) continue;
+		const int spawnCount = baseCount + (t < remainder ? 1 : 0);
+		for (int i = 0; i < spawnCount; ++i)
+		{
+			std::unique_ptr<IEnemy> ptr = RegistryEnemy::CreateEnemy(names[t]);
+			if (!ptr) continue;
 
-		m_mapEnemies[ptr.get()] = false;
-		m_pEnemies.push_back(std::move(ptr));
+			m_mapEnemies[ptr.get()] = false;
+			m_pEnemies.push_back(std::move(ptr));
+			++count;
+		}
 	}
+
+	logger::info("EnemySpawner::BuildEnemies - Spawned {} enemies ({} types equally divided).", count, enemyTypeCount);
 }
 
 void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)
@@ -276,11 +287,8 @@ void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)
 
 void pixel_game::EnemySpawner::DeactivateEnemy(IEnemy& e)
 {
-	if (auto* body = e.GetBody())
-		body->SetVisible(false);
-
+	e.SetInvisible();
 	m_mapEnemies[&e] = false;
-	// TODO: Reset Enemy State
 }
 
 int pixel_game::EnemySpawner::PickInactiveIndexRandom()
@@ -333,6 +341,7 @@ void EnemySpawner::PrepareExistingPoolInvisible_()
 
 		m_mapEnemies[e] = false;
 
+		e->SetInvisible();
 		if (auto* body = e->GetBody())
 		{
 			body->SetVisible(false);
