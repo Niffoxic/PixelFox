@@ -200,6 +200,105 @@ bool pixel_game::EnemySpawner::Initialize(const PG_SPAWN_DESC& desc)
 	return true;
 }
 
+_Use_decl_annotations_
+void pixel_game::EnemySpawner::LoadState(const pixel_engine::PEFoxLoader& loader)
+{
+	const int poolCount = static_cast<int>(m_pEnemies.size());
+	const int savedCount = loader.Contains("Count") ? loader["Count"].AsInt() : 0;
+	const int count = (std::min)(savedCount, poolCount);
+
+	for (int i = 0; i < poolCount; ++i)
+	{
+		IEnemy* e = m_pEnemies[i].get();
+		if (!e) continue;
+
+		if (m_mapEnemies.contains(e)) m_mapEnemies[e] = false;
+		else                          m_mapEnemies[e] = false;
+
+		if (auto* body = e->GetBody())
+			body->SetVisible(false);
+
+		e->SetInvisible();
+	}
+
+	int activeLoaded = 0;
+
+	for (int i = 0; i < count; ++i)
+	{
+		IEnemy* e = m_pEnemies[i].get();
+		if (!e) continue;
+
+		const std::string key = "E" + std::to_string(i);
+		if (!loader.Contains(key)) continue;
+
+		const auto& eNode = loader[key];
+
+		const float px = eNode.Contains("PosX") ? eNode["PosX"].AsFloat() : 0.f;
+		const float py = eNode.Contains("PosY") ? eNode["PosY"].AsFloat() : 0.f;
+
+		const bool active = eNode.Contains("Active") ? (eNode["Active"].AsInt() != 0) : false;
+
+		float health = e->GetHealth();
+		if (eNode.Contains("Health"))
+			health = eNode["Health"].AsFloat();
+
+		if (auto* body = e->GetBody())
+		{
+			body->SetPosition({ px, py });
+			body->SetVisible(active);
+		}
+
+		e->SetHealth(health);
+		if (m_mapEnemies.contains(e)) m_mapEnemies[e] = active;
+		else                          m_mapEnemies[e] = active;
+
+		if (active) ++activeLoaded;
+	}
+
+	m_nSpawnedCount = activeLoaded;
+	m_activationTimer = 0.0f;
+	if (savedCount > poolCount)
+	{
+		logger::debug("EnemySpawner::LoadState - saved {} exceeds pool {}, truncating.",
+			savedCount, poolCount);
+	}
+
+	logger::debug("EnemySpawner::LoadState - restored {} active out of {} (pool={})",
+		activeLoaded, savedCount, poolCount);
+}
+
+_Use_decl_annotations_
+void pixel_game::EnemySpawner::SaveState(pixel_engine::PEFoxLoader& enemiesNode)
+{
+	const int count = static_cast<int>(m_pEnemies.size());
+	enemiesNode.GetOrCreate("Count").SetValue(std::to_string(count));
+
+	for (int i = 0; i < count; ++i)
+	{
+		IEnemy* enemy = m_pEnemies[i].get();
+		if (!enemy) continue;
+
+		FVector2D pos{ 40.f, 40.f };
+		if (auto* body = enemy->GetBody())
+			pos = body->GetPosition();
+
+		bool active = enemy->IsActive();
+		if (m_mapEnemies.contains(enemy))
+			active = m_mapEnemies[enemy];
+
+		float health = 0.f;
+		health = enemy->GetHealth();
+
+		auto& eNode = enemiesNode.GetOrCreate("E" + std::to_string(i));
+		eNode.GetOrCreate("PosX").SetValue(std::to_string(pos.x));
+		eNode.GetOrCreate("PosY").SetValue(std::to_string(pos.y));
+		eNode.GetOrCreate("Active").SetValue(active ? "1" : "0");
+		eNode.GetOrCreate("Health").SetValue(std::to_string(health));
+	}
+
+	pixel_engine::logger::debug("EnemySpawner::SaveState - saved {} enemies", count);
+}
+
 void pixel_game::EnemySpawner::BuildEnemies()
 {
 	m_pEnemies.clear();

@@ -3,6 +3,8 @@
 #include "world/map_generator/interface_map.h"
 #include "obsticle/obsiticle.h"
 
+#include "pixel_engine/utilities/fox_loader/fox_loader.h"
+
 namespace pixel_game
 {
 	class FiniteMap final : public IMap
@@ -50,7 +52,8 @@ namespace pixel_game
 		bool SpawnObjectFromFileDataVec(
 			_In_ const fox::vector<FileData>& pool,
 			_In_ const FVector2D& gridPos,
-			_In_ const FVector2D& scale);
+			_In_ const FVector2D& scale,
+			_In_ char typeKey);
 
 		//~ build obsticles
 		void BuildTrees(_In_ LOAD_SCREEN_DETAILS details);
@@ -73,10 +76,27 @@ namespace pixel_game
 		//~ initialize enemies
 		void AllocateEnemy(LOAD_SCREEN_DETAILS details);
 
+		//~ save and load
+		void HandleInput(float deltaTime);
+		void LoadState();
+		void SaveState();
+
+		//~ cache
+		void BeginReuseFrame_();
+		void HideUnused_();
+		Obsticle* AcquireObsticle_(char type, const INIT_OBSTICLE_DESC& desc);
+
 	private:
-		int m_nMaxLevel	   { 3 };
+		float m_nInputDelay{ 0.2f };
+		float m_nInputTimer{ 0.2f };
+		const std::string m_szSavedPath{ "Saved/save.txt" }; //  I know its bad but no time
+		pixel_engine::PEFoxLoader m_foxLoader{};
+
+		int m_nMaxLevel	   { 4 };
 		int m_nCurrentLevel{ 1 };
-		fox::vector<std::unique_ptr<Obsticle>> m_ppObsticle{};
+
+		fox::unordered_map<char, fox::vector<std::unique_ptr<Obsticle>>> m_ppObsticle{};
+		fox::unordered_map<char, int> m_liveCount{};
 
 		pixel_engine::PEKeyboardInputs* m_pKeyboard{ nullptr };
 		PlayerCharacter* m_pPlayerCharacter{ nullptr };

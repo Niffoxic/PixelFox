@@ -31,6 +31,7 @@ namespace pixel_game
 		void Hide   ();
 		void Release();
 
+		void SetPosition(const FVector2D& pos);
 		FVector2D	GetPosition() const;
 		FVector2D	GetScale   () const;
 		std::string GetName	   () const;

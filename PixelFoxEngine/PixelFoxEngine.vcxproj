@@ -194,6 +194,8 @@
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.h" />
     <ClInclude Include="include\pixel_engine\render_manager\render_queue\render_queue.h" />
     <ClInclude Include="include\pixel_engine\utilities\clock\clock.h" />
+    <ClInclude Include="include\pixel_engine\utilities\filesystem\file_system.h" />
+    <ClInclude Include="include\pixel_engine\utilities\fox_loader\fox_loader.h" />
     <ClInclude Include="include\pixel_engine\utilities\hash_type.h" />
     <ClInclude Include="include\pixel_engine\utilities\id_allocator.h" />
     <ClInclude Include="include\pixel_engine\core\interface\interface_frame.h" />
@@ -239,6 +241,8 @@
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\render_queue.cpp" />
     <ClCompile Include="include\pixel_engine\render_manager\render_queue\sampler\sample_allocator.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\clock\clock.cpp" />
+    <ClCompile Include="include\pixel_engine\utilities\filesystem\file_system.cpp" />
+    <ClCompile Include="include\pixel_engine\utilities\fox_loader\fox_loader.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\keyboard_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\window_manager\inputs\mouse_inputs.cpp" />
     <ClCompile Include="include\pixel_engine\utilities\logger\logger.cpp" />

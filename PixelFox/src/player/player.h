@@ -38,6 +38,9 @@ namespace pixel_game
 
 		bool IsInitialized() const { return m_bInitialized; }
 
+		void  SetHealth	    (float hp) {}
+		float GetPlayerHeath() const { return 100.f; }
+
 	private:
 		//~ Look
 		bool InitializePlayer();

@@ -181,6 +181,7 @@ void pixel_game::GameWorld::KeyWatcher(float deltaTime)
                 pixel_engine::logger::debug("Returning to Main Menu");
                 if (m_pFiniteMap)
                 {
+                    m_pFiniteMap->Restart();
                     m_pFiniteMap->UnLoad();
                 }
                 SetState(GameState::Menu);
@@ -316,7 +317,7 @@ void pixel_game::GameWorld::InitializeFiniteMap()
     mapDesc.LoadScreen       = details;
     mapDesc.pPlayerCharacter = m_pPlayer.get();
     mapDesc.pEnemySpawner    = m_pEnemySpawner.get();
-    mapDesc.MapDuration      = 10.f; 
+    mapDesc.MapDuration      = 120.f; 
     mapDesc.UseBounds        = true;
     mapDesc.Bounds           = { { -32.f, -32.f }, { 32, 32 } };
     mapDesc.Type             = EMapType::Finite;

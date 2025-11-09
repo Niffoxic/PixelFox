@@ -8,6 +8,7 @@
 #include "pixel_engine/render_manager/components/font/font.h"
 
 #include <random>
+#include "pixel_engine/utilities/fox_loader/fox_loader.h"
 
 namespace pixel_game
 {
@@ -39,6 +40,10 @@ namespace pixel_game
 
 		_Success_(return != false)
 		bool Restart();
+
+		//~ save and load state
+		void LoadState(_In_ const pixel_engine::PEFoxLoader& loader);
+		void SaveState(_In_ pixel_engine::PEFoxLoader& loader);
 
 	private:
 		void BuildEnemies();               
