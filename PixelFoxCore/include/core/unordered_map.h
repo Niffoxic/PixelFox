@@ -395,7 +395,7 @@ namespace fox
         {
             const size_type idx = index_of(key);
             
-            for (node* e = m_buckets[idx]; e; e = e->next)
+             for (node* e = m_buckets[idx]; e; e = e->next)
             {
                 if (m_eq(e->key, key))
                 {

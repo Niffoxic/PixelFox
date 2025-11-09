@@ -131,46 +131,76 @@ void TurretAI::UpdateAIDecision()
     auto* rigidBody = m_pBody->GetRigidBody2D();
     if (rigidBody)
     {
-        //~ turret stays idle
         rigidBody->SetVelocity({ 0.f, 0.f });
     }
 
     if (!m_pTarget) return;
 
     const float distSq = DistanceFromPlayer();
-    const float attack = m_nMaxShootDistance;
-    const float attackSq = attack * attack;
+    const float attackSq = m_nMaxShootDistance * m_nMaxShootDistance;
 
-    //~ faces towards the target
     const FVector2D aimDir = DirectionToTarget();
+
     if (m_pAnimStateMachine)
     {
         const CharacterState idleFace = PickIdleFromDir(aimDir);
         m_pAnimStateMachine->TransitionTo(ToString(idleFace));
     }
 
+    float turretAngle = std::atan2(aimDir.y, aimDir.x);
     if (rigidBody)
     {
-        rigidBody->SetRotation(std::atan2(aimDir.y, aimDir.x));
+        rigidBody->SetRotation(turretAngle);
     }
 
-    //~ out of range
     if (distSq > attackSq) return;
 
-    //~ in range
     if (m_pProjectile && m_nFireTimer <= 0.0f)
     {
-        FVector2D spawn = rigidBody ? rigidBody->GetPosition() : FVector2D{ 0.f, 0.f };
-        spawn += m_muzzleOffset;
-
-        if (m_pProjectile->Fire(spawn, aimDir))
+        FVector2D dir = aimDir;
+        const float len2 = dir.x * dir.x + dir.y * dir.y;
+        if (len2 > 1e-12f)
         {
-            //~ raise attack callback with direction
-            EAttackDirection dir = DirToAttackDirection(aimDir);
-            if (dir == EAttackDirection::Invalid) dir = EAttackDirection::Right;
-            FireAttack(dir);
-            m_nFireTimer = m_nFireCooldown;
+            const float invLen = 1.0f / std::sqrt(len2);
+            dir.x *= invLen; dir.y *= invLen;
         }
+        else
+        {
+            dir = { std::cos(turretAngle), std::sin(turretAngle) };
+        }
+
+        const FVector2D basePos = rigidBody ? rigidBody->GetPosition() : FVector2D{ 0.f, 0.f };
+        FireProjectileTowardsTarget(basePos, turretAngle, dir);
+    }
+}
+
+_Use_decl_annotations_
+void pixel_game::TurretAI::FireProjectileTowardsTarget(
+    const FVector2D& basePos
+    ,float angleRadians,
+    const FVector2D& aimDirNorm)
+{
+    if (!m_pProjectile) return;
+
+    // Rotate muzzle offset by current turret angle
+    const float c = std::cos(angleRadians), s = std::sin(angleRadians);
+    const FVector2D muzzleWorld{
+        m_muzzleOffset.x * c - m_muzzleOffset.y * s,
+        m_muzzleOffset.x * s + m_muzzleOffset.y * c
+    };
+
+    FVector2D spawn = basePos + muzzleWorld;
+
+    if (m_pProjectile->Fire(spawn, aimDirNorm))
+    {
+        EAttackDirection dir = DirToAttackDirection(aimDirNorm);
+        if (dir == EAttackDirection::Invalid) dir = EAttackDirection::Right;
+        FireAttack(dir);
+        m_nFireTimer = m_nFireCooldown;
+    }
+    else
+    {
+        FireStopAttack();
     }
 }
 

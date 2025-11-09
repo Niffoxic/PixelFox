@@ -31,6 +31,12 @@ namespace pixel_game
 			const pixel_engine::PEKeyboardInputs* keyboard,
 			float deltaTime);
 
+		void Draw();
+		void Hide();
+		void UnloadFromQueue();
+
+		bool IsInitialized() const { return m_bInitialized; }
+
 	private:
 		//~ Look
 		bool InitializePlayer();
@@ -44,6 +50,7 @@ namespace pixel_game
 		//~ Events 
 
 	private:
+		bool m_bInitialized{ false };
 		std::unique_ptr<pixel_engine::QuadObject>       m_pBody    { nullptr };
 		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimState{ nullptr };
 

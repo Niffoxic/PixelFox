@@ -9,6 +9,8 @@ using namespace pixel_game;
 
 bool PlayerCharacter::Initialize()
 {
+    if (m_bInitialized) return true;
+    m_bInitialized = true;
     pixel_engine::PERenderQueue::Instance().GetCamera()->SetScale({ 1, 1 });
 
     if (!InitializePlayer    ()) return false;
@@ -27,6 +29,24 @@ void PlayerCharacter::Update(float deltaTime)
 void PlayerCharacter::Release()
 {
 
+}
+
+void pixel_game::PlayerCharacter::Draw()
+{
+    if (!m_bInitialized) return;
+    m_pBody->SetVisible(true);
+}
+
+void pixel_game::PlayerCharacter::Hide()
+{
+    if (!m_bInitialized) return;
+    m_pBody->SetVisible(false);
+}
+
+void pixel_game::PlayerCharacter::UnloadFromQueue()
+{
+    if (!m_bInitialized) return;
+    pixel_engine::PhysicsQueue::Instance().RemoveObject(m_pBody.get());
 }
 
 pixel_engine::PEISprite* PlayerCharacter::GetPlayerBody() const
@@ -93,6 +113,7 @@ bool pixel_game::PlayerCharacter::InitializePlayer()
     if (!m_pBody->Initialize()) return false;
     m_pBody->SetTexture("assets/sprites/player/idle_left/left_0.png");
 
+    m_pBody->SetVisible(false);
     pixel_engine::PhysicsQueue::Instance().AddObject(m_pBody.get());
     return true;
 }

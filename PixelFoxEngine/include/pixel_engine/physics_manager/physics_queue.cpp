@@ -43,7 +43,7 @@ bool pixel_engine::PhysicsQueue::FrameBegin(float delatTime)
             desc.texture = sprite->GetTexture();
             desc.scaledBy = sprite->GetScale();
             desc.tileSize = 32;
-
+            if (!desc.texture) continue;
             auto* built = Sampler::Instance().BuildTexture(desc);
             sprite->AssignSampledTexture(built);
         }
@@ -75,6 +75,9 @@ bool pixel_engine::PhysicsQueue::FrameBegin(float delatTime)
             Contact contact{};
             contact.A = a;
             contact.B = b;
+
+            if (contact.A->HasTag("Enemy") && contact.B->IsStatic()) continue;
+            if (contact.B->HasTag("Enemy") && contact.A->IsStatic()) continue;
 
             if (a->CheckCollision(b, contact))
             {

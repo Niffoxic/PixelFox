@@ -24,10 +24,16 @@
     <ClCompile Include="src\ai\controller\turret\turret_ai.cpp" />
     <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp" />
     <ClCompile Include="src\application.cpp" />
+    <ClCompile Include="src\enemy\angry_goblin\enemy_angry_goblin.cpp" />
+    <ClCompile Include="src\enemy\fire_dog\enemy_fire_dog.cpp" />
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp" />
+    <ClCompile Include="src\enemy\mushroom\enemy_mushroom.cpp" />
+    <ClCompile Include="src\enemy\skeleton\enemy_skeleton.cpp" />
+    <ClCompile Include="src\obsticle\obsitcle.cpp" />
     <ClCompile Include="src\player\player.cpp" />
     <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp" />
     <ClCompile Include="src\world\game_world.cpp" />
+    <ClCompile Include="src\world\map_generator\finite_map\finite_map.cpp" />
     <ClCompile Include="src\world\menu_gui\main_menu.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -38,16 +44,22 @@
     <ClInclude Include="src\ai\projectile\interface_projectile.h" />
     <ClInclude Include="src\ai\projectile\straight\straight_projectile.h" />
     <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\enemy\angry_goblin\enemy_angry_goblin.h" />
     <ClInclude Include="src\enemy\define_enemy.h" />
+    <ClInclude Include="src\enemy\fire_dog\enemy_fire_dog.h" />
     <ClInclude Include="src\enemy\goblin\enemy_goblin.h" />
     <ClInclude Include="src\enemy\interface_enemy.h" />
+    <ClInclude Include="src\enemy\mushroom\enemy_mushroom.h" />
     <ClInclude Include="src\enemy\registry_enemy.h" />
+    <ClInclude Include="src\enemy\skeleton\enemy_skeleton.h" />
+    <ClInclude Include="src\obsticle\obsiticle.h" />
     <ClInclude Include="src\player\player.h" />
     <ClInclude Include="src\world\enemy_spawner\enemy_spawner.h" />
     <ClInclude Include="src\world\events\enemy_events.h" />
     <ClInclude Include="src\world\events\player_events.h" />
     <ClInclude Include="src\world\events\projectile_events.h" />
     <ClInclude Include="src\world\game_world.h" />
+    <ClInclude Include="src\world\map_generator\finite_map\finite_map.h" />
     <ClInclude Include="src\world\map_generator\interface_map.h" />
     <ClInclude Include="src\world\menu_gui\main_menu.h" />
     <ClInclude Include="src\world\state\character_state.h" />

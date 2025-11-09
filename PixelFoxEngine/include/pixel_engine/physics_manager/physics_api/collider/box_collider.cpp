@@ -34,7 +34,7 @@ void BoxCollider::Update(float deltaTime)
     for (const auto& [collider, flag] : m_hitTrack)
     {
         if (!flag) continue;
-        
+        if (!collider) continue;
         Contact tmp;
         if (!CheckCollision(collider, tmp))
         {

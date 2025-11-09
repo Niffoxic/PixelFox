@@ -48,6 +48,11 @@ namespace pixel_engine
 			return R.Value <= 10 && G.Value <= 10 && B.Value <= 10;
 		}
 
+		bool IsWhite() const
+		{
+			return R.Value >= 250 && G.Value >= 250 && B.Value >= 250;
+		}
+
 	} PFE_FORMAT_R8G8B8_UINT;
 
 	typedef struct _PE_IMAGE_BUFFER_DESC
