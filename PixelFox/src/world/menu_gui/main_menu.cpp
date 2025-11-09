@@ -55,9 +55,10 @@ void MainMenu::Update(float deltaTime)
 void pixel_game::MainMenu::Show()
 {
     m_bVisible = true;
+    ShowCommonLayout();
+
     if (m_eState == EMenuState::Main) ShowMainMenu();
     else                              ShowControlsMenu();
-    ShowCommonLayout();
 }
 
 void pixel_game::MainMenu::Hide()

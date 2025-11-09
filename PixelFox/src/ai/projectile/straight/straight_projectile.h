@@ -82,13 +82,20 @@ namespace pixel_game
 		pixel_engine::AnimSateMachine* GetAnimStateMachine() const override;
 
 	private:
+		//~ helper
+		inline float AngleFromDir(const FVector2D& d) noexcept
+		{
+			return std::atan2(d.y, d.x);
+		}
+
+	private:
 		std::unique_ptr<pixel_engine::QuadObject> m_pBody{ nullptr };
 
 		bool      m_bActive   { false };
 		float     m_nSpeed    { 12.0f };
 		float     m_nLifeSpan { 2.0f };
-		float     m_nTimeLeft { 0.0f };
-		float     m_nDamage   { 1.0f };
+		float     m_nTimeLeft { 4.0f };
+		float     m_nDamage   { 10.0f };
 		FVector2D m_direction { 0.f, 0.f };
 
 		//~ Callback

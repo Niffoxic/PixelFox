@@ -11,6 +11,7 @@ pixel_game::GameWorld::GameWorld(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
     BuildLoadingDetails();
 
     m_pPlayer       = std::make_unique<PlayerCharacter>();
+
     m_pFiniteMap    = std::make_unique<FiniteMap>();
     m_pEnemySpawner = std::make_unique<EnemySpawner>(m_pPlayer.get());
 }
@@ -33,16 +34,6 @@ void pixel_game::GameWorld::Update(float deltaTime)
     KeyWatcher       (deltaTime);
 	HandleTransition ();
 	UpdateActiveState(deltaTime);
-
-    if (m_eGameState != GameState::Menu)
-    {
-        m_pPlayer->Update(deltaTime);
-
-        if (m_pKeyboard)
-        {
-            m_pPlayer->HandleInput(m_pKeyboard, deltaTime);
-        }
-    }
 }
 
 void pixel_game::GameWorld::BuildMainMenu(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
@@ -188,6 +179,10 @@ void pixel_game::GameWorld::KeyWatcher(float deltaTime)
             case GameState::Finite:
             {
                 pixel_engine::logger::debug("Returning to Main Menu");
+                if (m_pFiniteMap)
+                {
+                    m_pFiniteMap->UnLoad();
+                }
                 SetState(GameState::Menu);
                 m_nInputBlockTimer = m_nInputDelay;
                 return;
@@ -323,8 +318,14 @@ void pixel_game::GameWorld::InitializeFiniteMap()
     mapDesc.pEnemySpawner    = m_pEnemySpawner.get();
     mapDesc.MapDuration      = 120.f; 
     mapDesc.UseBounds        = true;
-    mapDesc.Bounds           = { { -50.f, -50.f }, { 50.f, 50.f } };
+    mapDesc.Bounds           = { { -32.f, -32.f }, { 32, 32 } };
     mapDesc.Type             = EMapType::Finite;
+    mapDesc.pKeyboard        = m_pKeyboard;
+    mapDesc.OnMapComplete    = 
+    [&]()
+    {
+        SetState(GameState::Menu);
+    };
 
     mapDesc.OnMapComplete = [this]()
     {

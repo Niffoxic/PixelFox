@@ -17,6 +17,7 @@ bool StraightProjectile::Init(INIT_PROJECTILE_DESC& desc)
 
 	m_pAnimState = std::make_unique<AnimSateMachine>(m_pBody.get());
 
+	m_pBody->SetVisible(false);
 	PhysicsQueue::Instance().AddObject(m_pBody.get());
 
 	m_bActive  = false;
@@ -36,22 +37,17 @@ void StraightProjectile::Update(float dt)
 {
 	if (!m_bActive || dt <= 0.f) return;
 
+	if (m_pAnimState)
+	{
+		m_pAnimState->OnFrameBegin(dt);
+		m_pAnimState->OnFrameEnd();
+	}
 	m_nTimeLeft -= dt;
-
 	if (m_nTimeLeft <= 0.0f)
 	{
 		if (m_fnOnExpired) m_fnOnExpired(this);
 		Deactivate();
 		return;
-	}
-
-	auto* rb = m_pBody->GetRigidBody2D();
-	if (rb)
-	{
-		FVector2D pos = rb->GetPosition();
-		pos.x += m_direction.x * m_nSpeed * dt;
-		pos.y += m_direction.y * m_nSpeed * dt;
-		rb->m_transform.Position = pos;
 	}
 }
 
@@ -70,16 +66,34 @@ bool StraightProjectile::Fire(const FVector2D& worldPos,
 {
 	if (m_bActive) return false;
 
-	m_direction = directionNorm;
+	const float len2 = directionNorm.LengthSq();
+	
+	if (len2 > 1e-12f) //~ an epsilon test
+	{
+		const float inv = 1.0f / std::sqrt(len2);
+		m_direction = { directionNorm.x * inv, directionNorm.y * inv };
+	}
+	else
+	{
+		m_direction = { 1.f, 0.f }; // fall back to +X to avoid rare cases
+	}
+
 	if (speed > 0.f) m_nSpeed = speed;
+	else if (m_nSpeed <= 0.f) m_nSpeed = 25.f;
 
 	m_nTimeLeft = m_nLifeSpan;
 	m_bActive = true;
-	SetPosition(worldPos);
-	SetActive(true);
 
+	if (auto* rb = m_pBody->GetRigidBody2D())
+	{
+		rb->SetPosition(worldPos);
+		rb->SetRotation(std::atan2(m_direction.y, m_direction.x));
+		rb->SetVelocity({ m_direction.x * m_nSpeed, m_direction.y * m_nSpeed });
+		rb->SetLinearDamping(0.7f);
+	}
+
+	m_pBody->SetVisible(true);
 	if (m_fnOnFire) m_fnOnFire(this);
-
 	return true;
 }
 
@@ -87,14 +101,14 @@ void StraightProjectile::Deactivate()
 {
 	if (!m_bActive) return;
 
-	m_bActive = false;
-	SetActive(false);
-	m_nTimeLeft = 0.0f;
-
 	if (auto* rb = m_pBody->GetRigidBody2D())
 	{
-		rb->SetVelocity({ 0.f,0.f });
+		rb->SetVelocity({ 0.f, 0.f });
 	}
+
+	m_pBody->SetVisible(false);
+	m_bActive = false;
+	m_nTimeLeft = 0.0f;
 }
 
 _Use_decl_annotations_
@@ -106,9 +120,8 @@ void StraightProjectile::SetActive(bool on)
 	{
 		if (m_fnOnActive) m_fnOnActive(this);
 	}
-	
-	m_bActive = on;
 }
+
 
 _Use_decl_annotations_
 bool StraightProjectile::IsActive() const

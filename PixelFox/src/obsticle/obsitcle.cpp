@@ -89,6 +89,12 @@ std::string pixel_game::Obsticle::GetName() const
 	return m_szName;
 }
 
+pixel_engine::PEISprite* pixel_game::Obsticle::GetSpirte() const
+{
+	if (m_pSprite) return m_pSprite.get();
+	return nullptr;
+}
+
 pixel_engine::BoxCollider* pixel_game::Obsticle::GetCollider() const
 {
 	if (!m_pSprite) return nullptr;

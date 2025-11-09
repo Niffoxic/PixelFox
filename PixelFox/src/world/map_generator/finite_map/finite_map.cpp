@@ -2,6 +2,8 @@
 #include "pixel_engine/utilities/logger/logger.h"
 
 #include <random>
+#include <fstream>
+#include <cctype> 
 
 using namespace pixel_game;
 
@@ -47,13 +49,28 @@ pixel_game::FiniteMap::FiniteMap()
     m_ppszWater.push_back(data);
     data.texture_base = "assets/water/5.png";
     m_ppszWater.push_back(data);
+
+    //~ add background
+    data.texture_base = "assets/ground/0.png";
+    m_ppszGround.push_back(data);
+    data.texture_base = "assets/ground/1.png";
+    m_ppszGround.push_back(data);
+    data.texture_base = "assets/ground/2.png";
+    m_ppszGround.push_back(data);
+    data.texture_base = "assets/ground/3.png";
+    m_ppszGround.push_back(data);
+    data.texture_base = "assets/ground/4.png";
+    m_ppszGround.push_back(data);
 }
 
 _Use_decl_annotations_
 void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
 {
+    if (m_bInitialized) return;
+
     m_bInitialized = true;
 
+    m_pKeyboard         = desc.pKeyboard;
     m_pPlayerCharacter  = desc.pPlayerCharacter;
     m_pEnemySpawner     = desc.pEnemySpawner;
     m_nMapDuration      = desc.MapDuration;
@@ -81,7 +98,33 @@ void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
     }
 
     BuildMapObjects(desc.LoadScreen);
+
+    if (desc.LoadScreen.pLoadTitle != nullptr)
+    {
+        desc.LoadScreen.pLoadTitle->SetText("Building Player...");
+    }
+    if (desc.LoadScreen.pLoadDescription != nullptr)
+    {
+        desc.LoadScreen.pLoadDescription->SetText("Player is being configured...");
+    }
+
     SetPlayerSpawnPosition();
+    AttachCamera();
+    BuildMapGUI(desc.LoadScreen);
+
+    if (m_pEnemySpawner)
+    {
+        if (!m_pEnemySpawner->IsInitialized())
+        {
+            PG_SPAWN_DESC spawnDesc{};
+            spawnDesc.pLoadDescription = desc.LoadScreen.pLoadDescription;
+            spawnDesc.pLoadTitle = desc.LoadScreen.pLoadTitle;
+            spawnDesc.SpawnMaxCount = 200;
+            spawnDesc.SpawnRampTime = 110.f;
+            spawnDesc.SpawnStartTime = 5.f;
+            m_pEnemySpawner->Initialize(spawnDesc);
+        }
+    }
 
     if (desc.LoadScreen.pLoadDescription)
     {
@@ -92,10 +135,31 @@ void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
 _Use_decl_annotations_
 void pixel_game::FiniteMap::Update(float deltaTime)
 {
+    if (deltaTime > 1.f) return;
     for (auto& obj : m_ppObsticle)
     {
         obj->Update(deltaTime);
     }
+
+    if (m_pPlayerCharacter)
+    {
+        m_pPlayerCharacter->Update(deltaTime);
+
+        if (m_pKeyboard)
+        {
+            m_pPlayerCharacter->HandleInput(m_pKeyboard, deltaTime);
+        }
+        RestrictPlayer();
+    }
+
+    if (m_pEnemySpawner)
+    {
+        m_pEnemySpawner->Update(deltaTime);
+    }
+
+    m_nElapsedTime += deltaTime;
+    UpdateMapGUI(deltaTime);
+    MapCycle();
 }
 
 void pixel_game::FiniteMap::Release()
@@ -105,14 +169,34 @@ void pixel_game::FiniteMap::Release()
         obj->Hide();
         obj->Release();
     }
+
+    if (m_pPlayerCharacter)
+    {
+        m_pPlayerCharacter->Hide();
+        m_pPlayerCharacter->UnloadFromQueue();
+    }
+
+    if (m_timer)
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_timer.get());
+    }
+    if (m_level)
+    {
+        pixel_engine::PERenderQueue::Instance().AddFont(m_level.get());
+    }
 }
 
 void pixel_game::FiniteMap::Start()
 {
+    AttachCamera();
+    m_pPlayerCharacter->Draw();
     for (auto& obj : m_ppObsticle) 
     {
         obj->Draw();
     }
+    m_nCurrentLevel = 1;
+    pixel_engine::PERenderQueue::Instance().AddFont(m_timer.get());
+    pixel_engine::PERenderQueue::Instance().AddFont(m_level.get());
 }
 
 void pixel_game::FiniteMap::Pause()
@@ -125,15 +209,39 @@ void pixel_game::FiniteMap::Resume()
 
 void pixel_game::FiniteMap::Restart()
 {
+    //~ Reset runtime state
+    m_bActive      = false;
+    m_bPaused      = false;
+    m_bComplete    = false;
+    m_nElapsedTime = 0.0f;
+    m_nCurrentLevel = 1;
+
+    if (m_pEnemySpawner)
+    {
+        m_pEnemySpawner->Restart();
+    }
+    AttachCamera();
 }
 
 void pixel_game::FiniteMap::UnLoad()
 {
+    DettachCamera();
+    m_pPlayerCharacter->Hide();
+
+    if (m_pEnemySpawner) m_pEnemySpawner->Hide();
+
+    for (auto& obj : m_ppObsticle)
+    {
+        obj->Hide();
+    }
+    pixel_engine::PERenderQueue::Instance().RemoveFont(m_timer.get());
+    pixel_engine::PERenderQueue::Instance().RemoveFont(m_level.get());
 }
 
 _Use_decl_annotations_
 void pixel_game::FiniteMap::BuildMapObjects(LOAD_SCREEN_DETAILS details)
 {
+
     m_ppObsticle.clear();
 
     if (details.pLoadTitle)
@@ -148,274 +256,295 @@ void pixel_game::FiniteMap::BuildMapObjects(LOAD_SCREEN_DETAILS details)
         details.pLoadTitle->SetText("Building Map|Stones|");
     BuildStones(details);
 
+    if (details.pLoadTitle)
+        details.pLoadTitle->SetText("Building Map|Ground|");
+    BuildGround(details);
+
     pixel_engine::logger::debug(
         "FiniteMap::BuildMapObjects completed — Obsticles: {}",
         m_ppObsticle.size());
+}
+
+std::string pixel_game::FiniteMap::LoadMap()
+{
+    const std::string levelPath =
+        "level/finiteLevel_" + std::to_string(m_nCurrentLevel) + ".txt";
+
+    std::ifstream in(levelPath, std::ios::in);
+    if (!in)
+    {
+        pixel_engine::logger::error("FiniteMap::LoadMap - failed to open '{}'", levelPath);
+        return {};
+    }
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    return ss.str();
+}
+
+void pixel_game::FiniteMap::AdvanceLevel_()
+{
+    m_nCurrentLevel = (m_nCurrentLevel % m_nMaxLevel) + 1;
+    std::string message = "Level: " + std::to_string(m_nCurrentLevel);
+    if (m_level) m_level->SetText(message);
+}
+
+void pixel_game::FiniteMap::RebuildLevel_()
+{
+    LOAD_SCREEN_DETAILS dummy{};
+
+    m_ppObsticle.clear();
+    
+    BuildMapObjects(dummy);
+    SetPlayerSpawnPosition();
+    AttachCamera();
+    BuildMapGUI(dummy);
+
+    if (m_pEnemySpawner) m_pEnemySpawner->Restart();
+
+    if (m_pPlayerCharacter) m_pPlayerCharacter->Draw();
+    for (auto& obj : m_ppObsticle) if (obj) obj->Draw();
+}
+
+_Use_decl_annotations_
+bool pixel_game::FiniteMap::SpawnObjectFromFileDataVec
+(const fox::vector<FileData>& pool,
+    const FVector2D& gridPos,
+    const FVector2D& scale)
+{
+    if (pool.empty()) return false;
+
+    const int idx = GetRandomNumber(0, static_cast<int>(pool.size()) - 1);
+    const auto& data = pool[idx];
+
+    INIT_OBSTICLE_DESC desc{};
+    desc.szName          = data.file_name;
+    desc.baseTexture     = data.texture_base;
+    desc.obsticleSprites = data.texture_sprite;
+    desc.scale           = scale;
+    desc.position        = m_Bounds.min + gridPos;
+
+    auto obst = std::make_unique<Obsticle>();
+    if (!obst->Init(desc)) return false;
+
+    if (auto* col = obst->GetCollider())
+    {
+        FVector2D scale = desc.scale;
+        col->SetScale(scale);
+    }
+    m_ppObsticle.push_back(std::move(obst));
+    return true;
+}
+
+_Use_decl_annotations_
+void pixel_game::FiniteMap::BuildTrees(LOAD_SCREEN_DETAILS details)
+{
+    const std::string level = LoadMap();
+    if (level.empty() || m_ppszTress.empty())
+        return;
+
+    if (details.pLoadDescription)
+        details.pLoadDescription->SetText("Placing Trees from file...");
+
+    int count = 0;
+    ForEachLevelCell(level, [&](int gx, int gy, char ch)
+    {
+        if (ch != 't') return;
+        if (SpawnObjectFromFileDataVec(m_ppszTress, { float(gx), float(gy) }, { 2.f, 2.f }))
+            ++count;
+    });
+
+    pixel_engine::logger::debug("FiniteMap::BuildTrees - Placed {} trees from file", count);
+}
+
+_Use_decl_annotations_
+void pixel_game::FiniteMap::BuildStones(LOAD_SCREEN_DETAILS details)
+{
+    const std::string level = LoadMap();
+    if (level.empty() || m_ppszStones.empty())
+        return;
+
+    if (details.pLoadDescription)
+        details.pLoadDescription->SetText("Placing Stones from file...");
+
+    int count = 0;
+    ForEachLevelCell(level, [&](int gx, int gy, char ch)
+    {
+        if (ch != 's') return;
+        if (SpawnObjectFromFileDataVec(m_ppszStones, { float(gx), float(gy) }, { 1.f, 1.f }))
+            ++count;
+    });
+
+    pixel_engine::logger::debug("FiniteMap::BuildStones - Placed {} stones from file", count);
+}
+
+_Use_decl_annotations_
+void pixel_game::FiniteMap::BuildWaters(LOAD_SCREEN_DETAILS details)
+{
+    const std::string level = LoadMap();
+    if (level.empty() || m_ppszWater.empty())
+        return;
+
+    if (details.pLoadDescription)
+        details.pLoadDescription->SetText("Placing Waters from file...");
+
+    int count = 0;
+    ForEachLevelCell(level, [&](int gx, int gy, char ch)
+    {
+        if (ch != 'w' && ch != 'W') return;
+        if (SpawnObjectFromFileDataVec(m_ppszWater,
+            { float(gx), float(gy) }, { 1.f, 1.f }))
+            ++count;
+    });
+
+    pixel_engine::logger::debug("FiniteMap::BuildWaters - Placed {} waters from file", count);
+}
+
+_Use_decl_annotations_
+void pixel_game::FiniteMap::BuildGround(LOAD_SCREEN_DETAILS details)
+{
+    if (m_ppszGround.empty())
+        return;
+
+    const FVector2D bigScale{ 64.f, 64.f };
+    const auto& data = m_ppszGround.front();
+
+    const FVector2D positions[] =
+    {
+        // Center
+        {  0.f,   0.f },
+
+        { -64.f,   0.f }, // left
+        {  64.f,   0.f }, // right
+        {  0.f,  64.f },  // up
+        {  0.f, -64.f },  // down
+
+        { -64.f,  64.f }, // up-left
+        {  64.f,  64.f }, // up-right
+        { -64.f, -64.f }, // down-left
+        {  64.f, -64.f }  // down-right
+    };
+
+    int placed = 0;
+
+    for (const auto& pos : positions)
+    {
+        INIT_OBSTICLE_DESC desc{};
+        desc.szName = data.file_name;
+        desc.baseTexture = data.texture_base;
+        desc.obsticleSprites = data.texture_sprite;
+        desc.scale = bigScale;
+        desc.position = pos;
+
+        auto obst = std::make_unique<Obsticle>();
+        if (!obst->Init(desc))
+            continue;
+
+        if (auto* col = obst->GetCollider())
+        {
+            col->SetScale(desc.scale);
+            col->SetColliderType(pixel_engine::ColliderType::Trigger);
+        }
+
+        if (auto* sprite = obst->GetSpirte())
+            sprite->SetLayer(pixel_engine::ELayer::Background);
+
+        m_ppObsticle.push_back(std::move(obst));
+        ++placed;
+    }
+
+    pixel_engine::logger::debug("FiniteMap::BuildGround - Placed {} ground tiles (center + 8 surround).", placed);
 }
 
 void pixel_game::FiniteMap::SetPlayerSpawnPosition()
 {
     if (m_pPlayerCharacter)
     {
+        if (!m_pPlayerCharacter->IsInitialized())
+        {
+            m_pPlayerCharacter->Initialize();
+        }
         m_pPlayerCharacter->GetPlayerBody()->SetPosition({ 0.f, 0.f });
     }
 }
 
-_Use_decl_annotations_
-void pixel_game::FiniteMap::BuildTrees(LOAD_SCREEN_DETAILS details)
+void pixel_game::FiniteMap::AttachCamera()
 {
-    if (m_ppszTress.empty())
+    if (auto* cam = pixel_engine::PERenderQueue::Instance().GetCamera())
+    {
+        if (m_pPlayerCharacter && m_pPlayerCharacter->GetPlayerBody())
+        {
+            cam->FollowSprite(m_pPlayerCharacter->GetPlayerBody());
+        }
+    }
+}
+
+void pixel_game::FiniteMap::DettachCamera()
+{
+    if (auto* cam = pixel_engine::PERenderQueue::Instance().GetCamera())
+    {
+        if (m_pPlayerCharacter && m_pPlayerCharacter->GetPlayerBody())
+        {
+            cam->FollowSprite(nullptr);
+            cam->SetPosition({ 0, 0 });
+        }
+    }
+}
+
+void pixel_game::FiniteMap::RestrictPlayer()
+{
+    if (!m_pPlayerCharacter)
         return;
 
-    constexpr int SpawnCount = 200;
-    int totalSpawned = 0;
-
-    if (details.pLoadDescription)
-        details.pLoadDescription->SetText("Spawning Random Trees...");
-
-    while (totalSpawned < SpawnCount)
-    {
-        const int index = GetRandomNumber(0, static_cast<int>(m_ppszTress.size()) - 1);
-        const auto& data = m_ppszTress[index];
-
-        int clusterCount = GetRandomNumber(1, 3);
-        FVector2D spawnPosition = GetRandomPositionInBound();
-
-        for (int i = 0; i < clusterCount && totalSpawned < SpawnCount; ++i)
-        {
-            INIT_OBSTICLE_DESC desc{};
-            desc.szName = data.file_name;
-            desc.baseTexture = data.texture_base;
-            desc.obsticleSprites = data.texture_sprite;
-            desc.scale = { 3.f, 3.f };
-            desc.position = spawnPosition;
-
-            auto obst = std::make_unique<Obsticle>();
-            if (obst->Init(desc))
-            {
-                if (auto* col = obst->GetCollider())
-                    col->SetScale(desc.scale);
-
-                m_ppObsticle.push_back(std::move(obst));
-                ++totalSpawned;
-            }
-            spawnPosition.x += 2.f;
-        }
-    }
-
-    pixel_engine::logger::debug(
-        "FiniteMap::BuildTrees - Spawned {} random trees using {} types",
-        totalSpawned,
-        m_ppszTress.size());
-}
-
-_Use_decl_annotations_
-void pixel_game::FiniteMap::BuildStones(LOAD_SCREEN_DETAILS details)
-{
-    if (m_ppszStones.empty())
+    auto* body = m_pPlayerCharacter->GetPlayerBody();
+    if (!body)
         return;
 
-    constexpr int SpawnCount = 150;
-    int totalSpawned = 0;
+    FVector2D pos = body->GetPosition();
+    FVector2D scale = body->GetScale();
 
-    if (details.pLoadDescription)
-        details.pLoadDescription->SetText("Spawning Random Stones...");
+    const float halfWidth = scale.x * 0.5f;
+    const float halfHeight = scale.y * 0.5f;
 
-    while (totalSpawned < SpawnCount)
-    {
-        const int index = GetRandomNumber(0, static_cast<int>(m_ppszStones.size()) - 1);
-        const auto& data = m_ppszStones[index];
+    if (pos.x - halfWidth < m_Bounds.min.x)
+        pos.x = m_Bounds.min.x + halfWidth;
+    else if (pos.x + halfWidth > m_Bounds.max.x)
+        pos.x = m_Bounds.max.x - halfWidth;
 
-        // small side by side
-        const int clusterCount = GetRandomNumber(1, 3);
+    if (pos.y - halfHeight < m_Bounds.min.y)
+        pos.y = m_Bounds.min.y + halfHeight;
+    else if (pos.y + halfHeight > m_Bounds.max.y)
+        pos.y = m_Bounds.max.y - halfHeight;
 
-        FVector2D spawnPosition = GetRandomPositionInBound();
-
-        for (int i = 0; i < clusterCount && totalSpawned < SpawnCount; ++i)
-        {
-            INIT_OBSTICLE_DESC desc{};
-            desc.szName = data.file_name;
-            desc.baseTexture = data.texture_base;
-            desc.obsticleSprites = data.texture_sprite;
-            desc.scale = { 1.f, 1.f };
-            desc.position = spawnPosition;
-
-            auto obst = std::make_unique<Obsticle>();
-            if (obst->Init(desc))
-            {
-                if (auto* col = obst->GetCollider())
-                    col->SetScale(desc.scale);
-
-                m_ppObsticle.push_back(std::move(obst));
-                ++totalSpawned;
-            }
-            spawnPosition.x += 1.f;
-        }
-    }
-
-    pixel_engine::logger::debug(
-        "FiniteMap::BuildStones - Spawned {} random stones using {} types",
-        totalSpawned,
-        m_ppszStones.size());
-}
-
-_Use_decl_annotations_
-void pixel_game::FiniteMap::BuildWaters(LOAD_SCREEN_DETAILS details)
-{
-    if (m_ppszWater.empty())
-        return;
-
-    constexpr int SpawnCount = 150;
-    int totalSpawned = 0;
-
-    if (details.pLoadDescription)
-        details.pLoadDescription->SetText("Spawning Random Waters...");
-
-    while (totalSpawned < SpawnCount)
-    {
-        const int idx = GetRandomNumber(0, static_cast<int>(m_ppszWater.size()) - 1);
-        const auto& data = m_ppszWater[idx];
-
-        const int style = GetRandomNumber(0, 2);
-        fox::vector<FVector2D> offsets;
-
-        if (style == 0)
-        {
-            const int n = GetRandomNumber(4, 10);
-            offsets = MakeWaterLine(n);
-        }
-        else if (style == 1)
-        {
-            const int w = GetRandomNumber(2, 5);
-            const int h = GetRandomNumber(2, 4);
-            offsets = MakeWaterBlock(w, h);
-        }
-        else
-        {
-            const int n = GetRandomNumber(5, 12);
-            offsets = MakeWaterBlob(n);
-        }
-
-        const FVector2D start = GetRandomPositionInBound();
-        BuildWaterCluster(data, start, offsets, totalSpawned, SpawnCount, details);
-    }
-
-    pixel_engine::logger::debug(
-        "FiniteMap::BuildWaters - Spawned {} random waters using {} types",
-        totalSpawned,
-        m_ppszWater.size());
-}
-
-_Use_decl_annotations_
-bool pixel_game::FiniteMap::InBounds(const FVector2D& p) const
-{
-    return (p.x >= m_Bounds.min.x && p.x <= m_Bounds.max.x &&
-        p.y >= m_Bounds.min.y && p.y <= m_Bounds.max.y);
-}
-
-_Use_decl_annotations_
-bool pixel_game::FiniteMap::TrySpawnWaterTile(const FileData& data, const FVector2D& pos)
-{
-    if (!InBounds(pos)) return false;
-
-    INIT_OBSTICLE_DESC desc{};
-    desc.szName = data.file_name;
-    desc.baseTexture = data.texture_base;
-    desc.obsticleSprites = data.texture_sprite;
-    desc.scale = { 2.f, 2.f };
-    desc.position = pos;
-
-    auto obst = std::make_unique<Obsticle>();
-    if (!obst->Init(desc)) return false;
-
-    if (auto* col = obst->GetCollider())
-        col->SetScale(desc.scale);
-
-    m_ppObsticle.push_back(std::move(obst));
-    return true;
-}
-
-_Use_decl_annotations_
-fox::vector<FVector2D> pixel_game::FiniteMap::MakeWaterLine(int n) const
-{
-    fox::vector<FVector2D> out; out.reserve(n);
-    for (int i = 0; i < n; ++i) out.push_back({ float(2 * i), 0.f });
-    return out;
-}
-
-_Use_decl_annotations_
-fox::vector<FVector2D> pixel_game::FiniteMap::MakeWaterBlock(int w, int h) const
-{
-    fox::vector<FVector2D> out; out.reserve(w * h);
-    for (int j = 0; j < h; ++j)
-        for (int i = 0; i < w; ++i)
-            out.push_back({ float(2 * i), float(2 * j) });
-    return out;
-}
-
-_Use_decl_annotations_
-fox::vector<FVector2D> pixel_game::FiniteMap::MakeWaterBlob(int n)
-{
-    fox::vector<FVector2D> pts;
-    pts.push_back({ 0.f, 0.f });
-    for (int k = 1; k < n; ++k)
-    {
-        const int base = GetRandomNumber(0, static_cast<int>(pts.size()) - 1);
-        FVector2D p = pts[base];
-        switch (GetRandomNumber(0, 3))
-        {
-        case 0: p.x += 2.f; break;
-        case 1: p.x -= 2.f; break;
-        case 2: p.y += 2.f; break;
-        default:p.y -= 2.f; break;
-        }
-        bool dup = false;
-        for (const auto& q : pts) { if (q.x == p.x && q.y == p.y) { dup = true; break; } }
-        if (!dup) pts.push_back(p);
-    }
-    return pts;
-}
-
-_Use_decl_annotations_
-void pixel_game::FiniteMap::BuildWaterCluster(
-    const FileData& data,
-    const FVector2D& start,
-    const fox::vector<FVector2D>& offsets,
-    int& totalSpawned,
-    const int spawnLimit,
-    LOAD_SCREEN_DETAILS& details)
-{
-    for (const auto& off : offsets)
-    {
-        if (totalSpawned >= spawnLimit) break;
-        FVector2D pos{ start.x + off.x, start.y + off.y };
-        if (TrySpawnWaterTile(data, pos))
-        {
-            ++totalSpawned;
-            if (details.pLoadDescription && (totalSpawned % 10 == 0))
-                details.pLoadDescription->SetText(std::format("Spawning Random Waters... {}", totalSpawned));
-        }
-    }
+    body->SetPosition(pos);
 }
 
 void pixel_game::FiniteMap::BuildMapGUI(LOAD_SCREEN_DETAILS details)
 {
+    if (!m_level)
+    {
+        m_level = std::make_unique<pixel_engine::PEFont>();
+        m_level->SetPosition({ 400, 80 });
+        m_level->SetPx(16);
+        std::string message = "Level: 1";
+        m_level->SetText(message);
+    }
+    if (!m_timer)
+    {
+        m_timer = std::make_unique<pixel_engine::PEFont>();
+        m_timer->SetPosition({ 400, 50 });
+        m_timer->SetText("Time Left:");
+    }
 }
 
-FVector2D pixel_game::FiniteMap::GetRandomPositionInBound()
+void pixel_game::FiniteMap::UpdateMapGUI(float deltaTime)
 {
-    if (m_Bounds.max.x <= m_Bounds.min.x || m_Bounds.max.y <= m_Bounds.min.y)
-        return FVector2D{ 0.f, 0.f };
-
-    static std::mt19937 rng{ std::random_device{}() };
-
-    std::uniform_real_distribution<float> distX(m_Bounds.min.x, m_Bounds.max.x);
-    std::uniform_real_distribution<float> distY(m_Bounds.min.y, m_Bounds.max.y);
-
-    float x = std::floor(distX(rng));
-    float y = std::floor(distY(rng));
-
-    return FVector2D{ x, y };
+    int time_left = m_nMapDuration - m_nElapsedTime;
+    std::string message = "Time Left: " + std::to_string(time_left);
+    
+    if (m_timer) 
+    {
+        m_timer->SetText(message);
+    }
 }
 
 int pixel_game::FiniteMap::GetRandomNumber(int min, int max)
@@ -426,4 +555,50 @@ int pixel_game::FiniteMap::GetRandomNumber(int min, int max)
     std::uniform_int_distribution<int> dist(min, max);
 
     return dist(rng);
+}
+
+void pixel_game::FiniteMap::MapCycle()
+{
+    if (m_nElapsedTime < m_nMapDuration) return;
+
+
+    if (m_nCurrentLevel >= m_nMaxLevel)
+    {
+        if (m_OnMapComplete) m_OnMapComplete();
+        return;
+    }
+
+    UnLoad();
+    DettachCamera();
+
+    AdvanceLevel_();
+
+    m_bActive       = false;
+    m_bPaused       = false;
+    m_bComplete     = false;
+    m_nElapsedTime  = 0.0f;
+
+    RebuildLevel_();
+
+    if (m_timer) pixel_engine::PERenderQueue::Instance().AddFont(m_timer.get());
+    if (m_level) pixel_engine::PERenderQueue::Instance().AddFont(m_level.get());
+}
+
+void pixel_game::FiniteMap::AllocateEnemy(LOAD_SCREEN_DETAILS details)
+{
+    if (m_pEnemySpawner)
+    {
+        PG_SPAWN_DESC desc{};
+        desc.SpawnMaxCount    = 200;
+        desc.SpawnRampTime    = 60.f;
+        desc.SpawnStartTime   = 5.f;
+        desc.pLoadDescription = details.pLoadDescription;
+        desc.pLoadTitle       = details.pLoadTitle;
+
+        if (!m_pEnemySpawner->IsInitialized())
+        {
+            m_pEnemySpawner->Initialize(desc);
+        }
+        else m_pEnemySpawner->Reset();
+    }
 }

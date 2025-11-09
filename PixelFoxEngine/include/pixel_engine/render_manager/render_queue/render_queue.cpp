@@ -230,7 +230,6 @@ void PERenderQueue::BuildSpriteInOrder()
     m_bDirtySprite.store(false, std::memory_order_release);
 }
 
-
 _Use_decl_annotations_
 void pixel_engine::PERenderQueue::RenderFont(PERaster2D* pRaster)
 {

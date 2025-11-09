@@ -40,39 +40,45 @@ namespace pixel_game
 
 	private:
 		void BuildMapObjects(_In_ LOAD_SCREEN_DETAILS details);
-		void SetPlayerSpawnPosition();
-		
+		std::string LoadMap();
+		void AdvanceLevel_();
+		void RebuildLevel_();
+
+		template <typename Fn>
+		void ForEachLevelCell(const std::string& level, Fn&& fn);
+
+		bool SpawnObjectFromFileDataVec(
+			_In_ const fox::vector<FileData>& pool,
+			_In_ const FVector2D& gridPos,
+			_In_ const FVector2D& scale);
+
 		//~ build obsticles
-		void BuildTrees     (_In_ LOAD_SCREEN_DETAILS details);
-		void BuildStones	(_In_ LOAD_SCREEN_DETAILS details);
+		void BuildTrees(_In_ LOAD_SCREEN_DETAILS details);
+		void BuildStones(_In_ LOAD_SCREEN_DETAILS details);
+		void BuildWaters(_In_ LOAD_SCREEN_DETAILS details);
+		void BuildGround(_In_ LOAD_SCREEN_DETAILS details);
 
-		//~ generate water
-		void BuildWaters	(_In_ LOAD_SCREEN_DETAILS details);
-		bool InBounds(_In_ const FVector2D& p) const;
-		bool TrySpawnWaterTile(_In_ const FileData& data, _In_ const FVector2D& pos);
-
-		fox::vector<FVector2D> MakeWaterLine(_In_ int n) const;
-		fox::vector<FVector2D> MakeWaterBlock(_In_ int w, _In_ int h) const;
-		fox::vector<FVector2D> MakeWaterBlob(_In_ int n);
-
-		void BuildWaterCluster(
-			_In_ const FileData& data,
-			_In_ const FVector2D& start,
-			_In_ const fox::vector<FVector2D>& offsets,
-			_Inout_ int& totalSpawned,
-			_In_ int spawnLimit,
-			_Inout_ LOAD_SCREEN_DETAILS& details);
-
-
+		//~ player properties
+		void SetPlayerSpawnPosition();
+		void AttachCamera();
+		void DettachCamera();
+		void RestrictPlayer();
+		
 		//~ GUI
 		void BuildMapGUI(LOAD_SCREEN_DETAILS details);
-
-		FVector2D GetRandomPositionInBound();
+		void UpdateMapGUI(float deltaTime);
 		int GetRandomNumber(int min, int max);
+		void MapCycle();
+
+		//~ initialize enemies
+		void AllocateEnemy(LOAD_SCREEN_DETAILS details);
 
 	private:
+		int m_nMaxLevel	   { 3 };
+		int m_nCurrentLevel{ 1 };
 		fox::vector<std::unique_ptr<Obsticle>> m_ppObsticle{};
 
+		pixel_engine::PEKeyboardInputs* m_pKeyboard{ nullptr };
 		PlayerCharacter* m_pPlayerCharacter{ nullptr };
 		EnemySpawner*	 m_pEnemySpawner{ nullptr };
 
@@ -80,6 +86,7 @@ namespace pixel_game
 		bool   m_bActive  { false };
 		bool   m_bPaused  { false };
 		bool   m_bComplete{ false };
+		bool   m_bBuilt{ false };
 
 		bool   m_bUseBounds  { false };
 		float  m_nMapDuration{ 0.0f };
@@ -91,10 +98,62 @@ namespace pixel_game
 		std::function<void()> m_OnMapComplete{};
 
 		//~ GUI
+		std::unique_ptr<pixel_engine::PEFont> m_timer{ nullptr };
+		std::unique_ptr<pixel_engine::PEFont> m_level{ nullptr };
 
 		//~ hard coded file location
 		fox::vector<FileData> m_ppszTress {};
 		fox::vector<FileData> m_ppszWater {};
 		fox::vector<FileData> m_ppszStones{};
+		fox::vector<FileData> m_ppszGround{};
 	};
+
+	template<typename Fn>
+	inline void FiniteMap::ForEachLevelCell(const std::string& level, Fn&& fn)
+	{
+		int mapSize = 64;
+		int x = 0, y = 0;
+
+		for (size_t i = 0; i < level.size() && y < mapSize; )
+		{
+			char c = level[i];
+
+			if (c == '\r') { ++i; continue; }
+			if (c == '\n')
+			{
+				++y; x = 0; ++i;
+				continue;
+			}
+
+			if (std::isdigit(static_cast<unsigned char>(c)))
+			{
+				//~ skips cells
+				int skip = 0;
+				while (i < level.size() && std::isdigit(static_cast<unsigned char>(level[i])))
+				{
+					skip = skip * 10 + (level[i] - '0');
+					++i;
+				}
+				x += skip;
+				if (x >= mapSize) { ++y; x = 0; }
+				continue;
+			}
+
+			//~ occupied cells: 'w', 't', 's'
+			if (c == 'w' || c == 't' || c == 's')
+			{
+				if (x < mapSize && y < mapSize)
+					fn(x, y, c);
+				++x;
+				++i;
+				if (x >= mapSize) { ++y; x = 0; }
+				continue;
+			}
+
+			//~ any other char: empty cell
+			++x; ++i;
+			if (x >= mapSize) { ++y; x = 0; }
+		}
+	}
+
 } // namespace pixel_game

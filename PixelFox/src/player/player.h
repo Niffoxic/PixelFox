@@ -31,6 +31,12 @@ namespace pixel_game
 			const pixel_engine::PEKeyboardInputs* keyboard,
 			float deltaTime);
 
+		void Draw();
+		void Hide();
+		void UnloadFromQueue();
+
+		bool IsInitialized() const { return m_bInitialized; }
+
 	private:
 		//~ Look
 		bool InitializePlayer();

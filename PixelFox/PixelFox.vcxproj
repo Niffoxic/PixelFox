@@ -24,7 +24,11 @@
     <ClCompile Include="src\ai\controller\turret\turret_ai.cpp" />
     <ClCompile Include="src\ai\projectile\straight\straight_projectile.cpp" />
     <ClCompile Include="src\application.cpp" />
+    <ClCompile Include="src\enemy\angry_goblin\enemy_angry_goblin.cpp" />
+    <ClCompile Include="src\enemy\fire_dog\enemy_fire_dog.cpp" />
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp" />
+    <ClCompile Include="src\enemy\mushroom\enemy_mushroom.cpp" />
+    <ClCompile Include="src\enemy\skeleton\enemy_skeleton.cpp" />
     <ClCompile Include="src\obsticle\obsitcle.cpp" />
     <ClCompile Include="src\player\player.cpp" />
     <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp" />
@@ -40,10 +44,14 @@
     <ClInclude Include="src\ai\projectile\interface_projectile.h" />
     <ClInclude Include="src\ai\projectile\straight\straight_projectile.h" />
     <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\enemy\angry_goblin\enemy_angry_goblin.h" />
     <ClInclude Include="src\enemy\define_enemy.h" />
+    <ClInclude Include="src\enemy\fire_dog\enemy_fire_dog.h" />
     <ClInclude Include="src\enemy\goblin\enemy_goblin.h" />
     <ClInclude Include="src\enemy\interface_enemy.h" />
+    <ClInclude Include="src\enemy\mushroom\enemy_mushroom.h" />
     <ClInclude Include="src\enemy\registry_enemy.h" />
+    <ClInclude Include="src\enemy\skeleton\enemy_skeleton.h" />
     <ClInclude Include="src\obsticle\obsiticle.h" />
     <ClInclude Include="src\player\player.h" />
     <ClInclude Include="src\world\enemy_spawner\enemy_spawner.h" />

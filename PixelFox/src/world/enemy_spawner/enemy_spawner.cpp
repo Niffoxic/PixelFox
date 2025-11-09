@@ -19,6 +19,109 @@ EnemySpawner::EnemySpawner(PlayerCharacter* player)
 {}
 
 _Use_decl_annotations_
+void pixel_game::EnemySpawner::Update(float deltaTime)
+{
+	if (deltaTime > 1.0f) return;
+	if (!m_bInitialized) return;
+
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e) continue;
+
+		if (m_mapEnemies[e])
+		{
+			e->Update(deltaTime);
+			if (e->IsDead())
+				DeactivateEnemy(*e);
+		}
+	}
+
+	m_elapsedTime    += deltaTime;
+	m_activationTimer += deltaTime;
+
+	if (m_elapsedTime < m_desc.SpawnStartTime) return;
+	if (m_bKeepSpawning && m_nSpawnedCount >= m_desc.SpawnMaxCount) return;
+
+	for (;;)
+	{
+		const float rampT = std::clamp(
+			(m_elapsedTime - m_desc.SpawnStartTime) / m_desc.SpawnRampTime, 0.0f, 1.0f
+		);
+
+		const float interval = std::max(
+			m_nMinInterval,
+			m_nStartInverval * (1.0f - rampT) + m_nMinInterval * rampT
+		);
+
+		if (m_activationTimer < interval) break;
+		m_activationTimer -= interval;
+
+		int activeNow = 0;
+		for (auto& enemy : m_pEnemies)
+			if (m_mapEnemies[enemy.get()])
+				++activeNow;
+
+		int targetActive = static_cast<int>(std::ceil(m_desc.SpawnMaxCount * rampT));
+		int deficit = std::max(0, targetActive - activeNow);
+		if (deficit == 0 && !(m_bKeepSpawning && m_nSpawnedCount >= m_desc.SpawnMaxCount))
+			deficit = (activeNow < static_cast<int>(m_pEnemies.size())) ? 1 : 0;
+		if (deficit <= 0) continue;
+
+		int inactiveCount = 0;
+		for (auto& uptr : m_pEnemies)
+			if (uptr && !m_mapEnemies[uptr.get()])
+				++inactiveCount;
+
+		int toActivate = std::min(deficit, inactiveCount);
+		if (toActivate <= 0) continue;
+
+		if (m_bKeepSpawning)
+		{
+			const int remaining = std::max(0, m_desc.SpawnMaxCount - m_nSpawnedCount);
+			toActivate = std::min(toActivate, remaining);
+			if (toActivate <= 0) continue;
+		}
+
+		for (int i = 0; i < toActivate; ++i)
+		{
+			const int idx = PickInactiveIndexRandom();
+			if (idx < 0) break;
+			ActivateEnemy(*m_pEnemies[static_cast<size_t>(idx)]);
+		}
+	}
+}
+
+void EnemySpawner::Release()
+{
+	m_pEnemies  .clear();
+	m_mapEnemies.clear();
+	m_bInitialized = false;
+}
+
+void EnemySpawner::Reset()
+{
+	m_elapsedTime   = 0.0f;
+	m_nSpawnedCount = 0;
+	m_pEnemies  .clear();
+	m_mapEnemies.clear();
+}
+
+void EnemySpawner::Hide()
+{
+	for (auto& enemy : m_pEnemies)
+	{
+		if (enemy) enemy->GetBody()->SetVisible(false);
+		m_mapEnemies[enemy.get()] = false;
+	}
+}
+
+void pixel_game::EnemySpawner::StopAtLimit(bool flag)
+{
+	m_bKeepSpawning = flag;
+}
+
+_Use_decl_annotations_
 bool pixel_game::EnemySpawner::Initialize(const PG_SPAWN_DESC& desc)
 {
 	if (!m_pPlayer || !m_pPlayer->GetPlayerBody())
@@ -30,27 +133,43 @@ bool pixel_game::EnemySpawner::Initialize(const PG_SPAWN_DESC& desc)
 	m_desc = desc;
 	m_elapsedTime = 0.0f;
 	m_nSpawnedCount = 0;
-	m_initialized = true;
+	m_bInitialized = true;
 
 	BuildEnemies();
 
-	//~ Pushing all the enemies in the map
-	//~ with visiblity set to false to avoid runtime loading in single thread
 	const FVector2D playerPos = m_pPlayer->GetPlayerBody()->GetPosition();
 
 	int prepared = 0;
-	for (auto& uptr : m_pEnemies)
+	const int total = static_cast<int>(m_pEnemies.size());
+
+	for (size_t i = 0; i < m_pEnemies.size(); ++i)
 	{
-		IEnemy* e = uptr.get();
+		IEnemy* e = m_pEnemies[i].get();
 		if (!e) continue;
 
-		//~ to avoid sudden collision
+		//~ Loading screen details
+		if (m_desc.pLoadTitle)
+		{
+			const int humanIdx = static_cast<int>(i) + 1;
+			m_desc.pLoadTitle->SetText(
+				"Allocating enemy (" + std::to_string(humanIdx) + "/" +
+				std::to_string(m_desc.SpawnMaxCount) + ")"
+			);
+		}
+
+		if (m_desc.pLoadDescription)
+		{
+			m_desc.pLoadDescription->SetText(
+				"creating enemy " + std::string(e->GetTypeName())
+			);
+		}
+
 		const FVector2D spawnPos = playerPos + m_spawnOffset * 10.f;
 
 		PG_ENEMY_INIT_DESC init{};
 		init.SpawnPoint = spawnPos;
-		init.Scale		= { 3.0f, 3.0f };
-		init.pTarget	= m_pPlayer->GetPlayerBody();
+		init.Scale   = { 3.0f, 3.0f };
+		init.pTarget = m_pPlayer->GetPlayerBody();
 
 		if (!e->Initialize(init))
 		{
@@ -64,98 +183,21 @@ bool pixel_game::EnemySpawner::Initialize(const PG_SPAWN_DESC& desc)
 		if (auto* body = e->GetBody())
 		{
 			pixel_engine::PhysicsQueue::Instance().AddObject(body);
-			body->SetVisible(false); //~ to avoid rendering and collisions
+			body->SetVisible(false);
 		}
 
 		m_mapEnemies[e] = false;
 		++prepared;
 	}
 
+	if (m_desc.pLoadTitle)
+		m_desc.pLoadTitle->SetText("Enemies allocated (" + std::to_string(prepared) + "/" + std::to_string(m_desc.SpawnMaxCount) + ")");
+	if (m_desc.pLoadDescription)
+		m_desc.pLoadDescription->SetText("Initialization complete");
+
 	logger::info("EnemySpawner: prepared {} / {} enemies (invisible in queues).",
 		prepared, m_desc.SpawnMaxCount);
 	return true;
-}
-
-_Use_decl_annotations_
-void pixel_game::EnemySpawner::Update(float deltaTime)
-{
-	if (deltaTime > 1.0f) return; //~ avoiding 1st call
-	if (!m_initialized) return;
-
-	for (auto& uptr : m_pEnemies)
-	{
-		IEnemy* e = uptr.get();
-		if (!e) continue;
-
-		if (m_mapEnemies[e])
-		{
-			e->Update(deltaTime);
-
-			if (e->IsDead())
-			{
-				DeactivateEnemy(*e);
-			}
-		}
-	}
-
-	m_elapsedTime     += deltaTime;
-	m_activationTimer += deltaTime;
-
-	if (m_elapsedTime < m_desc.SpawnStartTime) return;
-
-	//~ ramp 0 to 1
-	const float rampT = std::clamp
-	(
-		(m_elapsedTime - m_desc.SpawnStartTime) /
-		m_desc.SpawnRampTime, 0.0f, 1.0f
-	);
-
-	const float interval = std::max(
-		m_nMinInterval,
-		m_nStartInverval * (1.0f - rampT) + m_nMinInterval * rampT
-	);
-
-	int activeNow = 0;
-	for (auto& enemy : m_pEnemies)
-	{
-		if (m_mapEnemies[enemy.get()])
-			++activeNow;
-	}
-
-	const int desiredActive = static_cast<int>(std::floor(m_desc.SpawnMaxCount * rampT));
-	const int maxPerTick    = 1 + static_cast<int>(std::floor(2.0f * rampT));
-
-	if (m_activationTimer < interval) return;
-	m_activationTimer -= interval;
-
-	int deficit    = std::max(0, desiredActive - activeNow);
-	int toActivate = std::min(deficit, maxPerTick);
-
-	if (toActivate == 0) 
-		toActivate = (activeNow < m_desc.SpawnMaxCount) ? 1 : 0;
-		
-	for (int i = 0; i < toActivate; ++i)
-	{
-		const int idx = PickInactiveIndexRandom();
-		if (idx < 0) break;
-
-		ActivateEnemy(*m_pEnemies[static_cast<size_t>(idx)]);
-	}
-}
-
-void EnemySpawner::Release()
-{
-	m_pEnemies.clear();
-	m_mapEnemies.clear();
-	m_initialized = false;
-}
-
-void EnemySpawner::Reset()
-{
-	m_elapsedTime  = 0.0f;
-	m_nSpawnedCount = 0;
-	m_pEnemies  .clear();
-	m_mapEnemies.clear();
 }
 
 void pixel_game::EnemySpawner::BuildEnemies()
@@ -280,4 +322,136 @@ int EnemySpawner::RandInt(int min, int max)
 {
 	std::uniform_int_distribution<int> d(min, max);
 	return d(m_rng);
+}
+
+void EnemySpawner::PrepareExistingPoolInvisible_()
+{
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e) continue;
+
+		m_mapEnemies[e] = false;
+
+		if (auto* body = e->GetBody())
+		{
+			body->SetVisible(false);
+		}
+	}
+}
+
+void EnemySpawner::EnsurePoolMatchesDescOrRebuild_()
+{
+	const size_t want = static_cast<size_t>(m_desc.SpawnMaxCount);
+	if (m_pEnemies.size() == want)
+	{
+		PrepareExistingPoolInvisible_();
+		return;
+	}
+
+	m_pEnemies.clear();
+	m_mapEnemies.clear();
+
+	BuildEnemies();
+
+	if (!m_pPlayer || !m_pPlayer->GetPlayerBody()) return;
+
+	const FVector2D playerPos = m_pPlayer->GetPlayerBody()->GetPosition();
+	int prepared = 0;
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e) continue;
+
+		const FVector2D spawnPos = playerPos + m_spawnOffset * 10.f;
+
+		PG_ENEMY_INIT_DESC init{};
+		init.SpawnPoint = spawnPos;
+		init.Scale = { 3.0f, 3.0f };
+		init.pTarget = m_pPlayer->GetPlayerBody();
+
+		if (!e->Initialize(init))
+		{
+			logger::error("EnemySpawner::EnsurePoolMatchesDescOrRebuild_: init failed.");
+			m_mapEnemies[e] = false;
+			continue;
+		}
+
+		e->SetTarget(init.pTarget);
+
+		if (auto* body = e->GetBody())
+		{
+			pixel_engine::PhysicsQueue::Instance().AddObject(body);
+			body->SetVisible(false);
+		}
+
+		m_mapEnemies[e] = false;
+		++prepared;
+	}
+
+	logger::info("EnemySpawner: rebuilt pool; prepared {} / {} enemies (invisible).",
+		prepared, m_desc.SpawnMaxCount);
+}
+
+_Use_decl_annotations_
+bool EnemySpawner::Restart()
+{
+	if (!m_pPlayer || !m_pPlayer->GetPlayerBody())
+	{
+		logger::error("EnemySpawner::Restart: Player/body not set!");
+		return false;
+	}
+
+	if (m_pEnemies.empty())
+	{
+		BuildEnemies();
+
+		const FVector2D playerPos = m_pPlayer->GetPlayerBody()->GetPosition();
+		int prepared = 0;
+		for (auto& uptr : m_pEnemies)
+		{
+			IEnemy* e = uptr.get();
+			if (!e) continue;
+
+			const FVector2D spawnPos = playerPos + m_spawnOffset * 10.f;
+
+			PG_ENEMY_INIT_DESC init{};
+			init.SpawnPoint = spawnPos;
+			init.Scale = { 3.0f, 3.0f };
+			init.pTarget = m_pPlayer->GetPlayerBody();
+
+			if (!e->Initialize(init))
+			{
+				logger::error("EnemySpawner::Restart: init failed.");
+				m_mapEnemies[e] = false;
+				continue;
+			}
+
+			e->SetTarget(init.pTarget);
+
+			if (auto* body = e->GetBody())
+			{
+				pixel_engine::PhysicsQueue::Instance().AddObject(body);
+				body->SetVisible(false); 
+			}
+
+			m_mapEnemies[e] = false;
+			++prepared;
+		}
+
+		logger::info("EnemySpawner::Restart: prepared {} / {} enemies (invisible).",
+			prepared, m_desc.SpawnMaxCount);
+	}
+	else
+	{
+		PrepareExistingPoolInvisible_();
+	}
+
+	m_elapsedTime = 0.0f;
+	m_activationTimer = 0.0f;
+	m_nSpawnedCount = 0;
+	m_bInitialized = true;
+
+	logger::info("EnemySpawner: soft restart completed (pool reused).");
+	return true;
 }

@@ -115,7 +115,6 @@ namespace pixel_game
 		ATTACK5_DOWN_RIGHT= 88,
 	};
 
-
 	_NODISCARD _Check_return_
 	_CONSTEXPR20 std::string_view ToStringView(_In_ CharacterState state) noexcept
 	{

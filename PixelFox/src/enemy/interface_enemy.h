@@ -2,6 +2,8 @@
 
 #include "ai/controller/interface_controller.h"
 #include "fox_math/vector.h"
+#include <filesystem>
+#include "pixel_engine/utilities/logger/logger.h"
 #include "pixel_engine/render_manager/objects/quad/quad.h"
 #include "pixel_engine/render_manager/components/animator/anim_state.h"
 
@@ -45,6 +47,19 @@ namespace pixel_game
 		_NODISCARD _Check_return_
 		virtual bool IsDead() const = 0;
 
+		_NODISCARD _Check_return_ _Success_(return != nullptr)
+		inline bool ValidatePathExists(const std::string& path) const
+		{
+			if (!std::filesystem::exists(path))
+			{
+				pixel_engine::logger::error("path dNT: {}", path);
+				return false;
+			}
+			return true;
+		}
+
+		bool RangedEnemy() const { return m_bRangedEnemy; }
+
 	protected:
 		_NODISCARD _Check_return_
 		virtual bool InitEnemyBody(const PG_ENEMY_INIT_DESC& desc) = 0;
@@ -62,5 +77,8 @@ namespace pixel_game
 		//~ updates
 		virtual void UpdateAnimState   (_In_ float deltaTime) = 0;
 		virtual void UpdateAIController(_In_ float deltaTime) = 0;
+
+	protected:
+		bool m_bRangedEnemy{ false };
 	};
 } // namespace pixel_game

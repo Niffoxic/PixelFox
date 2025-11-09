@@ -35,6 +35,7 @@ namespace pixel_game
 		FVector2D	GetScale   () const;
 		std::string GetName	   () const;
 
+		pixel_engine::PEISprite* GetSpirte() const;
 		pixel_engine::BoxCollider* GetCollider() const;
 
 	private:

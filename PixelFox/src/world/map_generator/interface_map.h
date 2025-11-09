@@ -30,6 +30,7 @@ namespace pixel_game
 
 	typedef struct _MAP_INIT_DESC
 	{
+		_In_ pixel_engine::PEKeyboardInputs* pKeyboard;
 		_In_ LOAD_SCREEN_DETAILS   LoadScreen;
 		_In_ PlayerCharacter*	   pPlayerCharacter;
 		_In_ EnemySpawner*		   pEnemySpawner;

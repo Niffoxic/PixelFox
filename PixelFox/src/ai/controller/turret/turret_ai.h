@@ -67,6 +67,15 @@ namespace pixel_game
         void UpdateAIDecision() override;
 
     private:
+        //~ helpers
+        // Rotates muzzle offset by turret angle
+        void FireProjectileTowardsTarget(
+            _In_ const FVector2D& basePos,
+            _In_ float angleRadians,
+            _In_ const FVector2D& aimDirNorm);
+
+
+    private:
         pixel_engine::AnimSateMachine* m_pAnimStateMachine{ nullptr };
         pixel_engine::PEISprite*       m_pBody            { nullptr };
         pixel_engine::PEISprite*       m_pTarget          { nullptr };
