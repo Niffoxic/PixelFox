@@ -317,7 +317,7 @@ void pixel_game::GameWorld::InitializeFiniteMap()
     mapDesc.LoadScreen       = details;
     mapDesc.pPlayerCharacter = m_pPlayer.get();
     mapDesc.pEnemySpawner    = m_pEnemySpawner.get();
-    mapDesc.MapDuration      = 1200.f; 
+    mapDesc.MapDuration      = 120.f; 
     mapDesc.UseBounds        = true;
     mapDesc.Bounds           = { { -32.f, -32.f }, { 32, 32 } };
     mapDesc.Type             = EMapType::Finite;

@@ -75,6 +75,12 @@ namespace pixel_game
             }
         }
 
+
+        void  SetHealth(float hp) { m_nHealth = hp; }
+        float GetHealth() const { return m_nHealth; }
+
+        void Revive() { m_nHealth = m_nMaxHP; }
+
     protected:
         // Initialization helpers
         _NODISCARD _Check_return_
@@ -114,7 +120,7 @@ namespace pixel_game
 
         bool      m_bActive{ false };
         float     m_nHealth{ 150.0f };
-        
+        float m_nMaxHP{ 150.f };
         //~ projectile specifics
         float     m_nAttackDistance{ 50.f };
         float     m_nFireCoolDown{ 0.6f };

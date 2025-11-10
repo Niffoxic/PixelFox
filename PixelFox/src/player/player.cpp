@@ -75,16 +75,37 @@ bool PlayerCharacter::Initialize()
     m_pBasicAttack->AddHitTag("enemy");
 
     m_pSpecialAttack = std::make_unique<StraightProjectile>();
+    desc.OnHit =
+        [&](IProjectile* projectile, pixel_engine::BoxCollider* collider)
+        {
+            if (!collider) return;
+            if (collider == m_pBody->GetCollider()) return;
+            if (!collider->HasTag("Enemy")) return;
+            m_aoeVictims[collider] = true;
+        };
+
+
     m_pSpecialAttack->Init(desc);
+    m_pSpecialAttack->GetBody()->SetLayer(pixel_engine::ELayer::Obstacles);
+    m_pSpecialAttack->SetLifeSpan(m_nSpclLifeSpan);
+    m_pSpecialAttack->SetDamage(m_nSpclDamange);
+    m_pSpecialAttack->GetBody()->SetScale({ 10, 10 });
+    m_pSpecialAttack->GetBody()->GetCollider()->SetScale({ 10, 10 });
+    m_pSpecialAttack->GetBody()->SetTexture("assets/ball/fire_ball/1.png");
+    m_pSpecialAttack->SetSpeed(0.2f);
+    m_pSpecialAttack->AddHitTag("Enemy");
+    m_pSpecialAttack->AddHitTag("enemy");
 
     return true;
 }
 
 void PlayerCharacter::Update(float deltaTime)
 {
-    UpdatePlayerState();
+    UpdatePlayerState(deltaTime);
+
     UpdatePlayerAppearance(deltaTime);
     Attack                (deltaTime);
+    AttackSpecial         (deltaTime);
 }
 
 void PlayerCharacter::Release()
@@ -131,6 +152,13 @@ void pixel_game::PlayerCharacter::HandleInput(
     if (keyboard->IsKeyPressed('D')) dir.x += 1.f;
     if (keyboard->IsKeyPressed('W')) dir.y -= 1.f;
     if (keyboard->IsKeyPressed('S')) dir.y += 1.f;
+    
+    if (keyboard->IsKeyPressed('E'))
+    {
+        if (m_nSpclFireCoolDownTimer > 0.f) return;
+        m_nSpclFireCoolDownTimer = m_nSpclFireCoolDown;
+        m_bSpclLaunched = true;
+    }
 
     const float lenSq = dir.x * dir.x + dir.y * dir.y;
     if (lenSq > 0.f) {
@@ -139,8 +167,6 @@ void pixel_game::PlayerCharacter::HandleInput(
     }
     m_direction = dir;
     if (dir.x != 0.f || dir.y != 0.f) m_lastNonZeroDir = dir;
-
-    m_cachedDt = deltaTime;
 }
 
 bool pixel_game::PlayerCharacter::InitializePlayer()
@@ -440,7 +466,7 @@ void pixel_game::PlayerCharacter::UpdatePlayerAppearance(float deltaTime)
     if (m_pAnimState) m_pAnimState->OnFrameEnd();
 }
 
-void pixel_game::PlayerCharacter::UpdatePlayerState()
+void pixel_game::PlayerCharacter::UpdatePlayerState(float deltaTime)
 {
     if (!m_pAnimState) return;
 
@@ -453,15 +479,15 @@ void pixel_game::PlayerCharacter::UpdatePlayerState()
         {
             this, m_pAnimState.get(),
             m_pKeyboard,
-            m_cachedDt,
+            deltaTime,
             m_playerState.movementSpeed,
             m_playerState.dashForce,
             m_playerState.dashCooldown,
             m_playerState.dashCooldownTimer,
-            m_dashDuration,
-            m_dashTimer,
-            m_specialCooldown,
-            m_specialCooldownTimer,
+            m_nDashDuration,
+            m_nDashTimer,
+            m_nSpclFireCoolDown,
+            m_nSpclFireCoolDownTimer,
             m_direction,
             m_lastNonZeroDir
         };
@@ -472,15 +498,15 @@ void pixel_game::PlayerCharacter::UpdatePlayerState()
     {
         this, m_pAnimState.get(),
         m_pKeyboard,
-        m_cachedDt,
+        deltaTime,
         m_playerState.movementSpeed,
         m_playerState.dashForce,
         m_playerState.dashCooldown,
         m_playerState.dashCooldownTimer,
-        m_dashDuration,
-        m_dashTimer,
-        m_specialCooldown,
-        m_specialCooldownTimer,
+        m_nDashDuration,
+        m_nDashTimer,
+        m_nSpclFireCoolDown,
+        m_nSpclFireCoolDownTimer,
         m_direction,
         m_lastNonZeroDir
     };
@@ -495,9 +521,9 @@ void pixel_game::PlayerCharacter::UpdatePlayerState()
     }
 
     if (m_playerState.dashCooldownTimer > 0.f)
-        m_playerState.dashCooldownTimer -= m_cachedDt;
-    if (m_specialCooldownTimer > 0.f)
-        m_specialCooldownTimer -= m_cachedDt;
+        m_playerState.dashCooldownTimer -= deltaTime;
+    if (m_nSpclFireCoolDownTimer > 0.f)
+        m_nSpclFireCoolDownTimer -= deltaTime;
 }
 
 void pixel_game::PlayerCharacter::Attack(float deltaTime)
@@ -537,6 +563,91 @@ void pixel_game::PlayerCharacter::Attack(float deltaTime)
 
     FVector2D muzzlePos = playerPos;
 
-    m_pBasicAttack->Fire(muzzlePos, toTarget, m_nProjectileSpeed);
+    // m_pBasicAttack->Fire(muzzlePos, toTarget, m_nProjectileSpeed);
     fireTimer = m_nFireCoolDown;
+}
+
+void pixel_game::PlayerCharacter::AttackSpecial(float deltaTime)
+{
+    //~ tick AoE cadence timer
+    if (m_nNextDmgCoolDownTimer > 0.f)
+    {
+        m_nNextDmgCoolDownTimer -= deltaTime;
+        if (m_nNextDmgCoolDownTimer < 0.f) m_nNextDmgCoolDownTimer = 0.f;
+    }
+
+    if (!m_pSpecialAttack) return;
+    m_pSpecialAttack->Update(deltaTime);
+
+    //~ launch when requested and allowed
+    if (m_bSpclLaunched && m_bCanLaunch)
+    {
+        m_bSpclLaunched = false;
+        m_bCanLaunch = false;
+
+        auto* rb = m_pBody->GetRigidBody2D();
+        if (!rb) return;
+
+        const FVector2D playerPos = rb->GetPosition();
+        const FVector2D densePos = m_bestLoc;
+
+        FVector2D dir = densePos - playerPos;
+        const float len2 = dir.LengthSq();
+        if (len2 > 1e-6f)
+        {
+            const float inv = 1.f / std::sqrt(len2);
+            dir.x *= inv; dir.y *= inv;
+        }
+        else
+        {
+            dir = { 1.f, 0.f };
+        }
+
+        m_pSpecialAttack->SetDamage(m_nSpclDamange);
+        m_pSpecialAttack->SetLifeSpan(m_nSpclLifeSpan);
+
+        const float almostStatic = 0.001f;
+        m_pSpecialAttack->Fire(densePos, dir, almostStatic);
+
+        //~ first AoE tick immediately on launch
+        m_nNextDmgCoolDownTimer = 0.f;
+    }
+
+    //~ AoE tick while active
+    if (m_pSpecialAttack->IsActive())
+    {
+        if (m_nNextDmgCoolDownTimer <= 0.f)
+        {
+            for (const auto& kv : m_aoeVictims)
+            {
+                auto* col = kv.first;
+                if (!col) continue;
+
+                ON_PROJECTILE_HIT_EVENT ev{};
+                ev.damage = m_nSpclDamange;
+                ev.pCollider = col;
+                pixel_engine::EventQueue::Post<ON_PROJECTILE_HIT_EVENT>(ev);
+            }
+            m_nNextDmgCoolDownTimer = m_nNextDmgCoolDown;
+        }
+    }
+    else
+    {
+        //~ start cooldown after projectile ends
+        if (!m_bCanLaunch && m_nSpclFireCoolDownTimer <= 0.f)
+            m_nSpclFireCoolDownTimer = m_nSpclFireCoolDown;
+
+        if (m_nSpclFireCoolDownTimer > 0.f)
+        {
+            m_nSpclFireCoolDownTimer -= deltaTime;
+            if (m_nSpclFireCoolDownTimer <= 0.f)
+            {
+                m_nSpclFireCoolDownTimer = 0.f;
+                m_bCanLaunch = true;
+            }
+        }
+
+        m_aoeVictims.clear();
+        m_nNextDmgCoolDownTimer = 0.f;
+    }
 }

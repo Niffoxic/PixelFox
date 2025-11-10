@@ -24,6 +24,10 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 	if (deltaTime > 1.0f) return;
 	if (!m_bInitialized) return;
 
+	//~ enemy to player calc
+	UpdatePlayerNearest();
+	UpdatePlayerMostDense();
+
 	for (auto& uptr : m_pEnemies)
 	{
 		IEnemy* e = uptr.get();
@@ -90,10 +94,6 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 			ActivateEnemy(*m_pEnemies[static_cast<size_t>(idx)]);
 		}
 	}
-
-	//~ enemy to player calc
-	UpdatePlayerNearest();
-	UpdatePlayerMostDense();
 }
 
 void EnemySpawner::Release()
@@ -370,7 +370,7 @@ void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)
 	};
 
 	const FVector2D spawnPos = playerPos + base + jitter;
-
+	e.Revive();
 	if (auto* body = e.GetBody())
 	{
 		body->SetPosition(spawnPos);
@@ -547,7 +547,7 @@ void pixel_game::EnemySpawner::UpdatePlayerMostDense()
 	auto* playerBody = m_pPlayer->GetPlayerBody();
 	if (!playerBody) return;
 
-	const float radius = 128.f; // search radius
+	const float radius = 10.f; 
 	FVector2D bestPos{ 0.f, 0.f };
 	int bestCount = 0;
 

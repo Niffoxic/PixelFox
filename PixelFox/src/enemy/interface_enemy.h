@@ -64,6 +64,8 @@ namespace pixel_game
 		virtual void  SetHealth(float hp){}
 		virtual float GetHealth() const { return 100.0f; }
 
+		virtual void Revive(){}
+
 	protected:
 		_NODISCARD _Check_return_
 		virtual bool InitEnemyBody(const PG_ENEMY_INIT_DESC& desc) = 0;

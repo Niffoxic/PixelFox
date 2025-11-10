@@ -48,11 +48,11 @@ namespace pixel_game
 		void  SetHealth	    (float hp) {}
 		float GetPlayerHeath() const { return 100.f; }
 		
-		void SetDashAnimDone(bool v) noexcept { m_dashAnimDone = v; }
-		bool IsDashAnimDone() const noexcept { return m_dashAnimDone; }
+		void SetDashAnimDone(bool v) noexcept { m_nDashAnimDone = v; }
+		bool IsDashAnimDone() const noexcept { return m_nDashAnimDone; }
 
-		uint64_t BumpDashSerial() noexcept { return ++m_dashAnimSerial; }
-		uint64_t CurrentDashSerial() const noexcept { return m_dashAnimSerial; }
+		uint64_t BumpDashSerial() noexcept { return ++m_nDashAnimSerial; }
+		uint64_t CurrentDashSerial() const noexcept { return m_nDashAnimSerial; }
 
 		void SetNearestTargetLocation(const FVector2D& pos) { m_nearestLoc = pos; }
 		void SetDenseTargetLocation(const FVector2D& pos)   { m_bestLoc = pos; }
@@ -64,10 +64,11 @@ namespace pixel_game
 		void UpdatePlayerAppearance(float deltaTime);
 
 		//~ anim state
-		void UpdatePlayerState();
+		void UpdatePlayerState(float deltaTime);
 
 		//~ Actions
 		void Attack(float deltaTime);
+		void AttackSpecial(float deltaTime);
 
 		//~ Callbacks
 
@@ -99,6 +100,17 @@ namespace pixel_game
 		float     m_nProjectileLifeSpan{ 0.6f };
 		float     m_nProjectileDamage  { 20.f };
 
+		//~ special attack
+		float m_nSpclFireCoolDown     { 5.f };
+		float m_nSpclFireCoolDownTimer{ 0.0f };
+		float m_nSpclLifeSpan		  { 2.f };
+		float m_nSpclDamange		  { 12.f };
+		float m_nNextDmgCoolDown	  { 0.2f };
+		float m_nNextDmgCoolDownTimer { 0.0f };
+		bool  m_bSpclLaunched		  { false };
+		bool  m_bCanLaunch{ true };
+		fox::unordered_map<pixel_engine::BoxCollider*, bool> m_aoeVictims{};
+
 		pixel_engine::PEKeyboardInputs* m_pKeyboard;
 		std::string m_szPlayerBase{"assets/player/"};
 		bool m_bInitialized{ false };
@@ -120,14 +132,10 @@ namespace pixel_game
 		// input and cache
 		FVector2D m_direction{ 0.f, 0.f };
 		FVector2D m_lastNonZeroDir{ 1.f, 0.f };
-		float m_cachedDt{ 0.f };
 
-		float m_dashDuration{ 0.12f };
-		float m_dashTimer{ 0.f };
-		bool     m_dashAnimDone = false;
-		uint64_t m_dashAnimSerial = 0;
-
-		float m_specialCooldown{ 0.f };
-		float m_specialCooldownTimer{ 0.f };
+		float	 m_nDashDuration{ 0.12f };
+		float	 m_nDashTimer	{ 0.f };
+		bool     m_nDashAnimDone{ false };
+		uint64_t m_nDashAnimSerial{ 0 };
 	};
 } // pixel_game
