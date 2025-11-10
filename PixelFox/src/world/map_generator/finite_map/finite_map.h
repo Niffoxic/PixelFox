@@ -5,6 +5,8 @@
 
 #include "pixel_engine/utilities/fox_loader/fox_loader.h"
 
+#include "world/buff_spawner/buff_spawner.h"
+
 namespace pixel_game
 {
 	class FiniteMap final : public IMap
@@ -56,21 +58,21 @@ namespace pixel_game
 			_In_ char typeKey);
 
 		//~ build obsticles
-		void BuildTrees(_In_ LOAD_SCREEN_DETAILS details);
+		void BuildTrees (_In_ LOAD_SCREEN_DETAILS details);
 		void BuildStones(_In_ LOAD_SCREEN_DETAILS details);
 		void BuildWaters(_In_ LOAD_SCREEN_DETAILS details);
 		void BuildGround(_In_ LOAD_SCREEN_DETAILS details);
 
 		//~ player properties
 		void SetPlayerSpawnPosition();
-		void AttachCamera();
-		void DettachCamera();
+		void AttachCamera  ();
+		void DettachCamera ();
 		void RestrictPlayer();
 		
 		//~ GUI
-		void BuildMapGUI(LOAD_SCREEN_DETAILS details);
-		void UpdateMapGUI(float deltaTime);
-		int GetRandomNumber(int min, int max);
+		void BuildMapGUI	(LOAD_SCREEN_DETAILS details);
+		void UpdateMapGUI   (float deltaTime);
+		int  GetRandomNumber(int min, int max);
 		void MapCycle();
 
 		//~ initialize enemies
@@ -83,10 +85,11 @@ namespace pixel_game
 
 		//~ cache
 		void BeginReuseFrame_();
-		void HideUnused_();
+		void HideUnused_	 ();
 		Obsticle* AcquireObsticle_(char type, const INIT_OBSTICLE_DESC& desc);
 
 	private:
+		BuffSpawner m_buffSpawner{};
 		float m_nInputDelay{ 0.2f };
 		float m_nInputTimer{ 0.2f };
 		std::string m_szSavedPath{ "Saved/save.txt" }; //  I know its bad but no time

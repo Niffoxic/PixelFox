@@ -62,7 +62,6 @@ namespace pixel_game
 		void InitializeHardcoreMap();
 	private:
 		//~ Maps
-		BuffSpawner m_buffSpawner{};
 		std::unique_ptr<FiniteMap> m_pRegularMap{ nullptr };
 		std::unique_ptr<FiniteMap> m_pHardCoreMap{ nullptr };
 		//~ loading data

@@ -168,6 +168,7 @@ void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
     {
         desc.LoadScreen.pLoadDescription->SetText("Loading complete.");
     }
+    m_buffSpawner.Initialize();
 }
 
 _Use_decl_annotations_
@@ -175,6 +176,7 @@ void pixel_game::FiniteMap::Update(float deltaTime)
 {
     if (deltaTime > 1.f) return;
     HandleInput(deltaTime);
+    m_buffSpawner.Update(deltaTime);
 
     if (m_pPlayerCharacter)
     {
@@ -242,6 +244,7 @@ void pixel_game::FiniteMap::Release()
 
 void pixel_game::FiniteMap::Start()
 {
+    m_buffSpawner.DeactivateAll();
     AttachCamera();
     if (!m_pPlayerCharacter)
     {
@@ -290,6 +293,7 @@ void pixel_game::FiniteMap::Restart()
 void pixel_game::FiniteMap::UnLoad()
 {
     DettachCamera();
+    m_buffSpawner.DeactivateAll();
     if (m_pPlayerCharacter)
         m_pPlayerCharacter->Hide();
 
@@ -359,6 +363,7 @@ void pixel_game::FiniteMap::AdvanceLevel_()
 
 void pixel_game::FiniteMap::RebuildLevel_()
 {
+    m_buffSpawner.DeactivateAll();
     LOAD_SCREEN_DETAILS dummy{};
 
     BeginReuseFrame_();
