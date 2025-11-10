@@ -56,6 +56,19 @@ namespace pixel_game
         _NODISCARD _Check_return_
         bool IsDead() const override;
 
+        void SetInvisible() override
+        {
+            if (m_pBody)
+            {
+                m_pBody->SetVisible(false);
+            }
+        }
+
+        void  SetHealth(float hp) { m_nHealth = hp; }
+        float GetHealth() const { return m_nHealth; }
+
+        void Revive() { m_nHealth = m_nMaxHP; }
+
     protected:
         // Initialization helpers
         _NODISCARD _Check_return_
@@ -93,6 +106,7 @@ namespace pixel_game
         pixel_engine::PEISprite* m_pTarget{ nullptr };
 
         bool      m_bActive{ false };
+        float     m_nMaxHP{ 300.0f };
         float     m_nHealth{ 300.0f };
         float     m_nMoveSpeedUPS{ 3.5f };
         float     m_nDamage{ 21.f };

@@ -183,7 +183,7 @@ void pixel_engine::AnimSateMachine::SetOnExitCallback(const std::string& state, 
 }
 
 _Use_decl_annotations_
-bool pixel_engine::AnimSateMachine::IsPngFile(const std::filesystem::path& p) const noexcept
+bool pixel_engine::AnimSateMachine::IsPngFile(const std::filesystem::path& p) noexcept
 {
 	if (!p.has_extension()) return false;
 	const std::string ext = p.extension().string();
@@ -197,7 +197,8 @@ bool pixel_engine::AnimSateMachine::IsPngFile(const std::filesystem::path& p) co
 }
 
 _Use_decl_annotations_
-std::optional<int> pixel_engine::AnimSateMachine::ExtractFrameIndex(const std::filesystem::path& p) const noexcept
+std::optional<int> pixel_engine::AnimSateMachine::ExtractFrameIndex(
+	const std::filesystem::path& p) noexcept
 {
 	const std::string name = p.stem().string();
 
@@ -214,7 +215,7 @@ std::optional<int> pixel_engine::AnimSateMachine::ExtractFrameIndex(const std::f
 	
 	try 
 	{
-		return std::stoi(digits); //~ for 00
+		return std::stoi(digits);
 	}
 	catch (...) 
 	{
@@ -223,7 +224,7 @@ std::optional<int> pixel_engine::AnimSateMachine::ExtractFrameIndex(const std::f
 }
 
 _Use_decl_annotations_
-std::vector<std::filesystem::path> pixel_engine::AnimSateMachine::CollectPngFiles(const std::string& dirPath) const
+std::vector<std::filesystem::path> pixel_engine::AnimSateMachine::CollectPngFiles(const std::string& dirPath)
 {
 	std::vector<std::filesystem::path> files;
 
@@ -239,10 +240,10 @@ std::vector<std::filesystem::path> pixel_engine::AnimSateMachine::CollectPngFile
 }
 
 _Use_decl_annotations_
-void pixel_engine::AnimSateMachine::SortFramesByIndex(std::vector<std::filesystem::path>& files) const
+void pixel_engine::AnimSateMachine::SortFramesByIndex(std::vector<std::filesystem::path>& files)
 {
 	std::sort(files.begin(), files.end(),
-	[this](const std::filesystem::path& a, const std::filesystem::path& b)
+	[](const std::filesystem::path& a, const std::filesystem::path& b)
 	{
 		const auto ia = ExtractFrameIndex(a);
 		const auto ib = ExtractFrameIndex(b);

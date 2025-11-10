@@ -59,6 +59,12 @@ namespace pixel_game
 		}
 
 		bool RangedEnemy() const { return m_bRangedEnemy; }
+		virtual void SetInvisible() = 0;
+
+		virtual void  SetHealth(float hp){}
+		virtual float GetHealth() const { return 100.0f; }
+
+		virtual void Revive(){}
 
 	protected:
 		_NODISCARD _Check_return_

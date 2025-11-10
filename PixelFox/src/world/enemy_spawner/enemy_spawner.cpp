@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "world/events/enemy_events.h"
 
 using namespace pixel_game;
 using namespace pixel_engine;
@@ -24,6 +25,10 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 	if (deltaTime > 1.0f) return;
 	if (!m_bInitialized) return;
 
+	//~ enemy to player calc
+	UpdatePlayerNearest();
+	UpdatePlayerMostDense();
+
 	for (auto& uptr : m_pEnemies)
 	{
 		IEnemy* e = uptr.get();
@@ -33,7 +38,16 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 		{
 			e->Update(deltaTime);
 			if (e->IsDead())
+			{
+				if (auto* body = e->GetBody()) 
+				{
+					EVENT_DIE_EVENT event{};
+					event.DeathLocation = body->GetPosition();
+					pixel_engine::EventQueue::Post<EVENT_DIE_EVENT>(event);
+				}
 				DeactivateEnemy(*e);
+			}
+				
 		}
 	}
 
@@ -200,31 +214,141 @@ bool pixel_game::EnemySpawner::Initialize(const PG_SPAWN_DESC& desc)
 	return true;
 }
 
+_Use_decl_annotations_
+void pixel_game::EnemySpawner::LoadState(const pixel_engine::PEFoxLoader& loader)
+{
+	const int poolCount = static_cast<int>(m_pEnemies.size());
+	const int savedCount = loader.Contains("Count") ? loader["Count"].AsInt() : 0;
+	const int count = (std::min)(savedCount, poolCount);
+
+	for (int i = 0; i < poolCount; ++i)
+	{
+		IEnemy* e = m_pEnemies[i].get();
+		if (!e) continue;
+
+		if (m_mapEnemies.contains(e)) m_mapEnemies[e] = false;
+		else                          m_mapEnemies[e] = false;
+
+		if (auto* body = e->GetBody())
+			body->SetVisible(false);
+
+		e->SetInvisible();
+	}
+
+	int activeLoaded = 0;
+
+	for (int i = 0; i < count; ++i)
+	{
+		IEnemy* e = m_pEnemies[i].get();
+		if (!e) continue;
+
+		const std::string key = "E" + std::to_string(i);
+		if (!loader.Contains(key)) continue;
+
+		const auto& eNode = loader[key];
+
+		const float px = eNode.Contains("PosX") ? eNode["PosX"].AsFloat() : 0.f;
+		const float py = eNode.Contains("PosY") ? eNode["PosY"].AsFloat() : 0.f;
+
+		const bool active = eNode.Contains("Active") ? (eNode["Active"].AsInt() != 0) : false;
+
+		float health = e->GetHealth();
+		if (eNode.Contains("Health"))
+			health = eNode["Health"].AsFloat();
+
+		if (auto* body = e->GetBody())
+		{
+			body->SetPosition({ px, py });
+			body->SetVisible(active);
+		}
+
+		e->SetHealth(health);
+		if (m_mapEnemies.contains(e)) m_mapEnemies[e] = active;
+		else                          m_mapEnemies[e] = active;
+
+		if (active) ++activeLoaded;
+	}
+
+	m_nSpawnedCount = activeLoaded;
+	m_activationTimer = 0.0f;
+	if (savedCount > poolCount)
+	{
+		logger::debug("EnemySpawner::LoadState - saved {} exceeds pool {}, truncating.",
+			savedCount, poolCount);
+	}
+
+	logger::debug("EnemySpawner::LoadState - restored {} active out of {} (pool={})",
+		activeLoaded, savedCount, poolCount);
+}
+
+_Use_decl_annotations_
+void pixel_game::EnemySpawner::SaveState(pixel_engine::PEFoxLoader& enemiesNode)
+{
+	const int count = static_cast<int>(m_pEnemies.size());
+	enemiesNode.GetOrCreate("Count").SetValue(std::to_string(count));
+
+	for (int i = 0; i < count; ++i)
+	{
+		IEnemy* enemy = m_pEnemies[i].get();
+		if (!enemy) continue;
+
+		FVector2D pos{ 40.f, 40.f };
+		if (auto* body = enemy->GetBody())
+			pos = body->GetPosition();
+
+		bool active = enemy->IsActive();
+		if (m_mapEnemies.contains(enemy))
+			active = m_mapEnemies[enemy];
+
+		float health = 0.f;
+		health = enemy->GetHealth();
+
+		auto& eNode = enemiesNode.GetOrCreate("E" + std::to_string(i));
+		eNode.GetOrCreate("PosX").SetValue(std::to_string(pos.x));
+		eNode.GetOrCreate("PosY").SetValue(std::to_string(pos.y));
+		eNode.GetOrCreate("Active").SetValue(active ? "1" : "0");
+		eNode.GetOrCreate("Health").SetValue(std::to_string(health));
+	}
+
+	pixel_engine::logger::debug("EnemySpawner::SaveState - saved {} enemies", count);
+}
+
 void pixel_game::EnemySpawner::BuildEnemies()
 {
-	m_pEnemies  .clear();
+	m_pEnemies.clear();
 	m_mapEnemies.clear();
 
 	const auto& names = RegistryEnemy::GetEnemyNames();
-	
+
 	if (names.empty())
 	{
 		logger::error("RegistryEnemy::GetEnemyNames() is empty!");
 		return;
 	}
 
-	m_pEnemies.reserve(static_cast<size_t>(m_desc.SpawnMaxCount));
+	const int totalCount = m_desc.SpawnMaxCount;
+	const int enemyTypeCount = static_cast<int>(names.size());
+	m_pEnemies.reserve(static_cast<size_t>(totalCount));
 
-	for (int i = 0; i < m_desc.SpawnMaxCount; ++i)
+	const int baseCount = totalCount / enemyTypeCount;
+	const int remainder = totalCount % enemyTypeCount;
+
+	int count = 0;
+	for (int t = 0; t < enemyTypeCount; ++t)
 	{
-		const int idx = RandInt(0, static_cast<int>(names.size()) - 1);
-		std::unique_ptr<IEnemy> ptr = RegistryEnemy::CreateEnemy(names[idx]);
-		
-		if (!ptr) continue;
+		const int spawnCount = baseCount + (t < remainder ? 1 : 0);
+		for (int i = 0; i < spawnCount; ++i)
+		{
+			std::unique_ptr<IEnemy> ptr = RegistryEnemy::CreateEnemy(names[t]);
+			if (!ptr) continue;
 
-		m_mapEnemies[ptr.get()] = false;
-		m_pEnemies.push_back(std::move(ptr));
+			m_mapEnemies[ptr.get()] = false;
+			m_pEnemies.push_back(std::move(ptr));
+			++count;
+		}
 	}
+
+	logger::info("EnemySpawner::BuildEnemies - Spawned {} enemies ({} types equally divided).", count, enemyTypeCount);
 }
 
 void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)
@@ -256,7 +380,7 @@ void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)
 	};
 
 	const FVector2D spawnPos = playerPos + base + jitter;
-
+	e.Revive();
 	if (auto* body = e.GetBody())
 	{
 		body->SetPosition(spawnPos);
@@ -276,11 +400,8 @@ void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)
 
 void pixel_game::EnemySpawner::DeactivateEnemy(IEnemy& e)
 {
-	if (auto* body = e.GetBody())
-		body->SetVisible(false);
-
+	e.SetInvisible();
 	m_mapEnemies[&e] = false;
-	// TODO: Reset Enemy State
 }
 
 int pixel_game::EnemySpawner::PickInactiveIndexRandom()
@@ -333,6 +454,7 @@ void EnemySpawner::PrepareExistingPoolInvisible_()
 
 		m_mapEnemies[e] = false;
 
+		e->SetInvisible();
 		if (auto* body = e->GetBody())
 		{
 			body->SetVisible(false);
@@ -391,6 +513,123 @@ void EnemySpawner::EnsurePoolMatchesDescOrRebuild_()
 
 	logger::info("EnemySpawner: rebuilt pool; prepared {} / {} enemies (invisible).",
 		prepared, m_desc.SpawnMaxCount);
+}
+
+void pixel_game::EnemySpawner::UpdatePlayerNearest()
+{
+	if (!m_pPlayer || !m_pPlayer->IsInitialized())
+		return;
+
+	auto* playerBody = m_pPlayer->GetPlayerBody();
+	if (!playerBody)
+		return;
+
+	const FVector2D playerPos = playerBody->GetRigidBody2D()->GetPosition();
+
+	float nearestDistSq = FLT_MAX;
+	FVector2D nearestPos{ 0.f, 0.f };
+
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e || !m_mapEnemies[e]) continue;
+
+		auto* enemyBody = e->GetBody();
+		if (!enemyBody) continue;
+
+		const FVector2D enemyPos = enemyBody->GetRigidBody2D()->GetPosition();
+		const FVector2D delta = enemyPos - playerPos;
+		const float distSq = delta.LengthSq();
+
+		if (distSq < nearestDistSq)
+		{
+			nearestDistSq = distSq;
+			nearestPos = enemyPos;
+		}
+	}
+
+	m_pPlayer->SetNearestTargetLocation(nearestPos);
+}
+
+void pixel_game::EnemySpawner::UpdatePlayerMostDense()
+{
+	if (!m_pPlayer || !m_pPlayer->IsInitialized()) return;
+	auto* playerBody = m_pPlayer->GetPlayerBody();
+	if (!playerBody) return;
+
+	const FVector2D playerPos = playerBody->GetRigidBody2D()->GetPosition();
+
+	const float denseRadius = 10.f;
+	const float nearPlayerRange = 20.f;
+
+	FVector2D bestPos{ 0.f, 0.f };
+	int       bestCount = 0;
+	float     bestDistSq = FLT_MAX;
+
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e || !m_mapEnemies[e]) continue;
+
+		auto* bodyA = e->GetBody();
+		if (!bodyA || !bodyA->IsVisible()) continue;
+
+		const FVector2D posA = bodyA->GetRigidBody2D()->GetPosition();
+		const float distToPlayerSq = (posA - playerPos).LengthSq();
+		if (distToPlayerSq > nearPlayerRange * nearPlayerRange) continue;
+
+		int count = 0;
+		FVector2D centroid{ 0.f, 0.f };
+
+		for (auto& inner : m_pEnemies)
+		{
+			IEnemy* e2 = inner.get();
+			if (!e2 || !m_mapEnemies[e2]) continue;
+
+			auto* bodyB = e2->GetBody();
+			if (!bodyB || !bodyB->IsVisible()) continue;
+
+			const FVector2D posB = bodyB->GetRigidBody2D()->GetPosition();
+			if ((posB - posA).LengthSq() <= denseRadius * denseRadius)
+			{
+				++count;
+				centroid += posB;
+			}
+		}
+
+		if (count > 0)
+		{
+			const FVector2D center = centroid * (1.0f / static_cast<float>(count));
+			const float centerDistSq = (center - playerPos).LengthSq();
+
+			if ((count > bestCount) || (count == bestCount && centerDistSq < bestDistSq))
+			{
+				bestCount = count;
+				bestPos = center;
+				bestDistSq = centerDistSq;
+			}
+		}
+	}
+
+	//~ fall back to best possible closest
+	if (bestCount == 0)
+	{
+		float nearestSq = FLT_MAX;
+		for (auto& uptr : m_pEnemies)
+		{
+			IEnemy* e = uptr.get();
+			if (!e || !m_mapEnemies[e]) continue;
+
+			auto* body = e->GetBody();
+			if (!body || !body->IsVisible()) continue;
+
+			const FVector2D pos = body->GetRigidBody2D()->GetPosition();
+			const float d2 = (pos - playerPos).LengthSq();
+			if (d2 < nearestSq) { nearestSq = d2; bestPos = pos; }
+		}
+	}
+
+	m_pPlayer->SetDenseTargetLocation(bestPos);
 }
 
 _Use_decl_annotations_

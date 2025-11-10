@@ -13,10 +13,12 @@ namespace pixel_game
 	class IProjectile;
 	typedef struct _INIT_PROJECTILE_DESC 
 	{
-		std::function<void(_In_ IProjectile* projectile)> OnFire;
-		std::function<void(_In_ IProjectile* projectile)> OnHit;
-		std::function<void(_In_ IProjectile* projectile)> OnExpired;
-		std::function<void(_In_ IProjectile* projectile)> OnActive;
+		std::function<void()> OnFire;
+		std::function<void(_In_ IProjectile* projectile, _In_ pixel_engine::BoxCollider*)> OnHit;
+		std::function<void()> OnExpired;
+		std::function<void()> OnActive;
+
+		pixel_engine::PEISprite* pOwner{ nullptr };
 	} INIT_PROJECTILE_DESC;
 
 	class IProjectile
@@ -87,7 +89,10 @@ namespace pixel_game
 		virtual float GetDamage() const = 0;
 
 		//~ Collision
-		virtual void OnHit() = 0;
+		virtual void OnHit(pixel_engine::BoxCollider* collider) = 0;
+		virtual void AddHitTag(const std::string& tag) = 0;
+		virtual void RemoveHitTag(const std::string& tag) = 0;
+		virtual bool HasHitTag(const std::string& tag) const = 0;
 
 		//~ animations
 		virtual pixel_engine::AnimSateMachine* GetAnimStateMachine() const = 0;

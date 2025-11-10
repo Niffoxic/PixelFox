@@ -75,18 +75,18 @@ namespace pixel_engine
             const std::string& state,
             std::function<void()> callback);
 
-    private:
         //~ helpers
         _NODISCARD _Check_return_
-        bool IsPngFile(_In_ const std::filesystem::path& p) const noexcept;
-        
+        static bool IsPngFile(_In_ const std::filesystem::path& p) noexcept;
+
         _NODISCARD _Check_return_
-        std::optional<int> ExtractFrameIndex(_In_ const std::filesystem::path& p) const noexcept;
-        
+        static std::optional<int> ExtractFrameIndex(_In_ const std::filesystem::path& p) noexcept;
+
         _NODISCARD _Check_return_
-        std::vector<std::filesystem::path> CollectPngFiles(_In_ const std::string& dirPath) const;
-        
-        void SortFramesByIndex(_Inout_ std::vector<std::filesystem::path>& files) const;
+        static std::vector<std::filesystem::path> CollectPngFiles(_In_ const std::string& dirPath);
+
+        static void SortFramesByIndex(_Inout_ std::vector<std::filesystem::path>& files);
+
 
     private:
         PEISprite* m_pSprite{ nullptr };

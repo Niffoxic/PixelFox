@@ -10,26 +10,39 @@ pixel_game::GameWorld::GameWorld(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
     BuildFPSFont();
     BuildLoadingDetails();
 
-    m_pPlayer       = std::make_unique<PlayerCharacter>();
+    m_pPlayer         = std::make_unique<PlayerCharacter>();
+    m_pRegularMap     = std::make_unique<FiniteMap>();
+    m_pHardCoreMap    = std::make_unique<FiniteMap>();
+    m_pEnemySpawner   = std::make_unique<EnemySpawner>(m_pPlayer.get());
 
-    m_pFiniteMap    = std::make_unique<FiniteMap>();
-    m_pEnemySpawner = std::make_unique<EnemySpawner>(m_pPlayer.get());
+    m_buffSpawner.Initialize();
 }
 
 pixel_game::GameWorld::~GameWorld()
 {
-    if (m_pFiniteMap) 
+    if (m_pRegularMap) 
     {
-        if (m_pFiniteMap->IsActive())
+        if (m_pRegularMap->IsActive())
         {
-            m_pFiniteMap->UnLoad();
+            m_pRegularMap->UnLoad();
         }
-        m_pFiniteMap->Release();
+        m_pRegularMap->Release();
+    }
+
+    if (m_pHardCoreMap)
+    {
+        if (m_pHardCoreMap->IsActive())
+        {
+            m_pHardCoreMap->UnLoad();
+        }
+        m_pHardCoreMap->Release();
     }
 }
 
 void pixel_game::GameWorld::Update(float deltaTime)
 {
+    m_buffSpawner.Update(deltaTime);
+
     ComputeFPS(deltaTime);
     KeyWatcher       (deltaTime);
 	HandleTransition ();
@@ -79,11 +92,12 @@ void pixel_game::GameWorld::UpdateActiveState(float deltaTime)
     }
     case GameState::Finite:
     {
-        if (m_pFiniteMap) m_pFiniteMap->Update(deltaTime);
+        if (m_pRegularMap) m_pRegularMap->Update(deltaTime);
         return;
     }
     case GameState::Infinite:
     {
+        if (m_pHardCoreMap) m_pHardCoreMap->Update(deltaTime);
         return;
     }
     }
@@ -118,13 +132,14 @@ void pixel_game::GameWorld::EnterState(GameState state)
         if (m_pMainMenu) m_pMainMenu->Hide();
         AttachCameraToPlayer();
 
-        if (m_pFiniteMap)
+        if (m_pRegularMap)
         {
-            if (!m_pFiniteMap->IsInitialized())
+            if (!m_pRegularMap->IsInitialized())
             {
-                InitializeFiniteMap();
+                InitializeRegularMap();
             }
-            m_pFiniteMap->Start();
+            m_pEnemySpawner->StopAtLimit(true);
+            m_pRegularMap->Start();
         }
         return;
     }
@@ -132,6 +147,16 @@ void pixel_game::GameWorld::EnterState(GameState state)
     {
         if (m_pMainMenu) m_pMainMenu->Hide();
         AttachCameraToPlayer();
+
+        if (m_pHardCoreMap)
+        {
+            if (!m_pHardCoreMap->IsInitialized())
+            {
+                InitializeHardcoreMap();
+            }
+            m_pEnemySpawner->StopAtLimit(false);
+            m_pHardCoreMap->Start();
+        }
         return;
     }
     }
@@ -148,15 +173,19 @@ void pixel_game::GameWorld::ExitState(GameState state)
     }
     case GameState::Finite:
     {
-        if (m_pFiniteMap)
+        if (m_pRegularMap)
         {
-            m_pFiniteMap->UnLoad();
+            m_pRegularMap->UnLoad();
         }
         return;
     }
 
     case GameState::Infinite:
     {
+        if (m_pHardCoreMap)
+        {
+            m_pHardCoreMap->UnLoad();
+        }
         return;
     }
     }
@@ -179,9 +208,10 @@ void pixel_game::GameWorld::KeyWatcher(float deltaTime)
             case GameState::Finite:
             {
                 pixel_engine::logger::debug("Returning to Main Menu");
-                if (m_pFiniteMap)
+                if (m_pRegularMap)
                 {
-                    m_pFiniteMap->UnLoad();
+                    m_pRegularMap->Restart();
+                    m_pRegularMap->UnLoad();
                 }
                 SetState(GameState::Menu);
                 m_nInputBlockTimer = m_nInputDelay;
@@ -191,6 +221,11 @@ void pixel_game::GameWorld::KeyWatcher(float deltaTime)
             case GameState::Infinite:
             {
                 pixel_engine::logger::debug("Returning to Main Menu");
+                if (m_pHardCoreMap)
+                {
+                    m_pHardCoreMap->Restart();
+                    m_pHardCoreMap->UnLoad();
+                }
                 SetState(GameState::Menu);
                 m_nInputBlockTimer = m_nInputDelay;
                 return;
@@ -204,6 +239,13 @@ void pixel_game::GameWorld::KeyWatcher(float deltaTime)
         {
             ShowFPS();
             m_nInputBlockTimer = m_nInputDelay;
+        }
+        if (m_pKeyboard->WasKeyPressed('G'))
+        {
+            if (m_pPlayer)
+            {
+                m_pPlayer->SetHealth(10000.f);
+            }
         }
     }
 }
@@ -278,11 +320,11 @@ void pixel_game::GameWorld::BuildLoadingDetails()
     float width  = m_pWindows->GetWindowsWidth() / 2;
 
     m_pLoadingInfo ->SetPosition({ 100, height - 200 });
-    m_pLoadingTitle->SetPosition({ width - 350, height });
+    m_pLoadingTitle->SetPosition({ 150, height });
     m_pLoadingDesc ->SetPosition({ width - 300, height + 50 });
 }
 
-void pixel_game::GameWorld::InitializeFiniteMap()
+void pixel_game::GameWorld::InitializeRegularMap()
 {
     if (!m_pPlayer || !m_pEnemySpawner)
     {
@@ -293,7 +335,7 @@ void pixel_game::GameWorld::InitializeFiniteMap()
     //~ Set Loading Screen Active
     if (m_pLoadingInfo) 
     {
-        m_pLoadingInfo->SetText("Loading Finite Map!");
+        m_pLoadingInfo->SetText("Loading Regular Map!");
         pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingInfo.get());
     }
     if (m_pLoadingTitle)
@@ -334,7 +376,7 @@ void pixel_game::GameWorld::InitializeFiniteMap()
     };
 
     // create and initialize
-    m_pFiniteMap->Initialize(mapDesc);
+    m_pRegularMap->Initialize(mapDesc);
 
     if (m_pLoadingInfo)
     {
@@ -351,7 +393,82 @@ void pixel_game::GameWorld::InitializeFiniteMap()
 
     if (!m_pLoadingDesc) pixel_engine::logger::error("FAILED TO RELESAE");
 
-    m_pFiniteMap->Start();
+    m_pRegularMap->Start();
+
+    pixel_engine::logger::debug("GameWorld::InitializeFiniteMap - Finite Map initialized successfully!");
+}
+
+void pixel_game::GameWorld::InitializeHardcoreMap()
+{
+    if (!m_pPlayer || !m_pEnemySpawner)
+    {
+        pixel_engine::logger::error("GameWorld::InitializeFiniteMap - Missing Player or EnemySpawner!");
+        return;
+    }
+    if (!m_pHardCoreMap) return;
+
+    //~ Set Loading Screen Active
+    if (m_pLoadingInfo)
+    {
+        m_pLoadingInfo->SetText("Loading Hard Map!");
+        pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingInfo.get());
+    }
+    if (m_pLoadingTitle)
+    {
+        m_pLoadingTitle->SetText("Setting up Resouces");
+        pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingTitle.get());
+    }
+    if (m_pLoadingDesc)
+    {
+        m_pLoadingDesc->SetText("fetching descriptions");
+        pixel_engine::PERenderQueue::Instance().AddFont(m_pLoadingDesc.get());
+    }
+
+    LOAD_SCREEN_DETAILS details{};
+    details.pLoadTitle = m_pLoadingTitle.get();
+    details.pLoadDescription = m_pLoadingDesc.get();
+
+    // prepare map descriptor
+    MAP_INIT_DESC mapDesc{};
+    mapDesc.LoadScreen = details;
+    mapDesc.pPlayerCharacter = m_pPlayer.get();
+    mapDesc.pEnemySpawner    = m_pEnemySpawner.get();
+    mapDesc.MapDuration = 600.f;
+    mapDesc.UseBounds = true;
+    mapDesc.Bounds = { { -32.f, -32.f }, { 32, 32 } };
+    mapDesc.Type = EMapType::Infinite;
+    mapDesc.pKeyboard = m_pKeyboard;
+    mapDesc.OnMapComplete =
+        [&]()
+        {
+            SetState(GameState::Menu);
+        };
+
+    mapDesc.OnMapComplete = [this]()
+        {
+            pixel_engine::logger::debug("Finite Map Complete → Returning to Menu");
+            SetState(GameState::Menu);
+        };
+
+    // create and initialize
+    m_pHardCoreMap->Initialize(mapDesc);
+
+    if (m_pLoadingInfo)
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_pLoadingInfo.get());
+    }
+    if (m_pLoadingTitle)
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_pLoadingTitle.get());
+    }
+    if (m_pLoadingDesc)
+    {
+        pixel_engine::PERenderQueue::Instance().RemoveFont(m_pLoadingDesc.get());
+    }
+
+    if (!m_pLoadingDesc) pixel_engine::logger::error("FAILED TO RELESAE");
+
+    m_pHardCoreMap->Start();
 
     pixel_engine::logger::debug("GameWorld::InitializeFiniteMap - Finite Map initialized successfully!");
 }

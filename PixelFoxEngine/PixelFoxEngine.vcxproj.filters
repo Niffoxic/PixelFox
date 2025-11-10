@@ -177,6 +177,12 @@
     <ClInclude Include="include\pixel_engine\physics_manager\physics_api\rigid_body\rigid_body.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\pixel_engine\utilities\filesystem\file_system.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pixel_engine\utilities\fox_loader\fox_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -285,6 +291,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\pixel_engine\physics_manager\physics_api\rigid_body\rigid_body.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\utilities\filesystem\file_system.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\pixel_engine\utilities\fox_loader\fox_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

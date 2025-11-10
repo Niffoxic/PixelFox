@@ -164,7 +164,7 @@ void pixel_game::MainMenu::BuildLayout()
     m_menuBackground.GetCollider()->SetColliderType(pixel_engine::ColliderType::Trigger);
     m_menuBackground.SetScale({ menuW, menuH });
     m_menuBackground.SetLayer(pixel_engine::ELayer::Background);
-    m_menuBackground.SetTexture("assets/menu/background/0.png");
+    m_menuBackground.SetTexture("assets/menu/background/00.png");
 
     if (m_pBackgroundAnim)
     {
@@ -286,16 +286,16 @@ void pixel_game::MainMenu::BuildFonts()
     const float stepY = 80.f;          
     const float textX = screenW * 0.35f;
 
-    { // finite map
+    { // regular map
         m_menuFiniteMapText.SetPx(32);
-        m_menuFiniteMapText.SetPosition({ textX + 40, baseY });
-        m_menuFiniteMapText.SetText("Finite Map");
+        m_menuFiniteMapText.SetPosition({ textX + 35, baseY });
+        m_menuFiniteMapText.SetText("Regular Map");
     }
 
-    { // infinite map
+    { // hardcore map
         m_menuInfiniteMapText.SetPx(32);
         m_menuInfiniteMapText.SetPosition({ textX, baseY + stepY });
-        m_menuInfiniteMapText.SetText("Infinite Map");
+        m_menuInfiniteMapText.SetText("Hardcore Map");
     }
 
     { // controls option
@@ -357,7 +357,7 @@ void pixel_game::MainMenu::BuildControlsLayout()
         { "Ctrl+S", "Save Current Game State",      startY + stepY * 6.f },
         { "Ctrl+L", "Load Last Saved State",        startY + stepY * 7.f },
         { "Esc",    "To go back or open main menu", startY + stepY * 8.f },
-        { "F",      "Show FPS",                     startY + stepY * 9.f },
+        { "F/G",    "Show FPS/ Set HP = 10000",                     startY + stepY * 9.f },
     };
 
     for (const auto& r : rows)
@@ -408,7 +408,7 @@ void pixel_game::MainMenu::ShowMainMenu()
     auto& q = pixel_engine::PhysicsQueue::Instance();
 
     // inner screen panel
-    q.AddObject(&m_menuScreen);
+    //q.AddObject(&m_menuScreen);
 
     // options
     q.AddObject(&m_menuFiniteMap);
@@ -434,7 +434,7 @@ void pixel_game::MainMenu::HideMainMenu()
 {
     auto& q = pixel_engine::PhysicsQueue::Instance();
 
-    q.RemoveObject(&m_menuScreen);
+    //q.RemoveObject(&m_menuScreen);
 
     q.RemoveObject(&m_menuFiniteMap);
     q.RemoveObject(&m_menuInfiniteMap);

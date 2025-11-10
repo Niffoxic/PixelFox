@@ -42,19 +42,33 @@ namespace pixel_game
             pixel_engine::BoxCollider* GetCollider() const override;
 
         _NODISCARD _Check_return_ _Ret_maybenull_
-            IAIController* GetController() const override;
+        IAIController* GetController() const override;
 
         void SetTarget(_In_opt_ pixel_engine::PEISprite* target) override;
 
         _NODISCARD _Check_return_ _Ret_maybenull_
-            pixel_engine::PEISprite* GetTarget() const override;
+        pixel_engine::PEISprite* GetTarget() const override;
 
         _NODISCARD _Check_return_
-            bool HasTarget() const override;
+        bool HasTarget() const override;
 
         // States
         _NODISCARD _Check_return_
-            bool IsDead() const override;
+        bool IsDead() const override;
+
+        void SetInvisible() override
+        {
+            if (m_pBody)
+            {
+                m_pBody->SetVisible(false);
+            }
+        }
+
+
+        void  SetHealth(float hp) { m_nHealth = hp; }
+        float GetHealth() const { return m_nHealth; }
+
+        void Revive() { m_nHealth = m_nMaxHealth; }
 
     protected:
         // Initialization helpers
@@ -94,6 +108,7 @@ namespace pixel_game
 
         bool      m_bActive{ false };
         float     m_nHealth{ 50.0f };
+        float     m_nMaxHealth{ 50.0f };
         float     m_nMoveSpeedUPS{ 3.5f };
         float     m_nDamage{ 50.f };
         float     m_nKnockBack{ 5.f };

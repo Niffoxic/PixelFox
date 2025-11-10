@@ -17,7 +17,7 @@ namespace pixel_game
     class EnemyFireDog final : public IEnemy
     {
     public:
-        EnemyFireDog() = default;
+         EnemyFireDog() = default;
         ~EnemyFireDog() override = default;
 
         // Lifecycle
@@ -56,6 +56,30 @@ namespace pixel_game
         // States
         _NODISCARD _Check_return_
         bool IsDead() const override;
+
+        void SetInvisible() override
+        {
+            if (m_pBody)
+            {
+                m_pBody->SetVisible(false);
+            }
+            if (m_pProjectile)
+            {
+                m_pProjectile->Deactivate();
+                m_pProjectile->SetPosition({ 1000, 1000 });
+
+                if (auto* body = m_pProjectile->GetBody())
+                {
+                    body->SetVisible(false);
+                }
+            }
+        }
+
+
+        void  SetHealth(float hp) { m_nHealth = hp; }
+        float GetHealth() const { return m_nHealth; }
+
+        void Revive() { m_nHealth = m_nMaxHP; }
 
     protected:
         // Initialization helpers
@@ -96,7 +120,7 @@ namespace pixel_game
 
         bool      m_bActive{ false };
         float     m_nHealth{ 150.0f };
-        
+        float m_nMaxHP{ 150.f };
         //~ projectile specifics
         float     m_nAttackDistance{ 50.f };
         float     m_nFireCoolDown{ 0.6f };

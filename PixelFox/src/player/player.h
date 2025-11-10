@@ -4,13 +4,21 @@
 #include "pixel_engine/render_manager/components/animator/anim_state.h"
 #include "pixel_engine/render_manager/objects/quad/quad.h"
 #include "pixel_engine/window_manager/inputs/keyboard_inputs.h"
+#include "pixel_engine/utilities/logger/logger.h"
+
+#include "ai/projectile/straight/straight_projectile.h"
+
+//~ states
+#include "player_state/player_state.h"
+
 
 namespace pixel_game
 {
 	class PlayerCharacter
 	{
+
 	public:
-		PlayerCharacter() = default;
+		PlayerCharacter () = default;
 		~PlayerCharacter() = default;
 
 		PlayerCharacter(const PlayerCharacter&) = delete;
@@ -28,14 +36,39 @@ namespace pixel_game
 
 		//~ Handle Inputs
 		void HandleInput(
-			const pixel_engine::PEKeyboardInputs* keyboard,
+			pixel_engine::PEKeyboardInputs* keyboard,
 			float deltaTime);
 
 		void Draw();
 		void Hide();
 		void UnloadFromQueue();
 
+		bool IsDead() const { return m_nCurrentHealth <= 0.0f; }
+		void Revive()
+		{
+			m_nCurrentHealth = m_nMaxHealth;
+			m_playerState.movementSpeed = m_playerState.movementSpeed_Base;
+			m_nProjectileDamage = m_nProjectileDamage_Base;
+			m_nFireCoolDown = m_nFireCoolDown_Base;
+			m_nSpclFireCoolDown = m_nSpclFireCoolDown_Base;
+			m_nProjectileSpeed = m_nProjectileSpeed_Base;
+			m_playerState.dashForce = m_playerState.dashForce_Base;
+		}
+
 		bool IsInitialized() const { return m_bInitialized; }
+
+		//~ states
+		void  SetHealth(float hp) { m_nCurrentHealth = hp; }
+		float GetPlayerHeath() const { return m_nCurrentHealth; }
+		
+		void SetDashAnimDone(bool v) noexcept { m_nDashAnimDone = v; }
+		bool IsDashAnimDone() const noexcept { return m_nDashAnimDone; }
+
+		uint64_t BumpDashSerial() noexcept { return ++m_nDashAnimSerial; }
+		uint64_t CurrentDashSerial() const noexcept { return m_nDashAnimSerial; }
+
+		void SetNearestTargetLocation(const FVector2D& pos) { m_nearestLoc = pos; }
+		void SetDenseTargetLocation(const FVector2D& pos)   { m_bestLoc = pos; }
 
 	private:
 		//~ Look
@@ -43,23 +76,109 @@ namespace pixel_game
 		bool InitializeAppearance();
 		void UpdatePlayerAppearance(float deltaTime);
 
+		//~ build guis
+		void BuildHPFont();
+		void UpdateHPFont();
+		void HideHPFont();
+		void DrawHPFont();
+
+		void BuildCoolDownFont();
+		void UpdateCoolDownFont();
+		void HideCoolDownFont();
+		void DrawCoolDownFont();
+
+		//~ anim state
+		void UpdatePlayerState(float deltaTime);
+
 		//~ Actions
+		void Attack(float deltaTime);
+		void AttackSpecial(float deltaTime);
 
 		//~ Callbacks
 
 		//~ Events 
+		void SubscribeToEvents();
+		//~ helpers
+		_NODISCARD _Check_return_ _Success_(return != nullptr)
+		inline bool ValidatePathExists(const std::string & path) const
+		{
+			if (!std::filesystem::exists(path))
+			{
+				pixel_engine::logger::error("path dNT: {}", path);
+				return false;
+			}
+			return true;
+		}
 
 	private:
+		std::unique_ptr<pixel_engine::PEFont> m_pHPFont     { nullptr };
+		std::unique_ptr<pixel_engine::PEFont> m_pCooldownFont     { nullptr };
+
+		std::unique_ptr<StraightProjectile> m_pBasicAttack  { nullptr };
+		std::unique_ptr<StraightProjectile> m_pSpecialAttack{ nullptr };
+
+		FVector2D m_nearestLoc{ 10000.f, 10000.f};
+		FVector2D m_bestLoc{ 10000.f, 10000.f};
+		
+		float     m_nAttackDistance	   { 10.f };
+		float     m_nFireCoolDown	   { 0.4f };
+		float     m_nFireCoolDown_Base { 0.2f };
+		FVector2D m_MuzzleOffset	   { 0.5f, 0.f };
+		float     m_nProjectileSpeed   { 15.f };
+		float     m_nProjectileSpeed_Base   { 15.f };
+		float     m_nProjectileLifeSpan{ 0.6f };
+		float     m_nProjectileDamage  { 35.f };
+		float     m_nProjectileDamage_Base  { 35.f };
+
+		float m_nLastTakenHit{ 0.0f };
+		float m_nImmune	     { 0.45f };
+		//~ special attack
+		float m_nSpclFireCoolDown     { 5.f };
+		float m_nSpclFireCoolDown_Base     { 5.f };
+		float m_nSpclFireCoolDownTimer{ 0.0f };
+		float m_nSpclLifeSpan		  { 2.f };
+		float m_nSpclDamange		  { 50.f };
+		float m_nNextDmgCoolDown	  { 0.2f };
+		float m_nNextDmgCoolDownTimer { 0.0f };
+		bool m_spclWasActive{ false };
+		bool  m_bSpclLaunched		  { false };
+		bool  m_bCanLaunch{ true };
+		fox::unordered_map<pixel_engine::BoxCollider*, bool> m_aoeVictims{};
+
+		pixel_engine::PEKeyboardInputs* m_pKeyboard;
+		std::string m_szPlayerBase{"assets/player/"};
 		bool m_bInitialized{ false };
 		std::unique_ptr<pixel_engine::QuadObject>       m_pBody    { nullptr };
 		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimState{ nullptr };
 
-		struct PlayerState
+		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimBasic{ nullptr };
+		std::unique_ptr<pixel_engine::AnimSateMachine> m_pSpclAnim{ nullptr };
+
+		struct PlayerParams
 		{
-			float movementSpeed	   { 5.f };
-			float dashCooldownTimer{ 0.f };
+			float movementSpeed	   { 7.f };
+			float movementSpeed_Base{ 7.f };
+			float dashCooldownTimer{ 0.0f };
 			float dashCooldown	   { 1.5f };
-			float dashForce        { 8.f };
+			float dashForce        { 20.f };
+			float dashForce_Base   { 8.f };
 		} m_playerState;
+
+		//~ states management
+		EPlayerStateId m_eState{ EPlayerStateId::Idle };
+		IPlayerState* m_pState{ nullptr };
+
+		// input and cache
+		FVector2D m_direction{ 0.f, 0.f };
+		FVector2D m_lastNonZeroDir{ 1.f, 0.f };
+
+		float	 m_nDashDuration{ 0.5f };
+		float	 m_nDashTimer	{ 0.f };
+		bool     m_nDashAnimDone{ false };
+		uint64_t m_nDashAnimSerial{ 0 };
+
+		//~ attributes
+		float m_nMaxHealth    { 1000.f };
+		float m_nCurrentHealth{ 1000.f };
 	};
 } // pixel_game

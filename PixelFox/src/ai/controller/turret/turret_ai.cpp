@@ -53,6 +53,7 @@ void TurretAI::Update(float deltaTime)
 _Use_decl_annotations_
 bool TurretAI::Release()
 {
+    if (m_pProjectile) m_pProjectile->Deactivate();
     m_pBody          = nullptr;
     m_pTarget        = nullptr;
     m_pProjectile    = nullptr;
@@ -66,7 +67,7 @@ _Use_decl_annotations_
 bool TurretAI::Kill()
 {
     m_bActive = false;
-    // TODO: add callback to the owner
+    if (m_pProjectile) m_pProjectile->Deactivate();
     return true;
 }
 
@@ -98,11 +99,14 @@ void TurretAI::SetActive(bool flag)
 {
     m_bActive = flag;
 
-    if (!m_bActive && m_pBody)
+    if (!m_bActive)
     {
-        if (auto* rigidBody = m_pBody->GetRigidBody2D())
+        if (m_pProjectile) m_pProjectile->Deactivate();
+
+        if (m_pBody)
         {
-            rigidBody->SetVelocity({ 0.f, 0.f });
+            if (auto* rigidBody = m_pBody->GetRigidBody2D())
+                rigidBody->SetVelocity({ 0.f, 0.f });
         }
     }
 }
@@ -126,15 +130,13 @@ void TurretAI::OnTargetLost()
 
 void TurretAI::UpdateAIDecision()
 {
-    if (!m_pBody) return;
+    if (!m_pBody || !m_pTarget) return;
 
     auto* rigidBody = m_pBody->GetRigidBody2D();
     if (rigidBody)
     {
         rigidBody->SetVelocity({ 0.f, 0.f });
     }
-
-    if (!m_pTarget) return;
 
     const float distSq = DistanceFromPlayer();
     const float attackSq = m_nMaxShootDistance * m_nMaxShootDistance;
@@ -154,6 +156,9 @@ void TurretAI::UpdateAIDecision()
     }
 
     if (distSq > attackSq) return;
+
+    if (!m_pProjectile || m_pProjectile->IsActive() || m_nFireTimer > 0.0f)
+        return;
 
     if (m_pProjectile && m_nFireTimer <= 0.0f)
     {

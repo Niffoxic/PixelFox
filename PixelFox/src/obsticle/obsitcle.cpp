@@ -74,6 +74,15 @@ void pixel_game::Obsticle::Release()
 	pixel_engine::PhysicsQueue::Instance().RemoveObject(m_pSprite.get());
 }
 
+void pixel_game::Obsticle::SetPosition(const FVector2D& pos) 
+{
+	if (m_pSprite)
+	{
+		m_pSprite->SetPosition(pos);
+		m_nPosition = pos;
+	}
+}
+
 FVector2D pixel_game::Obsticle::GetPosition() const
 {
 	return m_nPosition;
