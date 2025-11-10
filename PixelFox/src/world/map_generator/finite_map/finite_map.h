@@ -89,7 +89,7 @@ namespace pixel_game
 	private:
 		float m_nInputDelay{ 0.2f };
 		float m_nInputTimer{ 0.2f };
-		const std::string m_szSavedPath{ "Saved/save.txt" }; //  I know its bad but no time
+		std::string m_szSavedPath{ "Saved/save.txt" }; //  I know its bad but no time
 		pixel_engine::PEFoxLoader m_foxLoader{};
 
 		int m_nMaxLevel	   { 4 };

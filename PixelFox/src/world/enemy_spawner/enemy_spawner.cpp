@@ -547,19 +547,27 @@ void pixel_game::EnemySpawner::UpdatePlayerMostDense()
 	auto* playerBody = m_pPlayer->GetPlayerBody();
 	if (!playerBody) return;
 
-	const float radius = 10.f; 
+	const FVector2D playerPos = playerBody->GetRigidBody2D()->GetPosition();
+
+	const float denseRadius = 10.f;
+	const float nearPlayerRange = 20.f;
+
 	FVector2D bestPos{ 0.f, 0.f };
-	int bestCount = 0;
+	int       bestCount = 0;
+	float     bestDistSq = FLT_MAX;
 
 	for (auto& uptr : m_pEnemies)
 	{
 		IEnemy* e = uptr.get();
 		if (!e || !m_mapEnemies[e]) continue;
+
 		auto* bodyA = e->GetBody();
-		if (!bodyA) continue;
-		if(!bodyA->IsVisible()) continue;
+		if (!bodyA || !bodyA->IsVisible()) continue;
 
 		const FVector2D posA = bodyA->GetRigidBody2D()->GetPosition();
+		const float distToPlayerSq = (posA - playerPos).LengthSq();
+		if (distToPlayerSq > nearPlayerRange * nearPlayerRange) continue;
+
 		int count = 0;
 		FVector2D centroid{ 0.f, 0.f };
 
@@ -567,26 +575,51 @@ void pixel_game::EnemySpawner::UpdatePlayerMostDense()
 		{
 			IEnemy* e2 = inner.get();
 			if (!e2 || !m_mapEnemies[e2]) continue;
+
 			auto* bodyB = e2->GetBody();
-			if (!bodyB) continue;
+			if (!bodyB || !bodyB->IsVisible()) continue;
 
 			const FVector2D posB = bodyB->GetRigidBody2D()->GetPosition();
-			if ((posB - posA).LengthSq() <= radius * radius)
+			if ((posB - posA).LengthSq() <= denseRadius * denseRadius)
 			{
 				++count;
 				centroid += posB;
 			}
 		}
 
-		if (count > bestCount)
+		if (count > 0)
 		{
-			bestCount = count;
-			bestPos = (count > 0) ? (centroid * (1.0f / static_cast<float>(count))) : posA;
+			const FVector2D center = centroid * (1.0f / static_cast<float>(count));
+			const float centerDistSq = (center - playerPos).LengthSq();
+
+			if ((count > bestCount) || (count == bestCount && centerDistSq < bestDistSq))
+			{
+				bestCount = count;
+				bestPos = center;
+				bestDistSq = centerDistSq;
+			}
 		}
 	}
 
-	if (bestCount > 0)
-		m_pPlayer->SetDenseTargetLocation(bestPos);
+	//~ fall back to best possible closest
+	if (bestCount == 0)
+	{
+		float nearestSq = FLT_MAX;
+		for (auto& uptr : m_pEnemies)
+		{
+			IEnemy* e = uptr.get();
+			if (!e || !m_mapEnemies[e]) continue;
+
+			auto* body = e->GetBody();
+			if (!body || !body->IsVisible()) continue;
+
+			const FVector2D pos = body->GetRigidBody2D()->GetPosition();
+			const float d2 = (pos - playerPos).LengthSq();
+			if (d2 < nearestSq) { nearestSq = d2; bestPos = pos; }
+		}
+	}
+
+	m_pPlayer->SetDenseTargetLocation(bestPos);
 }
 
 _Use_decl_annotations_

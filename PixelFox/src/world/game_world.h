@@ -57,10 +57,12 @@ namespace pixel_game
 		void BuildLoadingDetails();
 
 		//~ initialize map
-		void InitializeFiniteMap();
+		void InitializeRegularMap();
+		void InitializeHardcoreMap();
 	private:
 		//~ Maps
-		std::unique_ptr<FiniteMap> m_pFiniteMap{ nullptr };
+		std::unique_ptr<FiniteMap> m_pRegularMap{ nullptr };
+		std::unique_ptr<FiniteMap> m_pHardCoreMap{ nullptr };
 		//~ loading data
 		std::unique_ptr<pixel_engine::PEFont> m_pLoadingInfo { nullptr };
 		std::unique_ptr<pixel_engine::PEFont> m_pLoadingTitle{ nullptr };

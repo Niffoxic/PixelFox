@@ -23,6 +23,20 @@ pixel_game::FiniteMap::FiniteMap()
     m_ppszTress.push_back(data);
     data.texture_base = "assets/trees/4.png";
     m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/5.png";
+    m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/6.png";
+    m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/7.png";
+    m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/8.png";
+    m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/9.png";
+    m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/10.png";
+    m_ppszTress.push_back(data);
+    data.texture_base = "assets/trees/11.png";
+    m_ppszTress.push_back(data);
 
     //~ add stone data
     m_ppszStones.push_back(data);
@@ -66,6 +80,15 @@ _Use_decl_annotations_
 void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
 {
     if (m_bInitialized) return;
+
+    if (desc.Type == EMapType::Finite) 
+    {
+        m_szSavedPath = "Saved/regular-save.txt";
+    }
+    else
+    {
+        m_szSavedPath = "Saved/hardcore-save.txt";
+    }
 
     m_bInitialized = true;
 
@@ -115,14 +138,29 @@ void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
     {
         if (!m_pEnemySpawner->IsInitialized())
         {
-            PG_SPAWN_DESC spawnDesc{};
-            spawnDesc.pLoadDescription = desc.LoadScreen.pLoadDescription;
-            spawnDesc.pLoadTitle = desc.LoadScreen.pLoadTitle;
-            spawnDesc.SpawnMaxCount  = 250;
-            spawnDesc.SpawnRampTime  = 60.f;
-            spawnDesc.SpawnStartTime = 5.f;
-            m_pEnemySpawner->StopAtLimit(false);
-            m_pEnemySpawner->Initialize(spawnDesc);
+            if (desc.Type == EMapType::Finite)
+            {
+                PG_SPAWN_DESC spawnDesc{};
+                spawnDesc.pLoadDescription = desc.LoadScreen.pLoadDescription;
+                spawnDesc.pLoadTitle = desc.LoadScreen.pLoadTitle;
+                spawnDesc.SpawnMaxCount = 250;
+                spawnDesc.SpawnRampTime = 110.f;
+                spawnDesc.SpawnStartTime = 5.f;
+                m_pEnemySpawner->StopAtLimit(true);
+                m_pEnemySpawner->Initialize(spawnDesc);
+            }
+            else
+            {
+                PG_SPAWN_DESC spawnDesc{};
+                spawnDesc.pLoadDescription = desc.LoadScreen.pLoadDescription;
+                spawnDesc.pLoadTitle = desc.LoadScreen.pLoadTitle;
+                spawnDesc.SpawnMaxCount = 250;
+                spawnDesc.SpawnRampTime = 60;
+                spawnDesc.SpawnStartTime = 5.f;
+                m_pEnemySpawner->StopAtLimit(false);
+                m_pEnemySpawner->Initialize(spawnDesc);
+            }
+
         }
     }
 
@@ -132,10 +170,24 @@ void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
     }
 }
 
+_Use_decl_annotations_
 void pixel_game::FiniteMap::Update(float deltaTime)
 {
     if (deltaTime > 1.f) return;
     HandleInput(deltaTime);
+
+    if (m_pPlayerCharacter)
+    {
+        //~ TODO: Create 'Kill'
+        if (m_pPlayerCharacter->IsDead()) 
+        {
+            UnLoad();
+            m_nCurrentLevel = 1;
+            if (m_pEnemySpawner) m_pEnemySpawner->Restart();
+            if (m_OnMapComplete) m_OnMapComplete();
+            return;
+        }
+    }
 
     for (const auto& [type, vec] : m_ppObsticle)
     {
@@ -191,8 +243,14 @@ void pixel_game::FiniteMap::Release()
 void pixel_game::FiniteMap::Start()
 {
     AttachCamera();
+    if (!m_pPlayerCharacter)
+    {
+        pixel_engine::logger::error("Failed to load player!!");
+        return;
+    }
+    m_pPlayerCharacter->Revive();
     m_pPlayerCharacter->Draw();
-
+    m_nElapsedTime = 0.0f;
     for (const auto& [type, vec] : m_ppObsticle)
     {
         const int live = m_liveCount[type];
@@ -201,7 +259,6 @@ void pixel_game::FiniteMap::Start()
             if (vec[i]) vec[i]->Draw();
         }
     }
-
     m_nCurrentLevel = 1;
     pixel_engine::PERenderQueue::Instance().AddFont(m_timer.get());
     pixel_engine::PERenderQueue::Instance().AddFont(m_level.get());
@@ -358,7 +415,8 @@ void pixel_game::FiniteMap::BuildTrees(LOAD_SCREEN_DETAILS details)
     ForEachLevelCell(level, [&](int gx, int gy, char ch)
         {
             if (ch != 't') return;
-            if (SpawnObjectFromFileDataVec(m_ppszTress, { float(gx), float(gy) }, { 2.f, 2.f }, 't'))
+            if (SpawnObjectFromFileDataVec(m_ppszTress, { float(gx), float(gy) },
+                { 3.f, 3.f }, 't'))
                 ++count;
         });
 
@@ -564,6 +622,7 @@ void pixel_game::FiniteMap::MapCycle()
     }
 
     AdvanceLevel_();
+    m_pPlayerCharacter->Revive();
 
     m_bActive       = false;
     m_bPaused       = false;
@@ -756,6 +815,7 @@ Obsticle* pixel_game::FiniteMap::AcquireObsticle_(char type, const INIT_OBSTICLE
 
         if (auto* spr = obj->GetSpirte()) { spr->SetPosition(desc.position); spr->SetScale(desc.scale); }
         if (auto* col = obj->GetCollider()) col->SetScale(desc.scale);
+
 
         Obsticle* raw = obj.get();
         vec.push_back(std::move(obj));

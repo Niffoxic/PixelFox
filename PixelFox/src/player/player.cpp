@@ -71,6 +71,8 @@ bool PlayerCharacter::Initialize()
     m_pBasicAttack->SetActive(false);
     m_pBasicAttack->SetDamage   (m_nProjectileDamage);
     m_pBasicAttack->SetLifeSpan (m_nProjectileLifeSpan);
+    m_pBasicAttack->GetBody()->SetScale({ 2, 2 });
+    m_pBasicAttack->GetBody()->GetCollider()->SetScale({ 2, 2});
     m_pBasicAttack->SetSpeed    (m_nProjectileSpeed);
 
     m_pBasicAttack->AddHitTag("Enemy");
@@ -88,7 +90,6 @@ bool PlayerCharacter::Initialize()
 
 
     m_pSpecialAttack->Init(desc);
-    m_pSpecialAttack->GetBody()->SetLayer(pixel_engine::ELayer::Obstacles);
     m_pSpecialAttack->SetLifeSpan(m_nSpclLifeSpan);
     m_pSpecialAttack->SetDamage(m_nSpclDamange);
     m_pSpecialAttack->GetBody()->SetScale({ 10, 10 });
@@ -100,6 +101,15 @@ bool PlayerCharacter::Initialize()
 
     BuildHPFont();
     SubscribeToEvents();
+
+    //~ build anim state
+    m_pAnimBasic = std::make_unique<pixel_engine::AnimSateMachine>(m_pBasicAttack->GetBody());
+    m_pAnimBasic->AddFrameFromDir("base", "assets/ball/Fire/");
+    m_pAnimBasic->SetInitialState("base");
+    
+    m_pSpclAnim = std::make_unique<pixel_engine::AnimSateMachine>(m_pSpecialAttack->GetBody());
+    m_pSpclAnim->AddFrameFromDir("base", "assets/ball/blue/");
+    m_pSpclAnim->SetInitialState("base");
 
     return true;
 }
@@ -132,6 +142,9 @@ void pixel_game::PlayerCharacter::Hide()
     if (!m_bInitialized) return;
     m_pBody->SetVisible(false);
     HideHPFont();
+   
+    if (m_pBasicAttack) m_pBasicAttack->Deactivate();
+    if (m_pSpecialAttack) m_pSpecialAttack->Deactivate();
 }
 
 void pixel_game::PlayerCharacter::UnloadFromQueue()
@@ -139,6 +152,8 @@ void pixel_game::PlayerCharacter::UnloadFromQueue()
     if (!m_bInitialized) return;
     pixel_engine::PhysicsQueue::Instance().RemoveObject(m_pBody.get());
     HideHPFont();
+    if (m_pBasicAttack) m_pBasicAttack->Deactivate();
+    if (m_pSpecialAttack) m_pSpecialAttack->Deactivate();
 }
 
 pixel_engine::PEISprite* PlayerCharacter::GetPlayerBody() const
@@ -165,9 +180,10 @@ void pixel_game::PlayerCharacter::HandleInput(
     
     if (keyboard->IsKeyPressed('E'))
     {
-        if (m_nSpclFireCoolDownTimer > 0.f) return;
-        m_nSpclFireCoolDownTimer = m_nSpclFireCoolDown;
-        m_bSpclLaunched = true;
+        if (m_bCanLaunch)
+        {
+            m_bSpclLaunched = true;
+        }
     }
 
     const float lenSq = dir.x * dir.x + dir.y * dir.y;
@@ -474,6 +490,18 @@ void pixel_game::PlayerCharacter::UpdatePlayerAppearance(float deltaTime)
 
     //~ end
     if (m_pAnimState) m_pAnimState->OnFrameEnd();
+
+    //~ start
+    if (m_pSpclAnim) m_pSpclAnim->OnFrameBegin(deltaTime);
+
+    //~ end
+    if (m_pSpclAnim) m_pSpclAnim->OnFrameEnd();
+
+    //~ start
+    if (m_pAnimBasic) m_pAnimBasic->OnFrameBegin(deltaTime);
+
+    //~ end
+    if (m_pAnimBasic) m_pAnimBasic->OnFrameEnd();
 }
 
 void pixel_game::PlayerCharacter::BuildHPFont()
@@ -482,8 +510,10 @@ void pixel_game::PlayerCharacter::BuildHPFont()
 
     m_pHPFont = std::make_unique<pixel_engine::PEFont>();
     m_pHPFont->SetPx(16);
-    m_pHPFont->SetPosition({ 900, 670 });
+    m_pHPFont->SetPosition({ 1050, 670 });
     m_pHPFont->SetText("HP: ");
+
+    BuildCoolDownFont();
 }
 
 void pixel_game::PlayerCharacter::UpdateHPFont()
@@ -493,18 +523,66 @@ void pixel_game::PlayerCharacter::UpdateHPFont()
     int hp = m_nCurrentHealth;
     std::string message = "HP: " + std::to_string(hp);
     m_pHPFont->SetText(message);
+
+    UpdateCoolDownFont();
 }
 
 void pixel_game::PlayerCharacter::HideHPFont()
 {
     if (!m_pHPFont) return;
     pixel_engine::PERenderQueue::Instance().RemoveFont(m_pHPFont.get());
+
+    HideCoolDownFont();
 }
 
 void pixel_game::PlayerCharacter::DrawHPFont()
 {
     if (!m_pHPFont) return;
     pixel_engine::PERenderQueue::Instance().AddFont(m_pHPFont.get());
+
+    DrawCoolDownFont();
+}
+
+void pixel_game::PlayerCharacter::BuildCoolDownFont()
+{
+    if (m_pCooldownFont) return;
+
+    m_pCooldownFont = std::make_unique<pixel_engine::PEFont>();
+    m_pCooldownFont->SetPx(16);
+    m_pCooldownFont->SetPosition({ 800, 670 });
+    m_pCooldownFont->SetText("Sp CD: ");
+} 
+
+void pixel_game::PlayerCharacter::UpdateCoolDownFont()
+{
+    if (!m_pCooldownFont) return;
+
+    if (m_pSpecialAttack && m_pSpecialAttack->IsActive())
+    {
+        m_pCooldownFont->SetText("Sp: ACTIVE");
+        return;
+    }
+    if (m_bCanLaunch)
+    {
+        m_pCooldownFont->SetText("Sp: READY");
+        return;
+    }
+
+    const int secs = std::max(0, (int)std::ceil(m_nSpclFireCoolDownTimer));
+    if (secs == 0) m_bCanLaunch = true;
+    m_pCooldownFont->SetText("Sp CD: " + std::to_string(secs));
+}
+
+void pixel_game::PlayerCharacter::HideCoolDownFont()
+{
+    if (!m_pCooldownFont) return;
+    pixel_engine::PERenderQueue::Instance().RemoveFont(m_pCooldownFont.get());
+}
+
+void pixel_game::PlayerCharacter::DrawCoolDownFont()
+{
+    if (!m_pCooldownFont) return;
+    pixel_engine::PERenderQueue::Instance().AddFont(m_pCooldownFont.get());
 }
 
 void pixel_game::PlayerCharacter::UpdatePlayerState(float deltaTime)
@@ -604,27 +682,30 @@ void pixel_game::PlayerCharacter::Attack(float deltaTime)
 
     FVector2D muzzlePos = playerPos;
 
-    // m_pBasicAttack->Fire(muzzlePos, toTarget, m_nProjectileSpeed);
+    m_pBasicAttack->Fire(muzzlePos, toTarget, m_nProjectileSpeed);
     fireTimer = m_nFireCoolDown;
 }
 
 void pixel_game::PlayerCharacter::AttackSpecial(float deltaTime)
 {
-    //~ tick AoE cadence timer
-    if (m_nNextDmgCoolDownTimer > 0.f)
+    //~ AoE tick cadence
+    if (m_nNextDmgCoolDownTimer > 0.f) 
     {
         m_nNextDmgCoolDownTimer -= deltaTime;
         if (m_nNextDmgCoolDownTimer < 0.f) m_nNextDmgCoolDownTimer = 0.f;
     }
 
     if (!m_pSpecialAttack) return;
+
+    //~ update projectile first
     m_pSpecialAttack->Update(deltaTime);
+    bool isActive = m_pSpecialAttack->IsActive();
 
     //~ launch when requested and allowed
-    if (m_bSpclLaunched && m_bCanLaunch)
+    if (m_bSpclLaunched && m_bCanLaunch) 
     {
         m_bSpclLaunched = false;
-        m_bCanLaunch = false;
+        m_bCanLaunch    = false;
 
         auto* rb = m_pBody->GetRigidBody2D();
         if (!rb) return;
@@ -650,14 +731,15 @@ void pixel_game::PlayerCharacter::AttackSpecial(float deltaTime)
         const float almostStatic = 0.001f;
         m_pSpecialAttack->Fire(densePos, dir, almostStatic);
 
-        //~ first AoE tick immediately on launch
+        //~ immediate AoE tick on launch
         m_nNextDmgCoolDownTimer = 0.f;
+        isActive = true;
     }
 
-    //~ AoE tick while active
-    if (m_pSpecialAttack->IsActive())
+    //~ AoE damage while active
+    if (isActive) 
     {
-        if (m_nNextDmgCoolDownTimer <= 0.f)
+        if (m_nNextDmgCoolDownTimer <= 0.f) 
         {
             for (const auto& kv : m_aoeVictims)
             {
@@ -672,27 +754,29 @@ void pixel_game::PlayerCharacter::AttackSpecial(float deltaTime)
             m_nNextDmgCoolDownTimer = m_nNextDmgCoolDown;
         }
     }
-    else
+
+    if (m_spclWasActive && !isActive && m_nSpclFireCoolDownTimer <= 0.f) 
     {
-        //~ start cooldown after projectile ends
-        if (!m_bCanLaunch && m_nSpclFireCoolDownTimer <= 0.f)
-            m_nSpclFireCoolDownTimer = m_nSpclFireCoolDown;
+        m_nSpclFireCoolDownTimer = m_nSpclFireCoolDown;
+    }
 
-        if (m_nSpclFireCoolDownTimer > 0.f)
+    if (m_nSpclFireCoolDownTimer > 0.f) 
+    {
+        m_nSpclFireCoolDownTimer -= deltaTime;
+        if (m_nSpclFireCoolDownTimer <= 0.f)
         {
-            m_nSpclFireCoolDownTimer -= deltaTime;
-            if (m_nSpclFireCoolDownTimer <= 0.f)
-            {
-                m_nSpclFireCoolDownTimer = 0.f;
-                m_bCanLaunch = true;
-            }
+            m_nSpclFireCoolDownTimer = 0.f;
+            m_bCanLaunch = true;
         }
+    }
 
+    if (!isActive) 
+    {
         m_aoeVictims.clear();
         m_nNextDmgCoolDownTimer = 0.f;
     }
+    m_spclWasActive = isActive;
 }
-
 
 void pixel_game::PlayerCharacter::SubscribeToEvents()
 {

@@ -72,6 +72,11 @@ namespace pixel_game
 		void HideHPFont();
 		void DrawHPFont();
 
+		void BuildCoolDownFont();
+		void UpdateCoolDownFont();
+		void HideCoolDownFont();
+		void DrawCoolDownFont();
+
 		//~ anim state
 		void UpdatePlayerState(float deltaTime);
 
@@ -97,6 +102,8 @@ namespace pixel_game
 
 	private:
 		std::unique_ptr<pixel_engine::PEFont> m_pHPFont     { nullptr };
+		std::unique_ptr<pixel_engine::PEFont> m_pCooldownFont     { nullptr };
+
 		std::unique_ptr<StraightProjectile> m_pBasicAttack  { nullptr };
 		std::unique_ptr<StraightProjectile> m_pSpecialAttack{ nullptr };
 
@@ -108,7 +115,7 @@ namespace pixel_game
 		FVector2D m_MuzzleOffset	   { 0.5f, 0.f };
 		float     m_nProjectileSpeed   { 15.f };
 		float     m_nProjectileLifeSpan{ 0.6f };
-		float     m_nProjectileDamage  { 20.f };
+		float     m_nProjectileDamage  { 35.f };
 
 		float m_nLastTakenHit{ 0.0f };
 		float m_nImmune	     { 0.45f };
@@ -116,9 +123,10 @@ namespace pixel_game
 		float m_nSpclFireCoolDown     { 5.f };
 		float m_nSpclFireCoolDownTimer{ 0.0f };
 		float m_nSpclLifeSpan		  { 2.f };
-		float m_nSpclDamange		  { 12.f };
+		float m_nSpclDamange		  { 50.f };
 		float m_nNextDmgCoolDown	  { 0.2f };
 		float m_nNextDmgCoolDownTimer { 0.0f };
+		bool m_spclWasActive{ false };
 		bool  m_bSpclLaunched		  { false };
 		bool  m_bCanLaunch{ true };
 		fox::unordered_map<pixel_engine::BoxCollider*, bool> m_aoeVictims{};
@@ -129,12 +137,15 @@ namespace pixel_game
 		std::unique_ptr<pixel_engine::QuadObject>       m_pBody    { nullptr };
 		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimState{ nullptr };
 
+		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimBasic{ nullptr };
+		std::unique_ptr<pixel_engine::AnimSateMachine> m_pSpclAnim{ nullptr };
+
 		struct PlayerParams
 		{
-			float movementSpeed	   { 5.f };
+			float movementSpeed	   { 7.f };
 			float dashCooldownTimer{ 0.0f };
 			float dashCooldown	   { 1.5f };
-			float dashForce        { 10.f };
+			float dashForce        { 15.f };
 		} m_playerState;
 
 		//~ states management
@@ -145,13 +156,13 @@ namespace pixel_game
 		FVector2D m_direction{ 0.f, 0.f };
 		FVector2D m_lastNonZeroDir{ 1.f, 0.f };
 
-		float	 m_nDashDuration{ 0.12f };
+		float	 m_nDashDuration{ 0.5f };
 		float	 m_nDashTimer	{ 0.f };
 		bool     m_nDashAnimDone{ false };
 		uint64_t m_nDashAnimSerial{ 0 };
 
 		//~ attributes
-		float m_nMaxHealth{ 350.f };
-		float m_nCurrentHealth{ 350.f };
+		float m_nMaxHealth    { 1000.f };
+		float m_nCurrentHealth{ 1000.f };
 	};
 } // pixel_game
