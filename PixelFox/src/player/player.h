@@ -42,11 +42,14 @@ namespace pixel_game
 		void Hide();
 		void UnloadFromQueue();
 
+		bool IsDead() const { return m_nCurrentHealth <= 0.0f; }
+		void Revive() { m_nCurrentHealth = m_nMaxHealth; }
+
 		bool IsInitialized() const { return m_bInitialized; }
 
 		//~ states
-		void  SetHealth	    (float hp) {}
-		float GetPlayerHeath() const { return 100.f; }
+		void  SetHealth(float hp) { m_nCurrentHealth = hp; }
+		float GetPlayerHeath() const { return m_nCurrentHealth; }
 		
 		void SetDashAnimDone(bool v) noexcept { m_nDashAnimDone = v; }
 		bool IsDashAnimDone() const noexcept { return m_nDashAnimDone; }
@@ -63,6 +66,12 @@ namespace pixel_game
 		bool InitializeAppearance();
 		void UpdatePlayerAppearance(float deltaTime);
 
+		//~ build guis
+		void BuildHPFont();
+		void UpdateHPFont();
+		void HideHPFont();
+		void DrawHPFont();
+
 		//~ anim state
 		void UpdatePlayerState(float deltaTime);
 
@@ -73,7 +82,7 @@ namespace pixel_game
 		//~ Callbacks
 
 		//~ Events 
-
+		void SubscribeToEvents();
 		//~ helpers
 		_NODISCARD _Check_return_ _Success_(return != nullptr)
 		inline bool ValidatePathExists(const std::string & path) const
@@ -87,7 +96,8 @@ namespace pixel_game
 		}
 
 	private:
-		std::unique_ptr<StraightProjectile> m_pBasicAttack{ nullptr };
+		std::unique_ptr<pixel_engine::PEFont> m_pHPFont     { nullptr };
+		std::unique_ptr<StraightProjectile> m_pBasicAttack  { nullptr };
 		std::unique_ptr<StraightProjectile> m_pSpecialAttack{ nullptr };
 
 		FVector2D m_nearestLoc{ 10000.f, 10000.f};
@@ -100,6 +110,8 @@ namespace pixel_game
 		float     m_nProjectileLifeSpan{ 0.6f };
 		float     m_nProjectileDamage  { 20.f };
 
+		float m_nLastTakenHit{ 0.0f };
+		float m_nImmune	     { 0.45f };
 		//~ special attack
 		float m_nSpclFireCoolDown     { 5.f };
 		float m_nSpclFireCoolDownTimer{ 0.0f };
@@ -137,5 +149,9 @@ namespace pixel_game
 		float	 m_nDashTimer	{ 0.f };
 		bool     m_nDashAnimDone{ false };
 		uint64_t m_nDashAnimSerial{ 0 };
+
+		//~ attributes
+		float m_nMaxHealth{ 350.f };
+		float m_nCurrentHealth{ 350.f };
 	};
 } // pixel_game

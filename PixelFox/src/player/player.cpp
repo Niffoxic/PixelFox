@@ -14,6 +14,8 @@
 //~ events
 #include "pixel_engine/core/event/event_queue.h"
 #include "world/events/projectile_events.h"
+#include "world/events/enemy_events.h"
+#include "world/events/player_events.h"
 
 using namespace pixel_game;
 
@@ -96,39 +98,47 @@ bool PlayerCharacter::Initialize()
     m_pSpecialAttack->AddHitTag("Enemy");
     m_pSpecialAttack->AddHitTag("enemy");
 
+    BuildHPFont();
+    SubscribeToEvents();
+
     return true;
 }
 
 void PlayerCharacter::Update(float deltaTime)
 {
+    UpdateHPFont();
     UpdatePlayerState(deltaTime);
 
     UpdatePlayerAppearance(deltaTime);
     Attack                (deltaTime);
     AttackSpecial         (deltaTime);
+    m_nLastTakenHit -= deltaTime;
 }
 
 void PlayerCharacter::Release()
 {
-
+    HideHPFont();
 }
 
 void pixel_game::PlayerCharacter::Draw()
 {
     if (!m_bInitialized) return;
     m_pBody->SetVisible(true);
+    DrawHPFont();
 }
 
 void pixel_game::PlayerCharacter::Hide()
 {
     if (!m_bInitialized) return;
     m_pBody->SetVisible(false);
+    HideHPFont();
 }
 
 void pixel_game::PlayerCharacter::UnloadFromQueue()
 {
     if (!m_bInitialized) return;
     pixel_engine::PhysicsQueue::Instance().RemoveObject(m_pBody.get());
+    HideHPFont();
 }
 
 pixel_engine::PEISprite* PlayerCharacter::GetPlayerBody() const
@@ -466,6 +476,37 @@ void pixel_game::PlayerCharacter::UpdatePlayerAppearance(float deltaTime)
     if (m_pAnimState) m_pAnimState->OnFrameEnd();
 }
 
+void pixel_game::PlayerCharacter::BuildHPFont()
+{
+    if (m_pHPFont) return;
+
+    m_pHPFont = std::make_unique<pixel_engine::PEFont>();
+    m_pHPFont->SetPx(16);
+    m_pHPFont->SetPosition({ 900, 670 });
+    m_pHPFont->SetText("HP: ");
+}
+
+void pixel_game::PlayerCharacter::UpdateHPFont()
+{
+    if (!m_pHPFont) return;
+
+    int hp = m_nCurrentHealth;
+    std::string message = "HP: " + std::to_string(hp);
+    m_pHPFont->SetText(message);
+}
+
+void pixel_game::PlayerCharacter::HideHPFont()
+{
+    if (!m_pHPFont) return;
+    pixel_engine::PERenderQueue::Instance().RemoveFont(m_pHPFont.get());
+}
+
+void pixel_game::PlayerCharacter::DrawHPFont()
+{
+    if (!m_pHPFont) return;
+    pixel_engine::PERenderQueue::Instance().AddFont(m_pHPFont.get());
+}
+
 void pixel_game::PlayerCharacter::UpdatePlayerState(float deltaTime)
 {
     if (!m_pAnimState) return;
@@ -650,4 +691,41 @@ void pixel_game::PlayerCharacter::AttackSpecial(float deltaTime)
         m_aoeVictims.clear();
         m_nNextDmgCoolDownTimer = 0.f;
     }
+}
+
+
+void pixel_game::PlayerCharacter::SubscribeToEvents()
+{
+    auto token = pixel_engine::EventQueue::Subscribe<ENEMY_ATTACK_EVENT>(
+        [&](const ENEMY_ATTACK_EVENT& event)
+        {
+            if (m_nLastTakenHit <= 0.0f)
+            {
+                m_nLastTakenHit   = m_nImmune;
+                m_nCurrentHealth -= event.damage;
+            }
+        });
+
+    token = pixel_engine::EventQueue::Subscribe<ON_PROJECTILE_HIT_EVENT>(
+        [&](const ON_PROJECTILE_HIT_EVENT& event)
+        {
+            if (event.pCollider && event.pCollider == m_pBody->GetCollider())
+            {
+                if (m_nLastTakenHit <= 0.0f)
+                {
+                    m_nLastTakenHit   = m_nImmune;
+                    m_nCurrentHealth -= event.damage;
+                }
+            }
+        });
+
+    token = pixel_engine::EventQueue::Subscribe<ON_PLAYER_HIT_EVENT>(
+        [&](const ON_PLAYER_HIT_EVENT& event)
+        {
+            if (m_nLastTakenHit <= 0.0f)
+            {
+                m_nLastTakenHit   = m_nImmune;
+                m_nCurrentHealth -= event.damage;
+            }
+        });
 }

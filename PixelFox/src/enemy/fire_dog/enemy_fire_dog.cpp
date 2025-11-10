@@ -240,12 +240,30 @@ bool pixel_game::EnemyFireDog::InitEnemyAI(_In_ const PG_ENEMY_INIT_DESC& desc)
     m_pAIController->Init(controllerDesc);
 
     INIT_PROJECTILE_DESC projectileDesc{};
+    projectileDesc.OnHit = [&](IProjectile* projectile,
+        pixel_engine::BoxCollider* collider)
+    {
+        if (!collider) return;
+        if (!projectile) return;
+
+        ON_PROJECTILE_HIT_EVENT event{};
+        event.damage = projectile->GetDamage();
+        event.pCollider = collider;
+        pixel_engine::EventQueue::Post<ON_PROJECTILE_HIT_EVENT>(event);
+
+        if (projectile)
+        {
+            projectile->Deactivate();
+        }
+    };
     projectileDesc.pOwner = m_pAIController->GetBody();
 
     m_pProjectile = std::make_unique<StraightProjectile>();
     m_pProjectile->Init(projectileDesc);
     m_pProjectile->SetSpeed(m_nProjectileSpeed);
     m_pProjectile->SetLifeSpan(m_nProjectileLifeSpan);
+    m_pProjectile->AddHitTag("player");
+    m_pProjectile->AddHitTag("Player");
 
     if (auto* body = m_pProjectile->GetBody())
     {
