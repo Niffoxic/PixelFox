@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "world/events/enemy_events.h"
 
 using namespace pixel_game;
 using namespace pixel_engine;
@@ -37,7 +38,16 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 		{
 			e->Update(deltaTime);
 			if (e->IsDead())
+			{
+				if (auto* body = e->GetBody()) 
+				{
+					EVENT_DIE_EVENT event{};
+					event.DeathLocation = body->GetPosition();
+					pixel_engine::EventQueue::Post<EVENT_DIE_EVENT>(event);
+				}
 				DeactivateEnemy(*e);
+			}
+				
 		}
 	}
 

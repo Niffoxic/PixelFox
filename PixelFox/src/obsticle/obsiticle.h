@@ -11,8 +11,8 @@ namespace pixel_game
 	typedef struct _INIT_OBSTICLE_DESC
 	{
 		std::string szName;
-		std::string baseTexture;
-		std::string obsticleSprites;
+		std::string baseTexture; //~ take full .png path
+		std::string obsticleSprites; //~ takes dir path
 		FVector2D   scale;
 		FVector2D   position;
 	} INIT_OBSTICLE_DESC;
@@ -36,6 +36,7 @@ namespace pixel_game
 		FVector2D	GetScale   () const;
 		std::string GetName	   () const;
 
+		pixel_engine::AnimSateMachine* GetAnimState() const { return m_pAnimState.get(); }
 		pixel_engine::PEISprite* GetSpirte() const;
 		pixel_engine::BoxCollider* GetCollider() const;
 

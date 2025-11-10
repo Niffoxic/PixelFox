@@ -8,6 +8,7 @@
 #include "menu_gui/main_menu.h"
 
 #include "map_generator/finite_map/finite_map.h"
+#include "buff_spawner/buff_spawner.h"
 
 namespace pixel_game
 {
@@ -61,6 +62,7 @@ namespace pixel_game
 		void InitializeHardcoreMap();
 	private:
 		//~ Maps
+		BuffSpawner m_buffSpawner{};
 		std::unique_ptr<FiniteMap> m_pRegularMap{ nullptr };
 		std::unique_ptr<FiniteMap> m_pHardCoreMap{ nullptr };
 		//~ loading data

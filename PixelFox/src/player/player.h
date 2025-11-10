@@ -16,6 +16,7 @@ namespace pixel_game
 {
 	class PlayerCharacter
 	{
+
 	public:
 		PlayerCharacter () = default;
 		~PlayerCharacter() = default;
@@ -43,7 +44,16 @@ namespace pixel_game
 		void UnloadFromQueue();
 
 		bool IsDead() const { return m_nCurrentHealth <= 0.0f; }
-		void Revive() { m_nCurrentHealth = m_nMaxHealth; }
+		void Revive()
+		{
+			m_nCurrentHealth = m_nMaxHealth;
+			m_playerState.movementSpeed = m_playerState.movementSpeed_Base;
+			m_nProjectileDamage = m_nProjectileDamage_Base;
+			m_nFireCoolDown = m_nFireCoolDown_Base;
+			m_nSpclFireCoolDown = m_nSpclFireCoolDown_Base;
+			m_nProjectileSpeed = m_nProjectileSpeed_Base;
+			m_playerState.dashForce = m_playerState.dashForce_Base;
+		}
 
 		bool IsInitialized() const { return m_bInitialized; }
 
@@ -111,16 +121,20 @@ namespace pixel_game
 		FVector2D m_bestLoc{ 10000.f, 10000.f};
 		
 		float     m_nAttackDistance	   { 10.f };
-		float     m_nFireCoolDown	   { 0.2f };
+		float     m_nFireCoolDown	   { 0.4f };
+		float     m_nFireCoolDown_Base { 0.2f };
 		FVector2D m_MuzzleOffset	   { 0.5f, 0.f };
 		float     m_nProjectileSpeed   { 15.f };
+		float     m_nProjectileSpeed_Base   { 15.f };
 		float     m_nProjectileLifeSpan{ 0.6f };
 		float     m_nProjectileDamage  { 35.f };
+		float     m_nProjectileDamage_Base  { 35.f };
 
 		float m_nLastTakenHit{ 0.0f };
 		float m_nImmune	     { 0.45f };
 		//~ special attack
 		float m_nSpclFireCoolDown     { 5.f };
+		float m_nSpclFireCoolDown_Base     { 5.f };
 		float m_nSpclFireCoolDownTimer{ 0.0f };
 		float m_nSpclLifeSpan		  { 2.f };
 		float m_nSpclDamange		  { 50.f };
@@ -143,9 +157,11 @@ namespace pixel_game
 		struct PlayerParams
 		{
 			float movementSpeed	   { 7.f };
+			float movementSpeed_Base{ 7.f };
 			float dashCooldownTimer{ 0.0f };
 			float dashCooldown	   { 1.5f };
-			float dashForce        { 15.f };
+			float dashForce        { 20.f };
+			float dashForce_Base   { 8.f };
 		} m_playerState;
 
 		//~ states management

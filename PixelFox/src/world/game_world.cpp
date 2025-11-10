@@ -14,6 +14,8 @@ pixel_game::GameWorld::GameWorld(const PG_GAME_WORLD_CONSTRUCT_DESC& desc)
     m_pRegularMap     = std::make_unique<FiniteMap>();
     m_pHardCoreMap    = std::make_unique<FiniteMap>();
     m_pEnemySpawner   = std::make_unique<EnemySpawner>(m_pPlayer.get());
+
+    m_buffSpawner.Initialize();
 }
 
 pixel_game::GameWorld::~GameWorld()
@@ -39,6 +41,8 @@ pixel_game::GameWorld::~GameWorld()
 
 void pixel_game::GameWorld::Update(float deltaTime)
 {
+    m_buffSpawner.Update(deltaTime);
+
     ComputeFPS(deltaTime);
     KeyWatcher       (deltaTime);
 	HandleTransition ();

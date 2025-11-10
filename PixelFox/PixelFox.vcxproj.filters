@@ -75,6 +75,9 @@
     <ClCompile Include="src\player\player_state\dash\dash_state.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\buff_spawner\buff_spawner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -165,6 +168,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\player\player_state\dash\dash_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\buff_spawner\buff_spawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\events\event_buff.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

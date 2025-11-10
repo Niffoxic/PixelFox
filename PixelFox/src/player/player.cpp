@@ -16,6 +16,7 @@
 #include "world/events/projectile_events.h"
 #include "world/events/enemy_events.h"
 #include "world/events/player_events.h"
+#include "world/events/event_buff.h"
 
 using namespace pixel_game;
 
@@ -87,7 +88,6 @@ bool PlayerCharacter::Initialize()
             if (!collider->HasTag("Enemy")) return;
             m_aoeVictims[collider] = true;
         };
-
 
     m_pSpecialAttack->Init(desc);
     m_pSpecialAttack->SetLifeSpan(m_nSpclLifeSpan);
@@ -594,13 +594,14 @@ void pixel_game::PlayerCharacter::UpdatePlayerState(float deltaTime)
         m_eState = EPlayerStateId::Idle;
         m_pState = GetState(m_eState);
 
+        float dash = m_playerState.dashForce + m_playerState.dashCooldown;
         PlayerContext ctx
         {
             this, m_pAnimState.get(),
             m_pKeyboard,
             deltaTime,
             m_playerState.movementSpeed,
-            m_playerState.dashForce,
+            dash,
             m_playerState.dashCooldown,
             m_playerState.dashCooldownTimer,
             m_nDashDuration,
@@ -780,6 +781,7 @@ void pixel_game::PlayerCharacter::AttackSpecial(float deltaTime)
 
 void pixel_game::PlayerCharacter::SubscribeToEvents()
 {
+    //~ enemy events
     auto token = pixel_engine::EventQueue::Subscribe<ENEMY_ATTACK_EVENT>(
         [&](const ENEMY_ATTACK_EVENT& event)
         {
@@ -811,5 +813,39 @@ void pixel_game::PlayerCharacter::SubscribeToEvents()
                 m_nLastTakenHit   = m_nImmune;
                 m_nCurrentHealth -= event.damage;
             }
+        });
+
+    //~ buff events
+    pixel_engine::EventQueue::Subscribe<PLAYER_HP_BUFF_EVENT>(
+        [this](const PLAYER_HP_BUFF_EVENT& e)
+        {
+            m_pBody->SetVisible(true);
+            m_nCurrentHealth += e.hp;
+        });
+
+    pixel_engine::EventQueue::Subscribe<PLAYER_SPEED_BUFF_EVENT>(
+        [this](const PLAYER_SPEED_BUFF_EVENT& e)
+        {
+            m_playerState.movementSpeed += e.speed;
+            m_playerState.dashForce += e.speed;
+        });
+
+    pixel_engine::EventQueue::Subscribe<PLAYER_DAMANGE_BUFF_EVENT>(
+        [this](const PLAYER_DAMANGE_BUFF_EVENT& e)
+        {
+            m_nProjectileDamage += e.dmgBoost;
+        });
+
+    pixel_engine::EventQueue::Subscribe<PLAYER_LINEAR_ATTACK_SPEED_BUFF_EVENT>(
+        [this](const PLAYER_LINEAR_ATTACK_SPEED_BUFF_EVENT& e)
+        {
+            m_nProjectileSpeed += e.speedBoost;
+            m_nFireCoolDown = std::max(0.05f, m_nFireCoolDown - e.cdBoost);
+        });
+
+    pixel_engine::EventQueue::Subscribe<PLAYER_SPECIAL_CD_DEC_EVENT>(
+        [this](const PLAYER_SPECIAL_CD_DEC_EVENT& e)
+        {
+            m_nSpclFireCoolDown = std::max(0.f, m_nSpclFireCoolDown - e.decCDTime);
         });
 }
