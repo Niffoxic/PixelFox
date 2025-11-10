@@ -191,6 +191,10 @@ void pixel_game::EnemyGoblin::SubscribeEvents()
                 if (!collider) return;
                 if (event.pCollider != collider) return;
 
+                pixel_engine::logger::error(
+                    "I'm taking hit!! from {} to {}",
+                    m_nHealth, m_nHealth - event.damage);
+
                 m_nHealth -= event.damage;
 
                 if (m_nHealth <= 0.f)

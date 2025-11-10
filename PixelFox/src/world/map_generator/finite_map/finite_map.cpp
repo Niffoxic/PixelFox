@@ -118,9 +118,10 @@ void pixel_game::FiniteMap::Initialize(const MAP_INIT_DESC& desc)
             PG_SPAWN_DESC spawnDesc{};
             spawnDesc.pLoadDescription = desc.LoadScreen.pLoadDescription;
             spawnDesc.pLoadTitle = desc.LoadScreen.pLoadTitle;
-            spawnDesc.SpawnMaxCount  = 200;
-            spawnDesc.SpawnRampTime  = 110.f;
+            spawnDesc.SpawnMaxCount  = 10;
+            spawnDesc.SpawnRampTime  = 10.f;
             spawnDesc.SpawnStartTime = 5.f;
+            m_pEnemySpawner->StopAtLimit(true);
             m_pEnemySpawner->Initialize(spawnDesc);
         }
     }

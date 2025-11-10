@@ -90,6 +90,10 @@ void pixel_game::EnemySpawner::Update(float deltaTime)
 			ActivateEnemy(*m_pEnemies[static_cast<size_t>(idx)]);
 		}
 	}
+
+	//~ enemy to player calc
+	UpdatePlayerNearest();
+	UpdatePlayerMostDense();
 }
 
 void EnemySpawner::Release()
@@ -499,6 +503,90 @@ void EnemySpawner::EnsurePoolMatchesDescOrRebuild_()
 
 	logger::info("EnemySpawner: rebuilt pool; prepared {} / {} enemies (invisible).",
 		prepared, m_desc.SpawnMaxCount);
+}
+
+void pixel_game::EnemySpawner::UpdatePlayerNearest()
+{
+	if (!m_pPlayer || !m_pPlayer->IsInitialized())
+		return;
+
+	auto* playerBody = m_pPlayer->GetPlayerBody();
+	if (!playerBody)
+		return;
+
+	const FVector2D playerPos = playerBody->GetRigidBody2D()->GetPosition();
+
+	float nearestDistSq = FLT_MAX;
+	FVector2D nearestPos{ 0.f, 0.f };
+
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e || !m_mapEnemies[e]) continue;
+
+		auto* enemyBody = e->GetBody();
+		if (!enemyBody) continue;
+
+		const FVector2D enemyPos = enemyBody->GetRigidBody2D()->GetPosition();
+		const FVector2D delta = enemyPos - playerPos;
+		const float distSq = delta.LengthSq();
+
+		if (distSq < nearestDistSq)
+		{
+			nearestDistSq = distSq;
+			nearestPos = enemyPos;
+		}
+	}
+
+	m_pPlayer->SetNearestTargetLocation(nearestPos);
+}
+
+void pixel_game::EnemySpawner::UpdatePlayerMostDense()
+{
+	if (!m_pPlayer || !m_pPlayer->IsInitialized()) return;
+	auto* playerBody = m_pPlayer->GetPlayerBody();
+	if (!playerBody) return;
+
+	const float radius = 128.f; // search radius
+	FVector2D bestPos{ 0.f, 0.f };
+	int bestCount = 0;
+
+	for (auto& uptr : m_pEnemies)
+	{
+		IEnemy* e = uptr.get();
+		if (!e || !m_mapEnemies[e]) continue;
+		auto* bodyA = e->GetBody();
+		if (!bodyA) continue;
+		if(!bodyA->IsVisible()) continue;
+
+		const FVector2D posA = bodyA->GetRigidBody2D()->GetPosition();
+		int count = 0;
+		FVector2D centroid{ 0.f, 0.f };
+
+		for (auto& inner : m_pEnemies)
+		{
+			IEnemy* e2 = inner.get();
+			if (!e2 || !m_mapEnemies[e2]) continue;
+			auto* bodyB = e2->GetBody();
+			if (!bodyB) continue;
+
+			const FVector2D posB = bodyB->GetRigidBody2D()->GetPosition();
+			if ((posB - posA).LengthSq() <= radius * radius)
+			{
+				++count;
+				centroid += posB;
+			}
+		}
+
+		if (count > bestCount)
+		{
+			bestCount = count;
+			bestPos = (count > 0) ? (centroid * (1.0f / static_cast<float>(count))) : posA;
+		}
+	}
+
+	if (bestCount > 0)
+		m_pPlayer->SetDenseTargetLocation(bestPos);
 }
 
 _Use_decl_annotations_

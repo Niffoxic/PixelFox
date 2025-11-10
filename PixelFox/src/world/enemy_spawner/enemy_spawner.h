@@ -57,6 +57,8 @@ namespace pixel_game
 		//~ helpers
 		void PrepareExistingPoolInvisible_();
 		void EnsurePoolMatchesDescOrRebuild_();
+		void UpdatePlayerNearest();
+		void UpdatePlayerMostDense();
 
 	private:
 		PlayerCharacter* m_pPlayer{ nullptr };

@@ -31,6 +31,10 @@
     <ClCompile Include="src\enemy\skeleton\enemy_skeleton.cpp" />
     <ClCompile Include="src\obsticle\obsitcle.cpp" />
     <ClCompile Include="src\player\player.cpp" />
+    <ClCompile Include="src\player\player_state\dash\dash_state.cpp" />
+    <ClCompile Include="src\player\player_state\idle\idle_state.cpp" />
+    <ClCompile Include="src\player\player_state\move\move_state.cpp" />
+    <ClCompile Include="src\player\player_state\player_state.cpp" />
     <ClCompile Include="src\world\enemy_spawner\enemy_spawner.cpp" />
     <ClCompile Include="src\world\game_world.cpp" />
     <ClCompile Include="src\world\map_generator\finite_map\finite_map.cpp" />
@@ -54,6 +58,10 @@
     <ClInclude Include="src\enemy\skeleton\enemy_skeleton.h" />
     <ClInclude Include="src\obsticle\obsiticle.h" />
     <ClInclude Include="src\player\player.h" />
+    <ClInclude Include="src\player\player_state\dash\dash_state.h" />
+    <ClInclude Include="src\player\player_state\idle\idle_state.h" />
+    <ClInclude Include="src\player\player_state\move\move_state.h" />
+    <ClInclude Include="src\player\player_state\player_state.h" />
     <ClInclude Include="src\world\enemy_spawner\enemy_spawner.h" />
     <ClInclude Include="src\world\events\enemy_events.h" />
     <ClInclude Include="src\world\events\player_events.h" />

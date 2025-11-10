@@ -3,6 +3,14 @@
 #include "PixelFoxMathAPI.h"
 #include <sal.h>
 
+#ifndef _CONSTEXPR20
+#define _CONSTEXPR20 constexpr
+#endif
+
+#ifndef _NODISCARD
+#define _NODISCARD [[nodiscard]]
+#endif
+
 namespace fox_math 
 {
     //~ Constants

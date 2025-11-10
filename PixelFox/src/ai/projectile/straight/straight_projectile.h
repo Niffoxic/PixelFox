@@ -10,6 +10,9 @@ namespace pixel_game
 	class StraightProjectile final : public IProjectile
 	{
 	public:
+		using OnHitCB = std::function<void(_In_ IProjectile* projectile, _In_ pixel_engine::BoxCollider*)>;
+
+	public:
 		StraightProjectile() = default;
 		~StraightProjectile() override = default;
 
@@ -77,7 +80,11 @@ namespace pixel_game
 		float GetDamage() const override;
 
 		//~ Collision
-		void OnHit() override;
+		void OnHit(pixel_engine::BoxCollider* collider) override;
+
+		void AddHitTag(const std::string& tag) override;
+		void RemoveHitTag(const std::string& tag) override;
+		bool HasHitTag(const std::string& tag) const override;
 
 		pixel_engine::AnimSateMachine* GetAnimStateMachine() const override;
 
@@ -88,7 +95,10 @@ namespace pixel_game
 			return std::atan2(d.y, d.x);
 		}
 
+		void SetCallback();
+
 	private:
+		fox::vector<std::string> m_ppszTags{};
 		pixel_engine::PEISprite* m_pOwner{ nullptr };
 		std::unique_ptr<pixel_engine::QuadObject> m_pBody{ nullptr };
 
@@ -100,10 +110,10 @@ namespace pixel_game
 		FVector2D m_direction { 0.f, 0.f };
 
 		//~ Callback
-		std::unique_ptr<pixel_engine::AnimSateMachine>    m_pAnimState;
-		std::function<void(_In_ IProjectile* projectile)> m_fnOnFire;
-		std::function<void(_In_ IProjectile* projectile)> m_fnOnHit;
-		std::function<void(_In_ IProjectile* projectile)> m_fnOnExpired;
-		std::function<void(_In_ IProjectile* projectile)> m_fnOnActive;
+		std::unique_ptr<pixel_engine::AnimSateMachine> m_pAnimState;
+		std::function<void()> m_fnOnFire;
+		OnHitCB m_fnOnHit;
+		std::function<void()> m_fnOnExpired;
+		std::function<void()> m_fnOnActive;
 	};
 } // namespace pixel_game

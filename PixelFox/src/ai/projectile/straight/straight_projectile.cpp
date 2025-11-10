@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "straight_projectile.h"
+#include "pixel_engine/utilities/logger/logger.h"
 
 using namespace pixel_game;
 using namespace pixel_engine;
@@ -7,7 +8,11 @@ using namespace pixel_engine;
 _Use_decl_annotations_
 bool StraightProjectile::Init(INIT_PROJECTILE_DESC& desc)
 {
-	m_pOwner = desc.pOwner;
+	if (desc.pOwner)
+	{
+		m_pOwner = desc.pOwner;
+	}
+	
 	m_pBody = std::make_unique<QuadObject>();
 	if (!m_pBody) return false;
 
@@ -29,6 +34,9 @@ bool StraightProjectile::Init(INIT_PROJECTILE_DESC& desc)
 	m_fnOnExpired = desc.OnExpired;
 	m_fnOnFire    = desc.OnFire;
 	m_fnOnHit     = desc.OnHit;
+
+	SetCallback();
+
 	
 	return true;
 }
@@ -55,7 +63,7 @@ void StraightProjectile::Update(float dt)
 	m_nTimeLeft -= dt;
 	if (m_nTimeLeft <= 0.0f)
 	{
-		if (m_fnOnExpired) m_fnOnExpired(this);
+		if (m_fnOnExpired) m_fnOnExpired();
 		Deactivate();
 		return;
 	}
@@ -111,7 +119,7 @@ bool StraightProjectile::Fire(const FVector2D& worldPos,
 	}
 
 	m_pBody->SetVisible(true);
-	if (m_fnOnFire) m_fnOnFire(this);
+	if (m_fnOnFire) m_fnOnFire();
 	return true;
 }
 
@@ -136,7 +144,7 @@ void StraightProjectile::SetActive(bool on)
 
 	if (on && !m_bActive)
 	{
-		if (m_fnOnActive) m_fnOnActive(this);
+		if (m_fnOnActive) m_fnOnActive();
 	}
 }
 
@@ -231,13 +239,57 @@ float StraightProjectile::GetDamage() const
 	return m_nDamage; 
 }
 
-void StraightProjectile::OnHit()
+void StraightProjectile::OnHit(pixel_engine::BoxCollider* collider)
 {
-	if (m_fnOnHit) m_fnOnHit(this);
+	if (m_fnOnHit) m_fnOnHit(this, collider);
 	Deactivate();
+}
+
+void pixel_game::StraightProjectile::AddHitTag(const std::string& tag)
+{
+	m_ppszTags.push_back(tag);
+}
+
+void pixel_game::StraightProjectile::RemoveHitTag(const std::string& tag)
+{
+	// TODO: Add Key removal in fox::vector m_ppszTags;
+}
+
+bool pixel_game::StraightProjectile::HasHitTag(const std::string& tag) const
+{
+	for (auto& t : m_ppszTags)
+	{
+		if (t == tag) return true;
+	}
+	return false;
 }
 
 pixel_engine::AnimSateMachine* pixel_game::StraightProjectile::GetAnimStateMachine() const
 {
 	return m_pAnimState.get();
+}
+
+void pixel_game::StraightProjectile::SetCallback()
+{
+	if (!m_pBody) return;
+	auto* collider = m_pBody->GetCollider();
+	if (!collider) return;
+
+
+	collider->SetOnHitEnterCallback([this](pixel_engine::BoxCollider* other)
+		{
+			if (!other) return;
+
+			for (auto& tag : m_ppszTags)
+			{
+				if (other->HasTag(tag))
+				{
+					if (m_fnOnHit) 
+					{
+						m_fnOnHit(this, other);
+					}
+					return;
+				}
+			}
+		});
 }
