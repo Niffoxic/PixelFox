@@ -5,7 +5,13 @@
 #include "enemy/skeleton/enemy_skeleton.h"
 #include "enemy/mushroom/enemy_mushroom.h"
 #include "enemy/fire_dog/enemy_fire_dog.h"
+#include "enemy/demon_lord/enemy_lord.h"
 #include "enemy/registry_enemy.h"
+
+
+
+using pixel_game::DemonLord;
+REGISTER_BOSS_ENEMY(DemonLord);
 
 using pixel_game::EnemyGoblin;
 REGISTER_ENEMY(EnemyGoblin);

@@ -315,40 +315,71 @@ void pixel_game::EnemySpawner::SaveState(pixel_engine::PEFoxLoader& enemiesNode)
 
 void pixel_game::EnemySpawner::BuildEnemies()
 {
-	m_pEnemies.clear();
+	m_pEnemies  .clear();
 	m_mapEnemies.clear();
 
-	const auto& names = RegistryEnemy::GetEnemyNames();
+	const auto& names = RegistryEnemy::GetEnemyNames   ();
+	const auto& bossNames = RegistryEnemy::GetBossNames();
 
-	if (names.empty())
+	if (names.empty() && bossNames.empty())
 	{
-		logger::error("RegistryEnemy::GetEnemyNames() is empty!");
+		logger::error("EnemySpawner::BuildEnemies: No enemy is registered!");
 		return;
 	}
 
 	const int totalCount = m_desc.SpawnMaxCount;
-	const int enemyTypeCount = static_cast<int>(names.size());
 	m_pEnemies.reserve(static_cast<size_t>(totalCount));
 
-	const int baseCount = totalCount / enemyTypeCount;
-	const int remainder = totalCount % enemyTypeCount;
-
 	int count = 0;
-	for (int t = 0; t < enemyTypeCount; ++t)
-	{
-		const int spawnCount = baseCount + (t < remainder ? 1 : 0);
-		for (int i = 0; i < spawnCount; ++i)
-		{
-			std::unique_ptr<IEnemy> ptr = RegistryEnemy::CreateEnemy(names[t]);
-			if (!ptr) continue;
 
+	//~ create bosses
+	for (const auto& bossName : bossNames)
+	{
+		if (count >= totalCount) break;
+
+		if (auto ptr = RegistryEnemy::CreateBoss(bossName))
+		{
 			m_mapEnemies[ptr.get()] = false;
 			m_pEnemies.push_back(std::move(ptr));
 			++count;
 		}
+		else
+		{
+			logger::warning("EnemySpawner::BuildEnemies: Failed to create boss '{}'", bossName);
+		}
 	}
 
-	logger::info("EnemySpawner::BuildEnemies - Spawned {} enemies ({} types equally divided).", count, enemyTypeCount);
+	//~ divide pool equally for mobs
+	const int remaining = totalCount - count;
+	const int enemyTypeCount = static_cast<int>(names.size());
+
+	if (remaining > 0 && enemyTypeCount > 0)
+	{
+		const int baseCount = remaining / enemyTypeCount;
+		const int remainder = remaining % enemyTypeCount;
+
+		for (int t = 0; t < enemyTypeCount; ++t)
+		{
+			const int spawnCount = baseCount + (t < remainder ? 1 : 0);
+			for (int i = 0; i < spawnCount; ++i)
+			{
+				std::unique_ptr<IEnemy> ptr = RegistryEnemy::CreateEnemy(names[t]);
+				
+				if (!ptr)
+				{ 
+					logger::warning("EnemySpawner::BuildEnemies: Failed to create '{}'", names[t]);
+					continue;
+				}
+
+				m_mapEnemies[ptr.get()] = false;
+				m_pEnemies.push_back(std::move(ptr));
+				++count;
+			}
+		}
+	}
+
+	logger::info("EnemySpawner::BuildEnemies - Spawned {} enemies ({} bosses, mobs {}).",
+		count, static_cast<int>(bossNames.size()), enemyTypeCount);
 }
 
 void pixel_game::EnemySpawner::ActivateEnemy(IEnemy& e)

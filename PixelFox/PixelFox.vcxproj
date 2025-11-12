@@ -28,6 +28,7 @@
     <ClCompile Include="src\enemy\fire_dog\enemy_fire_dog.cpp" />
     <ClCompile Include="src\enemy\goblin\enemy_goblin.cpp" />
     <ClCompile Include="src\enemy\mushroom\enemy_mushroom.cpp" />
+    <ClCompile Include="src\enemy\demon_lord\enemy_lord.cpp" />
     <ClCompile Include="src\enemy\skeleton\enemy_skeleton.cpp" />
     <ClCompile Include="src\obsticle\obsitcle.cpp" />
     <ClCompile Include="src\player\player.cpp" />
@@ -55,6 +56,7 @@
     <ClInclude Include="src\enemy\goblin\enemy_goblin.h" />
     <ClInclude Include="src\enemy\interface_enemy.h" />
     <ClInclude Include="src\enemy\mushroom\enemy_mushroom.h" />
+    <ClInclude Include="src\enemy\demon_lord\enemy_lord.h" />
     <ClInclude Include="src\enemy\registry_enemy.h" />
     <ClInclude Include="src\enemy\skeleton\enemy_skeleton.h" />
     <ClInclude Include="src\obsticle\obsiticle.h" />

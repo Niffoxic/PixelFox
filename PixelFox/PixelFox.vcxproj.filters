@@ -78,6 +78,9 @@
     <ClCompile Include="src\world\buff_spawner\buff_spawner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\enemy\demon_lord\enemy_lord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -174,6 +177,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\world\events\event_buff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\enemy\demon_lord\enemy_lord.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

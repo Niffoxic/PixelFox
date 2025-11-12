@@ -10,70 +10,34 @@ using namespace pixel_game;
 pixel_game::FiniteMap::FiniteMap()
 {
     //~ add tree data
-    FileData data{};
-    data.file_name = "test_tree";
-    data.texture_base = "assets/trees/0.png";
-    data.texture_sprite = "";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/1.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/2.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/3.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/4.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/5.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/6.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/7.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/8.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/9.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/10.png";
-    m_ppszTress.push_back(data);
-    data.texture_base = "assets/trees/11.png";
-    m_ppszTress.push_back(data);
+    //~ TODO: Create assets.config for it later
+    
+    //~ Test
+    auto populate = [&](
+        const std::string& base,
+        int until,
+        fox::vector<FileData>& data)
+        {
+            FileData desc{};
+            desc.file_name = "test";
 
-    //~ add stone data
-    m_ppszStones.push_back(data);
-    data.texture_base = "assets/stones/1.png";
-    m_ppszStones.push_back(data);
-    data.texture_base = "assets/stones/2.png";
-    m_ppszStones.push_back(data);
-    data.texture_base = "assets/stones/3.png";
-    m_ppszStones.push_back(data);
-    data.texture_base = "assets/stones/0.png";
-    m_ppszStones.push_back(data);
-
-    //~ add water data
-    data.texture_base = "assets/water/0.png";
-    m_ppszWater.push_back(data);
-    data.texture_base = "assets/water/1.png";
-    m_ppszWater.push_back(data);
-    data.texture_base = "assets/water/2.png";
-    m_ppszWater.push_back(data);
-    data.texture_base = "assets/water/3.png";
-    m_ppszWater.push_back(data);
-    data.texture_base = "assets/water/4.png";
-    m_ppszWater.push_back(data);
-    data.texture_base = "assets/water/5.png";
-    m_ppszWater.push_back(data);
-
-    //~ add background
-    data.texture_base = "assets/ground/0.png";
-    m_ppszGround.push_back(data);
-    data.texture_base = "assets/ground/1.png";
-    m_ppszGround.push_back(data);
-    data.texture_base = "assets/ground/2.png";
-    m_ppszGround.push_back(data);
-    data.texture_base = "assets/ground/3.png";
-    m_ppszGround.push_back(data);
-    data.texture_base = "assets/ground/4.png";
-    m_ppszGround.push_back(data);
+            for (int i = 0; i < until; i++)
+            {
+                desc.texture_base = base + std::to_string(i) + ".png";
+                data.push_back(desc);
+            }
+        };
+   
+    std::string base = "assets/trees/";
+    populate(base, 12, m_ppszTress);
+    base = "assets/stones/";
+    populate(base, 10, m_ppszStones);
+    base = "assets/water/";
+    populate(base, 6, m_ppszWater);
+    base = "assets/ground/";
+    populate(base, 5, m_ppszGround);
+    base = "assets/randoms/";
+    populate(base, 12, m_ppszRandom);
 }
 
 _Use_decl_annotations_
@@ -331,6 +295,10 @@ void pixel_game::FiniteMap::BuildMapObjects(LOAD_SCREEN_DETAILS details)
         details.pLoadTitle->SetText("Building Map|Ground|");
     BuildGround(details);
 
+    if (details.pLoadTitle)
+        details.pLoadTitle->SetText("Building Map|Decoration|");
+    BuildRandom(details);
+
     pixel_engine::logger::debug(
         "FiniteMap::BuildMapObjects completed — Obsticles: {}",
         m_ppObsticle.size());
@@ -392,7 +360,8 @@ bool pixel_game::FiniteMap::SpawnObjectFromFileDataVec
 (const fox::vector<FileData>& pool,
     const FVector2D& gridPos,
     const FVector2D& scale,
-    char typeKey)
+    char typeKey,
+    bool trigger)
 {
     if (pool.empty()) return false;
 
@@ -406,7 +375,7 @@ bool pixel_game::FiniteMap::SpawnObjectFromFileDataVec
     desc.scale = scale;
     desc.position = m_Bounds.min + gridPos;
 
-    return AcquireObsticle_(typeKey, desc) != nullptr;
+    return AcquireObsticle_(typeKey, desc, trigger) != nullptr;
 }
 
 void pixel_game::FiniteMap::BuildTrees(LOAD_SCREEN_DETAILS details)
@@ -439,7 +408,8 @@ void pixel_game::FiniteMap::BuildStones(LOAD_SCREEN_DETAILS details)
     ForEachLevelCell(level, [&](int gx, int gy, char ch)
         {
             if (ch != 's') return;
-            if (SpawnObjectFromFileDataVec(m_ppszStones, { float(gx), float(gy) }, { 1.f, 1.f }, 's'))
+            if (SpawnObjectFromFileDataVec(m_ppszStones,
+                { float(gx), float(gy) }, { 2.f, 2.f }, 's'))
                 ++count;
         });
 
@@ -457,14 +427,15 @@ void pixel_game::FiniteMap::BuildWaters(LOAD_SCREEN_DETAILS details)
     ForEachLevelCell(level, [&](int gx, int gy, char ch)
         {
             if (ch != 'w' && ch != 'W') return;
-            if (SpawnObjectFromFileDataVec(m_ppszWater, { float(gx), float(gy) }, { 1.f, 1.f }, 'w'))
+            if (SpawnObjectFromFileDataVec(m_ppszWater,
+                { float(gx), float(gy) }, { 2.f, 2.f }, 'w'))
                 ++count;
         });
 
     pixel_engine::logger::debug("FiniteMap::BuildWaters - Placed {} waters from file", count);
 }
 
-void pixel_game::FiniteMap::BuildGround(LOAD_SCREEN_DETAILS /*details*/)
+void pixel_game::FiniteMap::BuildGround(LOAD_SCREEN_DETAILS details)
 {
     if (m_ppszGround.empty()) return;
 
@@ -504,6 +475,29 @@ void pixel_game::FiniteMap::BuildGround(LOAD_SCREEN_DETAILS /*details*/)
     }
 
     pixel_engine::logger::debug("FiniteMap::BuildGround - Placed {} ground tiles (center + 8 surround).", placed);
+}
+
+void pixel_game::FiniteMap::BuildRandom(LOAD_SCREEN_DETAILS details)
+{
+    const std::string level = LoadMap();
+    if (level.empty() || m_ppszRandom.empty()) return;
+
+    if (details.pLoadDescription)
+        details.pLoadDescription->SetText("Placing Decorations from file...");
+
+    int count = 0;
+    ForEachLevelCell(level, [&](int gx, int gy, char ch)
+        {
+            if (ch != 'r' && ch != 'R') return;
+            if (SpawnObjectFromFileDataVec(m_ppszRandom,
+                { float(gx), float(gy) }, { 1.0f, 1.0f },
+                'r', true))
+            {
+                ++count;
+            }
+        });
+
+    pixel_engine::logger::debug("FiniteMap::BuildRandoms - Placed {} decoration from file", count);
 }
 
 void pixel_game::FiniteMap::SetPlayerSpawnPosition()
@@ -793,7 +787,9 @@ void pixel_game::FiniteMap::HideUnused_()
     }
 }
 
-Obsticle* pixel_game::FiniteMap::AcquireObsticle_(char type, const INIT_OBSTICLE_DESC& desc)
+Obsticle* pixel_game::FiniteMap::AcquireObsticle_(char type, 
+    const INIT_OBSTICLE_DESC& desc,
+    bool trigger)
 {
     auto& vec = m_ppObsticle[type];
     int& live = m_liveCount[type]; //~ default init 
@@ -808,7 +804,19 @@ Obsticle* pixel_game::FiniteMap::AcquireObsticle_(char type, const INIT_OBSTICLE
             if (auto* spr = o->GetSpirte()) { spr->SetPosition(desc.position); spr->SetScale(desc.scale); }
             else { o->SetPosition(desc.position); }
 
-            if (auto* col = o->GetCollider()) col->SetScale(desc.scale);
+            if (auto* col = o->GetCollider()) 
+            {
+                col->SetScale(desc.scale);
+
+                if (trigger)
+                {
+                    col->SetColliderType(pixel_engine::ColliderType::Trigger);
+                }
+                else
+                {
+                    col->SetColliderType(pixel_engine::ColliderType::Static);
+                }
+            } 
         }
         ++live;
         return o;
@@ -819,8 +827,19 @@ Obsticle* pixel_game::FiniteMap::AcquireObsticle_(char type, const INIT_OBSTICLE
         if (!obj->Init(desc)) return nullptr;
 
         if (auto* spr = obj->GetSpirte()) { spr->SetPosition(desc.position); spr->SetScale(desc.scale); }
-        if (auto* col = obj->GetCollider()) col->SetScale(desc.scale);
+        if (auto* col = obj->GetCollider())
+        {
+            col->SetScale(desc.scale);
 
+            if (trigger)
+            {
+                col->SetColliderType(pixel_engine::ColliderType::Trigger);
+            }
+            else
+            {
+                col->SetColliderType(pixel_engine::ColliderType::Static);
+            }
+        }
 
         Obsticle* raw = obj.get();
         vec.push_back(std::move(obj));

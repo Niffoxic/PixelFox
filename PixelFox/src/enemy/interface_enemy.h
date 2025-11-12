@@ -65,6 +65,7 @@ namespace pixel_game
 		virtual float GetHealth() const { return 100.0f; }
 
 		virtual void Revive(){}
+		virtual bool IsBoss() const { return false; }
 
 	protected:
 		_NODISCARD _Check_return_

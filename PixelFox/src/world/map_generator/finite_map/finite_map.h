@@ -55,13 +55,15 @@ namespace pixel_game
 			_In_ const fox::vector<FileData>& pool,
 			_In_ const FVector2D& gridPos,
 			_In_ const FVector2D& scale,
-			_In_ char typeKey);
+			_In_ char typeKey,
+			_In_ bool trigger = false);
 
 		//~ build obsticles
 		void BuildTrees (_In_ LOAD_SCREEN_DETAILS details);
 		void BuildStones(_In_ LOAD_SCREEN_DETAILS details);
 		void BuildWaters(_In_ LOAD_SCREEN_DETAILS details);
 		void BuildGround(_In_ LOAD_SCREEN_DETAILS details);
+		void BuildRandom(_In_ LOAD_SCREEN_DETAILS details);
 
 		//~ player properties
 		void SetPlayerSpawnPosition();
@@ -86,7 +88,10 @@ namespace pixel_game
 		//~ cache
 		void BeginReuseFrame_();
 		void HideUnused_	 ();
-		Obsticle* AcquireObsticle_(char type, const INIT_OBSTICLE_DESC& desc);
+		Obsticle* AcquireObsticle_(
+			char type,
+			const INIT_OBSTICLE_DESC& desc,
+			bool trigger=false);
 
 	private:
 		BuffSpawner m_buffSpawner{};
@@ -127,6 +132,7 @@ namespace pixel_game
 		//~ hard coded file location
 		fox::vector<FileData> m_ppszTress {};
 		fox::vector<FileData> m_ppszWater {};
+		fox::vector<FileData> m_ppszRandom{};
 		fox::vector<FileData> m_ppszStones{};
 		fox::vector<FileData> m_ppszGround{};
 	};
@@ -162,8 +168,8 @@ namespace pixel_game
 				continue;
 			}
 
-			//~ occupied cells: 'w', 't', 's'
-			if (c == 'w' || c == 't' || c == 's')
+			//~ occupied cells: 'w', 't', 's', 'r'
+			if (c == 'w' || c == 't' || c == 's' || c == 'r')
 			{
 				if (x < mapSize && y < mapSize)
 					fn(x, y, c);
